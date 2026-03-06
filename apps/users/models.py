@@ -116,12 +116,6 @@ class User(SavingsBaseModel, PermissionsMixin, AbstractBaseUser):
     )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
-    # Role-based fields
-    is_auditor = models.BooleanField(
-        _("is auditor"), 
-        default=False, 
-        help_text=_("User is an auditor.")
-    )
     is_admin = models.BooleanField(
         _("is admin"), 
         default=False, 

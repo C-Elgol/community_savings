@@ -174,6 +174,25 @@ class LoanApplication(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.amount_requested}"
+class LoanGuarantor(SavingsBaseModel):
+    loan_application = models.ForeignKey(
+        LoanApplication,
+        on_delete=models.CASCADE,
+        related_name="guarantors"
+    )
+    guarantor_membership = models.ForeignKey(
+        Membership,
+        on_delete=models.CASCADE,
+        related_name="guaranteed_loan_applications"
+    )
+    is_confirmed = models.BooleanField(default=False)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [("loan_application", "guarantor_membership")]
+
+    def __str__(self):
+        return f"Guarantor - {self.guarantor_membership.user.full_name}"
 
 class Loan(SavingsBaseModel):
     application = models.OneToOneField(LoanApplication, on_delete=models.CASCADE, related_name="loan")
@@ -206,6 +225,18 @@ class Loan(SavingsBaseModel):
     @property
     def amount_left_to_pay(self):
         return self.total_amount_plus_interest - self.amount_paid
+
+class LoanRepaymentSchedule(SavingsBaseModel):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="repayment_schedule")
+    installment_number = models.PositiveIntegerField()
+    due_date = models.DateField()
+    amount_due = models.DecimalField(max_digits=12, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    is_paid = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [("loan", "installment_number")]
+        ordering = ["installment_number"]
 
 class LoanPayment(SavingsBaseModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="payments")
@@ -254,3 +285,19 @@ class Fine(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.fine_type}"
+
+class FinePayment(SavingsBaseModel):
+    fine = models.ForeignKey(Fine, on_delete=models.CASCADE, related_name="payments")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    paid_at = models.DateTimeField()
+    payment_reference = models.CharField(max_length=100, blank=True)
+    received_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="fine_payments_received"
+    )
+
+    def __str__(self):
+        return f"Fine Payment - {self.fine_id}"

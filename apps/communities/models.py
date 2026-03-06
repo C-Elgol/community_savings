@@ -20,6 +20,7 @@ class Community(SavingsBaseModel):
     country = models.CharField(max_length=100, blank=True)
     currency = models.CharField(max_length=10, default="XAF")
     start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
