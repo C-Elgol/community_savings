@@ -65,13 +65,16 @@ class LoanRiskAssessment(SavingsBaseModel):
         return f"Risk Assessment - {self.membership.user.full_name}"
 
 class CreditScoreHistory(SavingsBaseModel):
-    membership = models.ForeignKey(Membership, ...)
-    season = models.ForeignKey(FinancialSeason, ...)
+    membership = models.ForeignKey(Membership, on_delete=models.CASCADE)
+    season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE)
     score = models.PositiveIntegerField()
-    risk_band = models.CharField(...)
-    creditworthiness = models.CharField(...)
-    probability_of_default = models.DecimalField(...)
-    recommended_max_loan_amount = models.DecimalField(...)
-    assessed_at = models.DateTimeField(...)
+    risk_band = models.CharField(max_length=20, choices=RiskBand.choices)
+    creditworthiness = models.CharField(max_length=20, choices=CreditworthinessLevel.choices)
+    probability_of_default = models.DecimalField(max_digits=6, decimal_places=4)
+    recommended_max_loan_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    assessed_at = models.DateTimeField(auto_now_add=True)
     explanation = models.JSONField(default=dict, blank=True)
     scoring_version = models.CharField(max_length=50, default="v1")
+
+    def __str__(self):
+        return f"Credit Score History - {self.membership.user.full_name}"
