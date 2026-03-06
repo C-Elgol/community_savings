@@ -1,12 +1,12 @@
 from django.conf import settings
 from django.db import models
 
-from apps.common.models import BaseModel
-from apps.common.enums import MinuteStatus
+from apps.users.models import SavingsBaseModel
+from apps.global_data.enum import MinuteStatus
 from apps.communities.models import Community, Membership
 
 
-class Meeting(BaseModel):
+class Meeting(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="meetings")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -30,7 +30,7 @@ class Meeting(BaseModel):
         return f"{self.title} - {self.community.name}"
 
 
-class MeetingAttendance(BaseModel):
+class MeetingAttendance(SavingsBaseModel):
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="attendance_records")
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="attendance_records")
     was_present = models.BooleanField(default=False)
@@ -41,7 +41,7 @@ class MeetingAttendance(BaseModel):
         unique_together = [("meeting", "membership")]
 
 
-class MeetingMinute(BaseModel):
+class MeetingMinute(SavingsBaseModel):
     meeting = models.OneToOneField(Meeting, on_delete=models.CASCADE, related_name="minute")
     title = models.CharField(max_length=255)
     minute_date = models.DateField()
@@ -76,7 +76,7 @@ class MeetingMinute(BaseModel):
         return f"Minutes - {self.meeting.title}"
 
 
-class MinuteResolution(BaseModel):
+class MinuteResolution(SavingsBaseModel):
     minute = models.ForeignKey(MeetingMinute, on_delete=models.CASCADE, related_name="resolutions")
     title = models.CharField(max_length=255)
     description = models.TextField()

@@ -2,8 +2,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 
-from apps.common.models import BaseModel
-from apps.common.enums import (
+from apps.users.models import SavingsBaseModel
+from apps.global_data.enum import (
     CommunityType,
     MembershipRole,
     MembershipStatus,
@@ -12,7 +12,7 @@ from apps.common.enums import (
 )
 
 
-class Community(BaseModel):
+class Community(SavingsBaseModel):
     name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=50, unique=True, db_index=True)
     description = models.TextField(blank=True)
@@ -36,7 +36,7 @@ class Community(BaseModel):
         return self.name
 
 
-class CommunityPolicy(BaseModel):
+class CommunityPolicy(SavingsBaseModel):
     community = models.OneToOneField(
         Community,
         on_delete=models.CASCADE,
@@ -71,7 +71,7 @@ class CommunityPolicy(BaseModel):
         return f"Policy - {self.community.name}"
 
 
-class MembershipApplication(BaseModel):
+class MembershipApplication(SavingsBaseModel):
     community = models.ForeignKey(
         Community,
         on_delete=models.CASCADE,
@@ -111,7 +111,7 @@ class MembershipApplication(BaseModel):
         return f"{self.user.email} -> {self.community.name}"
 
 
-class Membership(BaseModel):
+class Membership(SavingsBaseModel):
     community = models.ForeignKey(
         Community,
         on_delete=models.CASCADE,

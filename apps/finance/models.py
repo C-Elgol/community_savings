@@ -2,8 +2,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 
-from apps.common.models import BaseModel
-from apps.common.enums import (
+from apps.users.models import SavingsBaseModel
+from apps.global_data.enum import (
     ContributionStatus,
     FineType,
     FineStatus,
@@ -13,7 +13,7 @@ from apps.common.enums import (
 from apps.communities.models import Community, Membership, MembershipApplication
 
 
-class FinancialSeason(BaseModel):
+class FinancialSeason(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="financial_seasons")
     season_date = models.DateField(db_index=True, help_text="Example: 2025-01-01 for January 2025")
     title = models.CharField(max_length=100, blank=True)
@@ -27,7 +27,7 @@ class FinancialSeason(BaseModel):
         return f"{self.community.name} - {self.season_date}"
 
 
-class RegistrationPayment(BaseModel):
+class RegistrationPayment(SavingsBaseModel):
     application = models.OneToOneField(
         MembershipApplication,
         on_delete=models.CASCADE,
@@ -48,7 +48,7 @@ class RegistrationPayment(BaseModel):
     def __str__(self):
         return f"Registration Payment - {self.application.user.email}"
 
-class ContributionCycle(BaseModel):
+class ContributionCycle(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="contribution_cycles")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="contribution_cycles")
     title = models.CharField(max_length=255)
@@ -61,7 +61,7 @@ class ContributionCycle(BaseModel):
         ordering = ["-due_date"]
 
 
-class Contribution(BaseModel):
+class Contribution(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="contributions")
     cycle = models.ForeignKey(ContributionCycle, on_delete=models.CASCADE, related_name="contributions")
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -89,7 +89,7 @@ class Contribution(BaseModel):
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.cycle.title}"
 
-class MemberFinanceSnapshot(BaseModel):
+class MemberFinanceSnapshot(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="finance_snapshots")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="member_finance_snapshots")
 
@@ -114,7 +114,7 @@ class MemberFinanceSnapshot(BaseModel):
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.season.season_date}"
 
-class NjangiBenefit(BaseModel):
+class NjangiBenefit(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_benefits")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="njangi_benefits")
     transaction_id = models.CharField(max_length=100, unique=True)
@@ -128,7 +128,7 @@ class NjangiBenefit(BaseModel):
 
     def __str__(self):
         return f"Njangi Benefit - {self.membership.user.full_name}"
-class LoanProduct(BaseModel):
+class LoanProduct(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="loan_products")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -146,7 +146,7 @@ class LoanProduct(BaseModel):
         return f"{self.name} - {self.community.name}"
 
 
-class LoanApplication(BaseModel):
+class LoanApplication(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="loan_applications")
     loan_product = models.ForeignKey(LoanProduct, on_delete=models.PROTECT, related_name="applications")
     season = models.ForeignKey(FinancialSeason, on_delete=models.SET_NULL, null=True, blank=True, related_name="loan_applications")
@@ -175,7 +175,7 @@ class LoanApplication(BaseModel):
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.amount_requested}"
 
-class Loan(BaseModel):
+class Loan(SavingsBaseModel):
     application = models.OneToOneField(LoanApplication, on_delete=models.CASCADE, related_name="loan")
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="loans")
     season = models.ForeignKey(FinancialSeason, on_delete=models.SET_NULL, null=True, blank=True, related_name="loans")
@@ -207,7 +207,7 @@ class Loan(BaseModel):
     def amount_left_to_pay(self):
         return self.total_amount_plus_interest - self.amount_paid
 
-class LoanPayment(BaseModel):
+class LoanPayment(SavingsBaseModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="payments")
     season = models.ForeignKey(FinancialSeason, on_delete=models.SET_NULL, null=True, blank=True, related_name="loan_payments")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -227,7 +227,7 @@ class LoanPayment(BaseModel):
     def __str__(self):
         return f"Payment {self.amount} - {self.loan_id}"
 
-class Fine(BaseModel):
+class Fine(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="fines")
     season = models.ForeignKey(FinancialSeason, on_delete=models.SET_NULL, null=True, blank=True, related_name="fines")
     fine_type = models.CharField(max_length=30, choices=FineType.choices)
