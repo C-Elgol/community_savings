@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include  'publics/home/includes/_head.html' %}
+    <script src="{% url 'javascript_catalog' %}"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<!-- mobile menu button -->
+<div class="md:hidden fixed top-4 left-4 z-50">
+    <button id="menuToggle" class="p-3 bg-white rounded-xl shadow-md text-emerald-700"><i class="fas fa-bars text-lg"></i></button>
+</div>
+
+{% include 'publics/home/includes/_sidebar.html' %}
+
+<!-- ========== MAIN CONTENT ========== -->
+<div class="md:ml-72 min-h-screen flex flex-col bg-slate-50">
+
+   {% include 'publics/home/includes/_navbar.html' %}
+
+    <!-- main dynamic content -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" id="mainContent">
+
+        <!-- ========== DASHBOARD PAGE (active by default) ========== -->
+        {% block content %}
+        {% comment %} {% include 'publics/home/dashboard.html' %}
+        {% include 'publics/home/contribution/contribution.html' %}
+        {% include 'publics/home/loan/loan.html' %}
+        {% include 'publics/home/meeting/meeting.html' %}
+        {% include 'publics/home/credit-score/credit_score.html' %}
+        {% include 'publics/home/fine/fine.html' %}
+        {% include 'publics/home/profile/profile.html' %}
+        {% include 'publics/home/notification/notification.html' %} {% endcomment %}
+
+        {% endblock %}
+
+       
+
+        
+
+
+        
+
+       
+
+       
+
+        
+    </main>
+
+    <!-- mobile bottom nav (quick) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 md:hidden flex justify-around py-2 z-40">
+        <a href="#" data-page="dashboard" class="mobile-nav flex flex-col items-center text-emerald-700"><i class="fas fa-home text-lg"></i><span class="text-xs">Home</span></a>
+        <a href="#" data-page="contributions" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-coins text-lg"></i><span class="text-xs">Contrib</span></a>
+        <a href="#" data-page="loans" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-file-invoice text-lg"></i><span class="text-xs">Loans</span></a>
+        <a href="#" data-page="profile" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-user text-lg"></i><span class="text-xs">Profile</span></a>
+    </div>
+</div>
+{% include 'publics/home/includes/_js.html' %}
+<!-- javascript for navigation and interactions -->
+<script>
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+        }
+
+        // page navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileNavs = document.querySelectorAll('.mobile-nav');
+        const pages = document.querySelectorAll('.page');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        const titles = {
+            dashboard: { title: 'Dashboard', subtitle: 'Welcome back, John' },
+            contributions: { title: 'Contributions', subtitle: 'Manage your savings and contributions' },
+            loans: { title: 'Loans', subtitle: 'Active loans and applications' },
+            meetings: { title: 'Meetings', subtitle: 'Upcoming gatherings & minutes' },
+            creditscore: { title: 'Credit Score', subtitle: 'Your credit health & risk factors' },
+            fines: { title: 'Fines', subtitle: 'Penalties and payments' },
+            profile: { title: 'Profile', subtitle: 'Personal information & settings' },
+            notifications: { title: 'Notifications', subtitle: 'Alerts and updates' }
+        };
+
+        function activatePage(pageId) {
+            // hide all pages
+            pages.forEach(p => p.classList.remove('active-page'));
+            document.getElementById(pageId)?.classList.add('active-page');
+
+            // update sidebar active style
+            navLinks.forEach(link => {
+                link.classList.remove('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
+                link.classList.add('nav-item-inactive');
+                if (link.dataset.page === pageId) {
+                    link.classList.add('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
+                    link.classList.remove('nav-item-inactive');
+                }
+            });
+
+            // mobile nav active color
+            mobileNavs.forEach(m => {
+                m.classList.remove('text-emerald-700');
+                m.classList.add('text-slate-600');
+                if (m.dataset.page === pageId) {
+                    m.classList.add('text-emerald-700');
+                    m.classList.remove('text-slate-600');
+                }
+            });
+
+            // update header
+            if (titles[pageId]) {
+                pageTitle.innerText = titles[pageId].title;
+                pageSubtitle.innerText = titles[pageId].subtitle;
+            }
+
+            // close sidebar on mobile after navigation
+            if (window.innerWidth < 768) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+        }
+
+        // add click listeners to sidebar links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (page) activatePage(page);
+            });
+        });
+
+        mobileNavs.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (page) activatePage(page);
+            });
+        });
+
+        // default open dashboard
+        activatePage('dashboard');
+
+        // mark taken / demo interactions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.mark-taken')) {
+                // just a dummy
+            }
+        });
+    })();
+</script>
+
+<!-- extra design footer (fine) -->
+<p class="text-center text-xs text-slate-400 py-4 md:ml-72">© 2026 NjangiHub · Secure community finance</p>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends 'publics/home/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+   <!-- ========== NOTIFICATIONS PAGE ========== -->
+        <div id="notifications" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Notifications</h2>
+                <div class="space-y-3"><div class="flex items-start gap-4 p-4 bg-blue-50 rounded-xl"><i class="fas fa-info-circle text-blue-600 mt-1"></i><div><p class="font-medium">Contribution due in 3 days</p><p class="text-sm text-slate-600">March cycle of XAF 15,000 is due on 28 Mar.</p><span class="text-xs text-slate-400">2 hours ago</span></div></div><div class="flex items-start gap-4 p-4 bg-amber-50 rounded-xl"><i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i><div><p class="font-medium">Fine issued for late attendance</p><p class="text-sm text-slate-600">XAF 2,000 fine for March meeting lateness.</p><span class="text-xs text-slate-400">yesterday</span></div></div><div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl"><i class="fas fa-check-circle text-emerald-600 mt-1"></i><div><p class="font-medium">Loan payment received</p><p class="text-sm text-slate-600">Your installment of XAF 7,500 was credited.</p><span class="text-xs text-slate-400">3 days ago</span></div></div></div>
+            </div>
+        </div>
+{% endblock %}

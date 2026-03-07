@@ -1,0 +1,13 @@
+{% extends 'publics/home/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+        <!-- ========== MEETINGS PAGE ========== -->
+        <div id="meetings" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Meetings & Attendance</h2>
+                <div class="space-y-4"><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-emerald-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">24</span><span class="text-xs">MAR</span></div><div class="flex-1"><p class="font-semibold">General assembly Q1</p><p class="text-sm text-slate-500">10:00 AM · Hall A · Chaired by J. Doe</p></div><span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Confirmed</span></div><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-amber-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">02</span><span class="text-xs">APR</span></div><div class="flex-1"><p class="font-semibold">Loan committee review</p><p class="text-sm text-slate-500">2:00 PM · Boardroom</p></div><span class="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full">Pending</span></div></div>
+            </div>
+        </div>
+{% endblock %}

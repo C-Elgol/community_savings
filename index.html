@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Njangi System · Fintech Dashboard</title>
+    <!-- Tailwind + Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f3b3f',
+                        secondary: '#0b5e4b',
+                        accent: '#0f766e',
+                        warning: '#b45309',
+                        error: '#b91c1c',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .sidebar-transition { transition: all 0.2s ease; }
+        .nav-item-active { background: #eef9f7; border-left: 4px solid #0f766e; color: #0f3b3f; font-weight: 600; }
+        .nav-item-inactive { color: #4b5563; font-weight: 500; }
+        .nav-item-inactive:hover { background: #f8fafc; }
+        .page { display: none; }
+        .page.active-page { display: block; }
+        .card-hover { transition: all 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        .risk-low { background: #10b981; }
+        .risk-moderate { background: #f59e0b; }
+        .risk-high { background: #ef4444; }
+        .notification-badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; border-radius: 9999px; background: #b91c1c; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); position: fixed; } .sidebar.active { transform: translateX(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<!-- mobile menu button -->
+<div class="md:hidden fixed top-4 left-4 z-50">
+    <button id="menuToggle" class="p-3 bg-white rounded-xl shadow-md text-emerald-700"><i class="fas fa-bars text-lg"></i></button>
+</div>
+
+<!-- ========== SIDEBAR (ALL NAVIGATION) ========== -->
+<aside class="sidebar fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-200 shadow-lg md:translate-x-0 flex flex-col overflow-y-auto">
+    <!-- logo -->
+    <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-600 flex items-center justify-center text-white shadow-sm"><i class="fas fa-hand-holding-heart text-lg"></i></div>
+        <span class="text-xl font-bold tracking-tight text-slate-800">Njangi<span class="text-emerald-700">Hub</span></span>
+    </div>
+
+    <!-- navigation menu (all pages) -->
+    <nav class="flex-1 px-4 py-6 space-y-1">
+        <!-- Dashboard -->
+        <a href="#" data-page="dashboard" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-active sidebar-transition">
+            <i class="fas fa-th-large w-5 text-emerald-700"></i><span class="text-sm font-medium">Dashboard</span>
+        </a>
+        <!-- Contributions -->
+        <a href="#" data-page="contributions" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-coins w-5 text-slate-400"></i><span class="text-sm">Contributions</span>
+        </a>
+        <!-- Loans -->
+        <a href="#" data-page="loans" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-file-invoice-dollar w-5 text-slate-400"></i><span class="text-sm">Loans</span>
+        </a>
+        <!-- Meetings -->
+        <a href="#" data-page="meetings" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-handshake w-5 text-slate-400"></i><span class="text-sm">Meetings</span>
+        </a>
+        <!-- Credit Score (with indicator) -->
+        <a href="#" data-page="creditscore" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-chart-line w-5 text-slate-400"></i><span class="text-sm">Credit Score</span>
+            <span class="ml-auto w-2 h-2 rounded-full bg-emerald-500"></span>
+        </a>
+        <!-- Fines -->
+        <a href="#" data-page="fines" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i><span class="text-sm">Fines</span>
+        </a>
+        <!-- Profile -->
+        <a href="#" data-page="profile" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-user-circle w-5 text-slate-400"></i><span class="text-sm">Profile</span>
+        </a>
+        <!-- Notifications with badge -->
+        <a href="#" data-page="notifications" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
+            <i class="fas fa-bell w-5 text-slate-400"></i><span class="text-sm">Notifications</span>
+            <span class="ml-auto bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-0.5 rounded-full">3</span>
+        </a>
+    </nav>
+
+    <!-- user mini profile -->
+    <div class="p-5 border-t border-slate-100">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold shadow-sm border border-white">JD</div>
+            <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-slate-800 truncate">John Doe</p><p class="text-xs text-slate-500 truncate">MEM-9382 · Njangi A</p></div>
+            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+        </div>
+    </div>
+</aside>
+
+<!-- ========== MAIN CONTENT ========== -->
+<div class="md:ml-72 min-h-screen flex flex-col bg-slate-50">
+
+    <!-- top navbar -->
+    <header class="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30">
+        <div class="flex items-center justify-between h-16 px-4 md:px-8">
+            <div><h2 class="text-xl font-semibold text-slate-800" id="pageTitle">Dashboard</h2><p class="text-xs text-slate-500" id="pageSubtitle">Welcome back, John</p></div>
+            <div class="flex items-center gap-4">
+                <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full"><i class="fas fa-bell text-lg"></i><span class="notification-badge">3</span></button>
+                <div class="flex items-center gap-2 cursor-pointer group"><div class="hidden sm:block text-right"><p class="text-sm font-semibold text-slate-800">John Doe</p><p class="text-xs text-slate-500">Admin</p></div><div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold">JD</div><i class="fas fa-chevron-down text-slate-400 text-xs group-hover:text-slate-600"></i></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- main dynamic content -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" id="mainContent">
+
+        <!-- ========== DASHBOARD PAGE (active by default) ========== -->
+        <div id="dashboard" class="page active-page">
+            <!-- overview cards (5) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Total contributions</span><div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><i class="fas fa-coins"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 540K</p><p class="text-xs text-emerald-600 mt-1">↑ 12% vs last season</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Current savings</span><div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fas fa-piggy-bank"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 127.5K</p><p class="text-xs text-slate-500 mt-1">42% of season target</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Active loan</span><div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center"><i class="fas fa-hand-holding-usd"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 85K</p><p class="text-xs text-slate-500 mt-1">6 months term</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Credit score</span><div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><i class="fas fa-star"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">724</p><p class="text-xs text-emerald-600 mt-1">Low risk</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Next due</span><div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fas fa-hourglass-half"></i></div></div><p class="text-xl font-bold text-slate-800 mt-2">XAF 15K</p><p class="text-xs text-slate-500 mt-1">28 Mar 2026 (4d)</p></div>
+            </div>
+
+            <!-- 2-col layout: left (history + loan) / right (credit widget + meetings) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- left span-2 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- contribution history table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-4"><h2 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-history text-emerald-600"></i> Contribution history</h2><a href="#" class="text-sm text-emerald-700 hover:underline">View all</a></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-left text-slate-400 text-xs border-b border-slate-100"><tr><th class="pb-3">Cycle</th><th class="pb-3">Due</th><th class="pb-3">Expected</th><th class="pb-3">Paid</th><th class="pb-3">Status</th></tr></thead><tbody class="divide-y divide-slate-100"><tr><td class="py-3 font-medium">March 2026</td><td class="py-3">20 Mar</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr><tr><td class="py-3 font-medium">February 2026</td><td>20 Feb</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr><tr><td class="py-3 font-medium">January 2026</td><td>20 Jan</td><td>XAF 15k</td><td>XAF 12k</td><td><span class="bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs">Partial</span></td></tr><tr><td class="py-3 font-medium">December 2025</td><td>20 Dec</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr></tbody></table></div></div>
+
+                    <!-- loan summary with progress -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-3"><h2 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-file-invoice text-indigo-600"></i> Loan summary · Education loan</h2><span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">Active · 3 left</span></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"><div><p class="text-xs text-slate-400">Principal</p><p class="font-semibold">XAF 85,000</p></div><div><p class="text-xs text-slate-400">Interest (5%)</p><p class="font-semibold">XAF 4,250</p></div><div><p class="text-xs text-slate-400">Paid so far</p><p class="font-semibold text-emerald-600">XAF 42,500</p></div><div><p class="text-xs text-slate-400">Left</p><p class="font-semibold">XAF 46,750</p></div></div><div class="space-y-1"><div class="flex justify-between text-xs"><span>Repayment</span><span>48%</span></div><div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="bg-emerald-600 h-2 rounded-full" style="width:48%"></div></div><p class="text-xs text-slate-400 mt-2"><i class="far fa-clock mr-1"></i>Next payment 15 Apr · XAF 15,000</p></div></div>
+                </div>
+
+                <!-- right column -->
+                <div class="space-y-6">
+                    <!-- credit score widget with risk & model fields -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><h2 class="text-base font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-emerald-600"></i> Credit profile</h2><div class="flex items-end justify-between"><div><p class="text-3xl font-bold text-slate-800">724</p><p class="text-xs text-slate-500">out of 850</p></div><div><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>Low risk</span></div></div><div class="mt-5 grid grid-cols-3 gap-1 h-1.5 rounded-full overflow-hidden bg-slate-100"><div class="bg-emerald-500 h-full" style="width:100%"></div></div><div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>Low</span><span>Moderate</span><span>High</span></div><div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs"><div><span class="text-slate-400">PD</span><p class="font-medium">2.3%</p></div><div><span class="text-slate-400">Max rec.</span><p class="font-medium">XAF 250k</p></div><div><span class="text-slate-400">Worthiness</span><p class="font-medium text-emerald-600">Good</p></div><div><span class="text-slate-400">Assessed</span><p class="font-medium">2d ago</p></div></div></div>
+
+                    <!-- upcoming meetings -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-3"><h2 class="text-base font-semibold"><i class="fas fa-calendar-alt text-indigo-400 mr-2"></i>Upcoming meetings</h2><i class="fas fa-ellipsis-h text-slate-300"></i></div><div class="space-y-4"><div class="flex gap-3"><div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex flex-col items-center justify-center text-sm font-semibold">24<span class="text-[9px]">MAR</span></div><div><p class="text-sm font-medium">General assembly</p><p class="text-xs text-slate-400"><i class="far fa-clock mr-1"></i>10:00 AM · Hall A</p></div></div><div class="flex gap-3"><div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex flex-col items-center justify-center text-sm font-semibold">02<span class="text-[9px]">APR</span></div><div><p class="text-sm font-medium">Loan committee</p><p class="text-xs text-slate-400"><i class="far fa-clock mr-1"></i>2:00 PM · Boardroom</p></div></div></div><button class="w-full mt-4 text-sm text-emerald-700 bg-emerald-50 py-2 rounded-xl hover:bg-emerald-100">View all</button></div>
+                </div>
+            </div>
+
+            <!-- recent activity feed -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center gap-2 mb-4"><i class="fas fa-stream text-slate-300"></i><h2 class="text-base font-semibold">Recent activity</h2></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700"><i class="fas fa-check text-xs"></i></div><div><p class="text-slate-700">Contribution <span class="font-semibold">XAF 15,000</span> recorded.</p><span class="text-xs text-slate-400">2h ago</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700"><i class="fas fa-file-signature text-xs"></i></div><div><p class="text-slate-700">Loan payment <span class="font-semibold">XAF 7,500</span> received.</p><span class="text-xs text-slate-400">yesterday</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-700"><i class="fas fa-exclamation text-xs"></i></div><div><p class="text-slate-700">Fine of <span class="font-semibold">XAF 2,000</span> issued (late).</p><span class="text-xs text-slate-400">3d ago</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700"><i class="fas fa-users text-xs"></i></div><div><p class="text-slate-700">Attendance confirmed for Q1.</p><span class="text-xs text-slate-400">5d ago</span></div></div></div></div>
+        </div>
+
+        <!-- ========== CONTRIBUTIONS PAGE ========== -->
+        <div id="contributions" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Contributions</h2><button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-sm font-medium"><i class="fas fa-plus mr-2"></i>New contribution</button></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-emerald-50 p-4 rounded-xl"><p class="text-sm text-emerald-700 font-medium">Total contributed</p><p class="text-2xl font-bold text-slate-800">XAF 540,000</p></div>
+                    <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-700 font-medium">This season</p><p class="text-2xl font-bold text-slate-800">XAF 127,500</p></div>
+                    <div class="bg-amber-50 p-4 rounded-xl"><p class="text-sm text-amber-700 font-medium">Pending cycles</p><p class="text-2xl font-bold text-slate-800">1</p></div>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="px-4 py-3 text-left">Cycle</th><th class="px-4 py-3 text-left">Due date</th><th class="px-4 py-3 text-left">Expected</th><th class="px-4 py-3 text-left">Paid</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left"></th></tr></thead><tbody><tr class="border-b"><td class="px-4 py-3 font-medium">March 2026</td><td class="px-4 py-3">20 Mar</td><td>XAF 15,000</td><td>XAF 15,000</td><td><span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs">Paid</span></td><td><button class="text-emerald-700"><i class="fas fa-receipt"></i></button></td></tr><tr class="border-b"><td class="px-4 py-3 font-medium">February 2026</td><td>20 Feb</td><td>XAF 15,000</td><td>XAF 15,000</td><td><span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs">Paid</span></td><td></td></tr><tr class="border-b"><td class="px-4 py-3 font-medium">January 2026</td><td>20 Jan</td><td>XAF 15,000</td><td>XAF 12,000</td><td><span class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">Partial</span></td><td></td></tr></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- ========== LOANS PAGE ========== -->
+        <div id="loans" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Loans</h2><button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-2"></i>Apply for loan</button></div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="border rounded-xl p-5"><h3 class="font-semibold text-lg mb-3">Active loan</h3><div class="space-y-2"><p><span class="text-slate-500">Amount:</span> <span class="font-bold">XAF 85,000</span></p><p><span class="text-slate-500">Paid:</span> XAF 42,500</p><div class="w-full h-2 bg-slate-100 rounded-full"><div class="bg-emerald-600 h-2 rounded-full" style="width:50%"></div></div><p class="text-sm mt-2">Next installment: 15 Apr</p></div></div>
+                    <div class="border rounded-xl p-5"><h3 class="font-semibold text-lg mb-3">Loan history</h3><div class="space-y-3"><div class="flex justify-between"><span>Education loan (2025)</span><span class="font-medium text-emerald-700">Closed</span></div><div class="flex justify-between"><span>Emergency loan (2024)</span><span class="font-medium text-emerald-700">Closed</span></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== MEETINGS PAGE ========== -->
+        <div id="meetings" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Meetings & Attendance</h2>
+                <div class="space-y-4"><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-emerald-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">24</span><span class="text-xs">MAR</span></div><div class="flex-1"><p class="font-semibold">General assembly Q1</p><p class="text-sm text-slate-500">10:00 AM · Hall A · Chaired by J. Doe</p></div><span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Confirmed</span></div><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-amber-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">02</span><span class="text-xs">APR</span></div><div class="flex-1"><p class="font-semibold">Loan committee review</p><p class="text-sm text-slate-500">2:00 PM · Boardroom</p></div><span class="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full">Pending</span></div></div>
+            </div>
+        </div>
+
+        <!-- ========== CREDIT SCORE PAGE (detailed) ========== -->
+        <div id="creditscore" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-4">Credit Score Details</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div><div class="flex items-end gap-4"><span class="text-5xl font-bold text-slate-800">724</span><span class="text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full text-sm font-medium">Low risk</span></div><p class="text-sm text-slate-500 mt-2">Last assessed: 2 days ago</p><div class="mt-6 space-y-3"><div><span class="text-slate-500 text-sm">Probability of default</span><p class="font-semibold">2.3%</p></div><div><span class="text-slate-500 text-sm">Recommended max loan</span><p class="font-semibold">XAF 250,000</p></div><div><span class="text-slate-500 text-sm">Creditworthiness</span><p class="font-semibold text-emerald-700">Good</p></div></div></div>
+                    <div class="border-l pl-6"><h3 class="font-semibold mb-3">Score factors</h3><ul class="space-y-2 text-sm"><li class="flex justify-between"><span>Contribution consistency</span><span class="font-medium text-emerald-600">98%</span></li><li class="flex justify-between"><span>Repayment punctuality</span><span class="font-medium text-emerald-600">95%</span></li><li class="flex justify-between"><span>Attendance rate</span><span class="font-medium text-amber-600">82%</span></li><li class="flex justify-between"><span>Debt ratio</span><span class="font-medium">0.3</span></li></ul></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FINES PAGE ========== -->
+        <div id="fines" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Fines</h2><span class="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-sm">Unpaid: XAF 2,000</span></div>
+                <div class="space-y-3"><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Late contribution (Feb)</p><p class="text-sm text-slate-500">Issued: 25 Feb 2026</p></div><div class="text-right"><p class="font-bold text-rose-700">XAF 2,000</p><span class="text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">Unpaid</span></div></div><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Absence fee (Jan meeting)</p><p class="text-sm text-slate-500">Issued: 10 Jan 2026 · paid</p></div><div class="text-right"><p class="font-bold text-slate-500 line-through">XAF 1,000</p><span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Paid</span></div></div></div>
+            </div>
+        </div>
+
+        <!-- ========== PROFILE PAGE ========== -->
+        <div id="profile" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Profile</h2>
+                <div class="flex items-center gap-6 mb-8"><div class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-200 to-teal-200 flex items-center justify-center text-3xl font-bold text-emerald-800">JD</div><div><h3 class="text-2xl font-semibold">John Doe</h3><p class="text-slate-500">Member since Jan 2024 · MEM-9382</p></div></div>
+                <div class="grid md:grid-cols-2 gap-6"><div><label class="text-sm text-slate-500">Full name</label><p class="font-medium">John Doe</p></div><div><label class="text-sm text-slate-500">Email</label><p class="font-medium">john.d@njangi.com</p></div><div><label class="text-sm text-slate-500">Phone</label><p class="font-medium">+237 677 123 456</p></div><div><label class="text-sm text-slate-500">ID number</label><p class="font-medium">ID-00987321</p></div></div>
+            </div>
+        </div>
+
+        <!-- ========== NOTIFICATIONS PAGE ========== -->
+        <div id="notifications" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">Notifications</h2>
+                <div class="space-y-3"><div class="flex items-start gap-4 p-4 bg-blue-50 rounded-xl"><i class="fas fa-info-circle text-blue-600 mt-1"></i><div><p class="font-medium">Contribution due in 3 days</p><p class="text-sm text-slate-600">March cycle of XAF 15,000 is due on 28 Mar.</p><span class="text-xs text-slate-400">2 hours ago</span></div></div><div class="flex items-start gap-4 p-4 bg-amber-50 rounded-xl"><i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i><div><p class="font-medium">Fine issued for late attendance</p><p class="text-sm text-slate-600">XAF 2,000 fine for March meeting lateness.</p><span class="text-xs text-slate-400">yesterday</span></div></div><div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl"><i class="fas fa-check-circle text-emerald-600 mt-1"></i><div><p class="font-medium">Loan payment received</p><p class="text-sm text-slate-600">Your installment of XAF 7,500 was credited.</p><span class="text-xs text-slate-400">3 days ago</span></div></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- mobile bottom nav (quick) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 md:hidden flex justify-around py-2 z-40">
+        <a href="#" data-page="dashboard" class="mobile-nav flex flex-col items-center text-emerald-700"><i class="fas fa-home text-lg"></i><span class="text-xs">Home</span></a>
+        <a href="#" data-page="contributions" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-coins text-lg"></i><span class="text-xs">Contrib</span></a>
+        <a href="#" data-page="loans" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-file-invoice text-lg"></i><span class="text-xs">Loans</span></a>
+        <a href="#" data-page="profile" class="mobile-nav flex flex-col items-center text-slate-600"><i class="fas fa-user text-lg"></i><span class="text-xs">Profile</span></a>
+    </div>
+</div>
+
+<!-- javascript for navigation and interactions -->
+<script>
+    (function() {
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+        }
+
+        // page navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileNavs = document.querySelectorAll('.mobile-nav');
+        const pages = document.querySelectorAll('.page');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        const titles = {
+            dashboard: { title: 'Dashboard', subtitle: 'Welcome back, John' },
+            contributions: { title: 'Contributions', subtitle: 'Manage your savings and contributions' },
+            loans: { title: 'Loans', subtitle: 'Active loans and applications' },
+            meetings: { title: 'Meetings', subtitle: 'Upcoming gatherings & minutes' },
+            creditscore: { title: 'Credit Score', subtitle: 'Your credit health & risk factors' },
+            fines: { title: 'Fines', subtitle: 'Penalties and payments' },
+            profile: { title: 'Profile', subtitle: 'Personal information & settings' },
+            notifications: { title: 'Notifications', subtitle: 'Alerts and updates' }
+        };
+
+        function activatePage(pageId) {
+            // hide all pages
+            pages.forEach(p => p.classList.remove('active-page'));
+            document.getElementById(pageId)?.classList.add('active-page');
+
+            // update sidebar active style
+            navLinks.forEach(link => {
+                link.classList.remove('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
+                link.classList.add('nav-item-inactive');
+                if (link.dataset.page === pageId) {
+                    link.classList.add('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
+                    link.classList.remove('nav-item-inactive');
+                }
+            });
+
+            // mobile nav active color
+            mobileNavs.forEach(m => {
+                m.classList.remove('text-emerald-700');
+                m.classList.add('text-slate-600');
+                if (m.dataset.page === pageId) {
+                    m.classList.add('text-emerald-700');
+                    m.classList.remove('text-slate-600');
+                }
+            });
+
+            // update header
+            if (titles[pageId]) {
+                pageTitle.innerText = titles[pageId].title;
+                pageSubtitle.innerText = titles[pageId].subtitle;
+            }
+
+            // close sidebar on mobile after navigation
+            if (window.innerWidth < 768) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+        }
+
+        // add click listeners to sidebar links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (page) activatePage(page);
+            });
+        });
+
+        mobileNavs.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (page) activatePage(page);
+            });
+        });
+
+        // default open dashboard
+        activatePage('dashboard');
+
+        // mark taken / demo interactions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.mark-taken')) {
+                // just a dummy
+            }
+        });
+    })();
+</script>
+
+<!-- extra design footer (fine) -->
+<p class="text-center text-xs text-slate-400 py-4 md:ml-72">© 2026 NjangiHub · Secure community finance</p>
+</body>
+</html>
