@@ -26,4 +26,6 @@ urlpatterns = [
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript_catalog'),
     path('', include('apps.users.urls', namespace='users')),
     path('finance/', include('apps.finance.urls', namespace='finance')),
+    path('meetings/', include('apps.meetings.urls', namespace='meetings')),
+    path('analytics/', include('apps.analytics.urls', namespace='analytics')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

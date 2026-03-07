@@ -38,27 +38,27 @@
     </a>
     <!-- Loans -->
     <a
-      href="#"
+      href="{% url 'finance:member_loan' %}"
       data-page="loans"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_loan' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-file-invoice-dollar w-5 text-slate-400"></i
-      ><span class="text-sm">Loans</span>
+      ><span class="text-sm">{% trans "Loans" %}</span>
     </a>
     <!-- Meetings -->
     <a
-      href="#"
+      href="{% url 'meetings:members_meeting' %}"
       data-page="meetings"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'members_meeting' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-handshake w-5 text-slate-400"></i
       ><span class="text-sm">Meetings</span>
     </a>
     <!-- Credit Score (with indicator) -->
     <a
-      href="#"
+      href="{% url 'analytics:member_credit_score' %}"
       data-page="creditscore"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_credit_score' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-chart-line w-5 text-slate-400"></i
       ><span class="text-sm">Credit Score</span>
@@ -66,18 +66,18 @@
     </a>
     <!-- Fines -->
     <a
-      href="#"
+      href="{% url 'finance:member_fine' %}"
       data-page="fines"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_fine' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i
       ><span class="text-sm">Fines</span>
     </a>
     <!-- Profile -->
     <a
-      href="#"
+      href="{% url 'users:member_profile' %}"
       data-page="profile"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_profile' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-user-circle w-5 text-slate-400"></i
       ><span class="text-sm">Profile</span>
