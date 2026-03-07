@@ -25,7 +25,7 @@
       class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'home' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-th-large w-5 text-emerald-700"></i
-      ><span class="text-sm font-medium">Dashboard</span>
+      ><span class="text-sm font-medium">{% trans "Dashboard" %}</span>
     </a>
     <!-- Contributions -->
     <a
@@ -52,7 +52,7 @@
       class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'members_meeting' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-handshake w-5 text-slate-400"></i
-      ><span class="text-sm">Meetings</span>
+      ><span class="text-sm">{% trans "Meetings" %}</span>
     </a>
     <!-- Credit Score (with indicator) -->
     <a
@@ -61,7 +61,7 @@
       class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_credit_score' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-chart-line w-5 text-slate-400"></i
-      ><span class="text-sm">Credit Score</span>
+      ><span class="text-sm">{% trans "Credit Score" %}</span>
       <span class="ml-auto w-2 h-2 rounded-full bg-emerald-500"></span>
     </a>
     <!-- Fines -->
@@ -71,7 +71,7 @@
       class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_fine' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i
-      ><span class="text-sm">Fines</span>
+      ><span class="text-sm">{% trans "Fines" %}</span>
     </a>
     <!-- Profile -->
     <a
@@ -80,16 +80,16 @@
       class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_profile' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-user-circle w-5 text-slate-400"></i
-      ><span class="text-sm">Profile</span>
+      ><span class="text-sm">{% trans "Profile" %}</span>
     </a>
     <!-- Notifications with badge -->
     <a
-      href="#"
+      href="{% url 'users:notification' %}"
       data-page="notifications"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'notification' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-bell w-5 text-slate-400"></i
-      ><span class="text-sm">Notifications</span>
+      ><span class="text-sm">{% trans "Notifications" %}</span>
       <span
         class="ml-auto bg-rose-100 text-rose-700 text-xs font-semibold px-2 py-0.5 rounded-full"
         >3</span
