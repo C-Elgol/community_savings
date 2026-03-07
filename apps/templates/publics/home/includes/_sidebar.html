@@ -12,7 +12,8 @@
     <!-- navigation menu (all pages) -->
     <nav class="flex-1 px-4 py-6 space-y-1">
         <!-- Dashboard -->
-        <a href="#" data-page="dashboard" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-active sidebar-transition">
+        <a href="{% url 'users:home' %}" data-page="dashboard" class="nav-link flex items-center gap-3 px-4 py-3.5 
+        {% if request.resolver_match.url_name == 'users:home' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}">
             <i class="fas fa-th-large w-5 text-emerald-700"></i><span class="text-sm font-medium">Dashboard</span>
         </a>
         <!-- Contributions -->
