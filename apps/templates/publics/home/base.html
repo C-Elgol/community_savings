@@ -32,7 +32,7 @@
         'publics/home/credit-score/credit_score.html' %} {% include
         'publics/home/fine/fine.html' %} {% include
         'publics/home/profile/profile.html' %} {% include
-        'publics/home/notification/notification.html' %} {% endcomment %}
+        'publics/home/notification/notification.html' %} {% endcomment %} 
         {% endblock %}
       </main>
 
@@ -187,8 +187,10 @@
           });
         });
 
-        // default open dashboard
-        activatePage("dashboard");
+        // dynamic page activation on load
+        const activeLink = document.querySelector(".nav-link.nav-item-active");
+        const initialPage = activeLink ? activeLink.dataset.page : "dashboard";
+        activatePage(initialPage);
 
         // mark taken / demo interactions
         document.addEventListener("click", function (e) {
