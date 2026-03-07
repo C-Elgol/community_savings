@@ -16,8 +16,9 @@
             <i class="fas fa-th-large w-5 text-emerald-700"></i><span class="text-sm font-medium">Dashboard</span>
         </a>
         <!-- Contributions -->
-        <a href="#" data-page="contributions" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-coins w-5 text-slate-400"></i><span class="text-sm">Contributions</span>
+        <a href="{% url 'finance:users_contribution' %}" data-page="contributions" class="nav-link flex items-center gap-3 px-4 py-3.5 
+        {% if request.resolver_match.url_name == 'users_contribution' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}">
+            <i class="fas fa-coins w-5 text-slate-400"></i><span class="text-sm">{% trans "Contributions" %}</span>
         </a>
         <!-- Loans -->
         <a href="#" data-page="loans" class="nav-link flex items-center gap-3 px-4 py-3.5 rounded-xl nav-item-inactive sidebar-transition">
