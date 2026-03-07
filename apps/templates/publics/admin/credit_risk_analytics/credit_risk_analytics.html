@@ -1,0 +1,13 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+ <!-- ========== CREDIT RISK ANALYTICS PAGE ========== -->
+        <div id="risk" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold mb-4">Credit Risk Analytics</h2>
+                <div class="grid md:grid-cols-3 gap-4"><div class="bg-rose-50 p-4 rounded-xl"><span class="text-sm text-rose-800">High risk members</span><p class="text-2xl font-bold">8</p></div><div class="bg-amber-50 p-4 rounded-xl"><span class="text-sm text-amber-800">Moderate risk</span><p class="text-2xl font-bold">15</p></div><div class="bg-emerald-50 p-4 rounded-xl"><span class="text-sm text-emerald-800">Low risk</span><p class="text-2xl font-bold">112</p></div></div>
+                <div class="mt-6"><h3 class="font-semibold mb-2">Top default probability</h3><div class="space-y-2"><div class="flex justify-between"><span>James K.</span><span class="font-medium text-rose-600">12.3%</span></div><div class="flex justify-between"><span>Susan M.</span><span class="font-medium text-amber-600">8.7%</span></div></div></div>
+            </div>
+        </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+ <!-- ========== FINANCIAL REPORTS PAGE ========== -->
+        <div id="reports" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-xl font-bold mb-4">Financial Reports</h2>
+                <div class="grid sm:grid-cols-2 gap-4"><div class="border p-4 rounded-xl"><i class="fas fa-file-pdf text-rose-600 text-2xl mb-2"></i><p class="font-medium">Q1 2026 Statement</p><button class="text-sm text-emerald-700 mt-2">Download</button></div><div class="border p-4 rounded-xl"><i class="fas fa-file-excel text-green-600 text-2xl mb-2"></i><p class="font-medium">Contribution summary Mar</p><button class="text-sm text-emerald-700 mt-2">Export</button></div></div>
+            </div>
+        </div>
+{% endblock %}

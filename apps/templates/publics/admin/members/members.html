@@ -1,0 +1,14 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+ <!-- ========== MEMBERS PAGE ========== -->
+        <div id="members" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold">Members</h2><button class="bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-2"></i>Add member</button></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm"><thead class="bg-slate-50 text-slate-600"><tr><th class="px-4 py-3 text-left">ID</th><th class="px-4 py-3 text-left">Name</th><th class="px-4 py-3 text-left">Group</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left">Joined</th><th class="px-4 py-3 text-left"></th></tr></thead><tbody><tr class="border-b"><td class="px-4 py-3">M-1024</td><td class="px-4 py-3 font-medium">Martha N.</td><td>Njangi A</td><td><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span></td><td>12 Jan 2024</td><td><button class="text-emerald-700"><i class="fas fa-eye"></i></button></td></tr><tr class="border-b"><td>M-1025</td><td class="font-medium">John Doe</td><td>Youth fund</td><td><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span></td><td>3 Feb 2024</td><td></td></tr><tr class="border-b"><td>M-1026</td><td class="font-medium">Esther K.</td><td>Women's group</td><td><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Pending</span></td><td>19 Mar 2026</td><td></td></tr></tbody></table>
+                </div>
+            </div>
+        </div>
+{% endblock %}

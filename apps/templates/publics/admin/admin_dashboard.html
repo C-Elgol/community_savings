@@ -1,0 +1,69 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+<!-- ========== DASHBOARD PAGE (advanced widgets, charts) ========== -->
+        <div id="dashboard" class="page active-page">
+            <!-- KPI cards row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex justify-between"><span class="text-xs font-medium uppercase text-slate-400">Total members</span><div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700"><i class="fas fa-users"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">1,482</p><p class="text-xs text-emerald-600 mt-1">↑ 24 new this month</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex justify-between"><span class="text-xs font-medium uppercase text-slate-400">Total contributions</span><div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600"><i class="fas fa-coins"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 4.28M</p><p class="text-xs text-emerald-600">↑ 8.3% vs last quarter</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex justify-between"><span class="text-xs font-medium uppercase text-slate-400">Active loans</span><div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700"><i class="fas fa-hand-holding-usd"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 1.92M</p><p class="text-xs text-amber-600">42 active loans</p></div>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex justify-between"><span class="text-xs font-medium uppercase text-slate-400">Loan default risk</span><div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-700"><i class="fas fa-exclamation-triangle"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">3.2%</p><p class="text-xs text-rose-600">high-risk: 8 members</p></div>
+            </div>
+
+            <!-- second row: additional metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Upcoming contributions & financial summary combined -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <h3 class="font-semibold text-slate-800 mb-3 flex items-center"><i class="fas fa-calendar-alt text-emerald-600 mr-2"></i>Upcoming contributions (next 7d)</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center"><span><span class="font-medium">Njangi A</span> <span class="text-slate-500 text-sm">(12 members)</span></span><span class="font-semibold">XAF 180,000</span></div>
+                        <div class="flex justify-between items-center"><span><span class="font-medium">Women's group</span> <span class="text-slate-500 text-sm">(8 members)</span></span><span class="font-semibold">XAF 96,000</span></div>
+                        <div class="flex justify-between items-center"><span><span class="font-medium">Youth fund</span> <span class="text-slate-500 text-sm">(15 members)</span></span><span class="font-semibold">XAF 225,000</span></div>
+                        <div class="border-t pt-2 mt-2 flex justify-between font-bold"><span>Total due</span><span>XAF 501,000</span></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <h3 class="font-semibold text-slate-800 mb-3 flex items-center"><i class="fas fa-chart-simple text-indigo-600 mr-2"></i>Financial summary</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-50 p-3 rounded-xl"><span class="text-xs text-slate-500">Total savings</span><p class="text-lg font-bold">XAF 6.2M</p></div>
+                        <div class="bg-slate-50 p-3 rounded-xl"><span class="text-xs text-slate-500">Outstanding loans</span><p class="text-lg font-bold">XAF 1.92M</p></div>
+                        <div class="bg-slate-50 p-3 rounded-xl"><span class="text-xs text-slate-500">Fines collected</span><p class="text-lg font-bold">XAF 87K</p></div>
+                        <div class="bg-slate-50 p-3 rounded-xl"><span class="text-xs text-slate-500">Interest earned</span><p class="text-lg font-bold">XAF 94K</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- charts section (mock chart blocks) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-semibold">Contribution trends (last 6 months)</h3><span class="text-xs bg-slate-100 px-2 py-1 rounded">Monthly</span></div>
+                    <div class="h-40 flex items-end justify-between gap-1 px-2">
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-100 h-24 rounded-t-lg" style="height: 80px;"></div><span class="text-xs mt-1">Oct</span></div>
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-200 h-28 rounded-t-lg" style="height: 96px;"></div><span class="text-xs mt-1">Nov</span></div>
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-300 h-32 rounded-t-lg" style="height: 112px;"></div><span class="text-xs mt-1">Dec</span></div>
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-400 h-36 rounded-t-lg" style="height: 128px;"></div><span class="text-xs mt-1">Jan</span></div>
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-500 h-40 rounded-t-lg" style="height: 144px;"></div><span class="text-xs mt-1">Feb</span></div>
+                        <div class="w-full flex flex-col items-center"><div class="w-full bg-emerald-600 h-44 rounded-t-lg" style="height: 160px;"></div><span class="text-xs mt-1">Mar</span></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-semibold">Loan risk distribution</h3><span class="text-xs bg-slate-100 px-2 py-1 rounded">by amount</span></div>
+                    <div class="space-y-3">
+                        <div><div class="flex justify-between text-sm"><span>Low risk</span><span class="font-medium">XAF 1.2M (62%)</span></div><div class="w-full h-2 bg-slate-100 rounded-full"><div class="bg-emerald-500 h-2 rounded-full" style="width:62%"></div></div></div>
+                        <div><div class="flex justify-between text-sm"><span>Moderate risk</span><span class="font-medium">XAF 520k (27%)</span></div><div class="w-full h-2 bg-slate-100 rounded-full"><div class="bg-amber-500 h-2 rounded-full" style="width:27%"></div></div></div>
+                        <div><div class="flex justify-between text-sm"><span>High risk</span><span class="font-medium">XAF 210k (11%)</span></div><div class="w-full h-2 bg-slate-100 rounded-full"><div class="bg-rose-500 h-2 rounded-full" style="width:11%"></div></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- recent transactions / quick table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                <h3 class="font-semibold mb-3 flex items-center"><i class="fas fa-clock text-emerald-600 mr-2"></i>Recent contributions</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm"><thead class="text-left text-slate-400 border-b"><tr><th class="pb-2">Member</th><th class="pb-2">Group</th><th class="pb-2">Amount</th><th class="pb-2">Date</th></tr></thead><tbody class="divide-y"><tr><td class="py-2">Martha N.</td><td>Njangi A</td><td>XAF 15,000</td><td>Today</td></tr><tr><td class="py-2">John D.</td><td>Youth fund</td><td>XAF 12,000</td><td>Yesterday</td></tr><tr><td class="py-2">Esther K.</td><td>Women's group</td><td>XAF 10,000</td><td>23 Mar</td></tr></tbody></table>
+                </div>
+            </div>
+        </div>
+{% endblock %}

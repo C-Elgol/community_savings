@@ -1,0 +1,27 @@
+{% load static %}
+{% load i18n %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjangiAdmin · Community Savings & Loan Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .sidebar-transition { transition: all 0.2s ease; }
+        .nav-item-active { background: #ecfdf3; border-left: 4px solid #0b5e4b; color: #0b5e4b; font-weight: 600; }
+        .nav-item-inactive { color: #475569; font-weight: 500; }
+        .nav-item-inactive:hover { background: #f8fafc; }
+        .page { display: none; }
+        .page.active-page { display: block; }
+        .card-hover { transition: all 0.2s; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        .risk-low { background: #10b981; }
+        .risk-moderate { background: #f59e0b; }
+        .risk-high { background: #ef4444; }
+        .notification-badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; border-radius: 9999px; background: #b91c1c; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+        @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); position: fixed; } .sidebar.active { transform: translateX(0); } }
+    </style>
+</head>
