@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<head>
+    {% include  'publics/admin/includes/_head.html' %}
+    <script src="{% url 'javascript_catalog' %}"></script>
+</head>
 <body class="bg-slate-50 text-slate-800 antialiased">
 
 <!-- mobile menu button -->
@@ -40,24 +43,11 @@
 
        
 
-        <!-- ========== SYSTEM LOGS PAGE ========== -->
-        <div id="logs" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">System Logs</h2>
-                <div class="space-y-2 font-mono text-xs"><div class="bg-slate-50 p-2">[2026-03-07 10:23:45] admin@njangi - approved loan APP-342</div><div class="bg-slate-50 p-2">[2026-03-07 09:12:11] system - daily contribution check</div><div class="bg-slate-50 p-2">[2026-03-06 22:04:33] cron - interest calculation completed</div></div>
-            </div>
-        </div>
+       
 
-        <!-- ========== SETTINGS PAGE ========== -->
-        <div id="settings" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">System Settings</h2>
-                <div class="space-y-4"><div class="flex justify-between items-center"><span>Community name</span><input class="border rounded px-3 py-1" value="NjangiHub"></div><div class="flex justify-between items-center"><span>Default interest rate</span><input class="border rounded px-3 py-1" value="5.0%"></div><div class="flex justify-between items-center"><span>Require guarantor</span><input type="checkbox" checked class="toggle"></div></div>
-            </div>
-        </div>
     </main>
 </div>
-
+{% include 'publics/home/includes/_js.html' %}
 <!-- javascript for navigation and interactions -->
 <script>
     (function() {
