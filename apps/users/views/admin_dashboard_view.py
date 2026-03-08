@@ -4,6 +4,5 @@ from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
-
-class MemberProfileView(TemplateView):
-    template_name = 'publics/home/profile/profile.html'
+class AdminDashboardView(TemplateView):
+    template_name = 'publics/admin/admin_dashboard.html'
