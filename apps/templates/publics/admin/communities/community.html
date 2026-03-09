@@ -105,14 +105,12 @@
     <!-- Meta -->
     <div class="flex items-center justify-between text-xs text-slate-400">
       <span
-        ><i class="fas fa-globe-africa mr-1"></i>{{
-        community.country|default:"—" }}</span
+        ><i class="fas fa-globe-africa mr-1"></i>{{ community.country|default:"—" }}</span
       >
       <span class="font-medium text-slate-600">{{ community.currency }}</span>
       {% if community.start_date %}
       <span
-        ><i class="far fa-calendar mr-1"></i>{{ community.start_date|date:"M Y"
-        }}</span
+        >started {{ community.start_date|date:"M Y"}}</span
       >
       {% endif %}
     </div>
