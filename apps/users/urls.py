@@ -8,7 +8,7 @@ from apps.users.views.register_view import RegisterView, Verify2FAView
 from apps.users.views.login_view import LoginView, LogoutView
 from apps.users.views.password_reset_view import PasswordResetRequestView, PasswordResetVerifyView, PasswordResetView
 from apps.users.views.resend_verification_view import ResendVerificationView
-
+from apps.users.views.admin_member_view import AdminMemberView
 
 app_name = "users"
     
@@ -25,4 +25,5 @@ urlpatterns = [
     path('password-reset-verify/<str:email>/', PasswordResetVerifyView.as_view(), name='password_reset_verify'),
     path('password-reset/<str:email>/', PasswordResetView.as_view(), name='password_reset'),
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
+    path('admin-members/', AdminMemberView.as_view(), name='admin_members'),
 ]
