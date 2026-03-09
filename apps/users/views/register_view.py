@@ -38,7 +38,6 @@ class RegisterView(TemplateView):
         first_name = request.POST.get("first_name", "").strip()
         last_name = request.POST.get("last_name", "").strip()
         email = request.POST.get("email", "").strip()
-        address = request.POST.get("address", "").strip()
         password = request.POST.get("password", "").strip()
         confirm_password = request.POST.get("confirm_password", "").strip()
         terms = request.POST.get("terms", "")
@@ -48,7 +47,8 @@ class RegisterView(TemplateView):
             'first_name': first_name,
             'last_name': last_name,
             'email': email,
-            'address': address,
+            'last_name': last_name,
+            'email': email,
             'terms': terms == "on"
         }
 
@@ -57,7 +57,7 @@ class RegisterView(TemplateView):
 
         try:
             # ===== VALIDATIONS =====
-            if not all([first_name, last_name, email, address, password, confirm_password]):
+            if not all([first_name, last_name, email, password, confirm_password]):
                 error_message = _("All fields are required.")
                 if is_ajax:
                     return JsonResponse({'success': False, 'message': error_message, 'fields': fields})
@@ -108,11 +108,14 @@ class RegisterView(TemplateView):
                     password=password,
                     first_name=first_name,
                     last_name=last_name,
-                    address=address,
                     is_active=False,
                     has_accepted_terms=True,
                     terms_accepted_at=timezone.now()
                 )
+
+                # Create user profile
+                from apps.users.models import Profile
+                Profile.objects.create(user=user)
 
                 # Ensure metadata is a dictionary
                 if not isinstance(user.metadata, dict):
