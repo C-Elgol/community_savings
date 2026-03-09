@@ -1,222 +1,363 @@
 {% load static i18n %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NjangiHub · Join the Community</title>
+        <script src="{% url 'javascript_catalog' %}"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        .njangi-gradient {
-            background: linear-gradient(145deg, #0f3b3f 0%, #0b5e4b 70%, #0f766e 100%);
-        }
-        .input-focus {
-            transition: all 0.2s ease;
-        }
-        .input-focus:focus {
-            border-color: #0f766e;
-            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
-        }
-        .hover-lift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+      * {
+        font-family: "Inter", sans-serif;
+      }
+      .njangi-gradient {
+        background: linear-gradient(
+          145deg,
+          #0f3b3f 0%,
+          #0b5e4b 70%,
+          #0f766e 100%
+        );
+      }
+      .input-focus {
+        transition: all 0.2s ease;
+      }
+      .input-focus:focus {
+        border-color: #0f766e;
+        box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+      }
+      .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
     </style>
-</head>
-<body class="min-h-screen bg-slate-50 flex items-center justify-center p-0 md:p-4">
-    
+  </head>
+  <body
+    class="min-h-screen bg-slate-50 flex items-center justify-center p-0 md:p-4"
+  >
     <!-- main container - exactly two equal halves on desktop, stacked on mobile -->
-    <div class="w-full min-h-screen md:min-h-0 md:max-w-6xl md:rounded-3xl md:shadow-2xl flex flex-col md:flex-row bg-white overflow-hidden">
-        
-        <!-- LEFT HALF - NJANGI BRANDING (hidden on mobile, shown on md+) -->
-        <div class="hidden md:flex md:w-1/2 njangi-gradient p-8 lg:p-12 text-white flex-col justify-between relative overflow-hidden">
-            <!-- decorative circles -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-2xl"></div>
-            <div class="absolute bottom-0 left-0 w-80 h-80 bg-black/10 rounded-full -ml-40 -mb-40 blur-3xl"></div>
-            
-            <!-- top content -->
-            <div>
-                <!-- logo with icon -->
-                <div class="flex items-center gap-3 mb-12">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white text-2xl border border-white/30">
-                        <i class="fas fa-hand-holding-heart"></i>
-                    </div>
-                    <span class="text-2xl font-bold tracking-tight">Njangi<span class="font-light text-white/90">Hub</span></span>
-                </div>
-                
-                <!-- headline -->
-                <h1 class="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-                    Grow Together,<br>
-                    <span class="text-emerald-200">Save Together</span>
-                </h1>
-                
-                <!-- njangi-specific features -->
-                <div class="space-y-5 mb-12">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200">
-                            <i class="fas fa-hand-holding-usd"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-lg">Community Savings</p>
-                            <p class="text-white/80 text-sm">Pool resources with trusted members</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-lg">Njangi Credit Score</p>
-                            <p class="text-white/80 text-sm">Build credit with every contribution</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-lg">Secure & Transparent</p>
-                            <p class="text-white/80 text-sm">Blockchain-backed trust system</p>
-                        </div>
-                    </div>
-                </div>
+    <div
+      class="w-full min-h-screen md:min-h-0 md:max-w-6xl md:rounded-3xl md:shadow-2xl flex flex-col md:flex-row bg-white overflow-hidden"
+    >
+      <!-- LEFT HALF - NJANGI BRANDING (hidden on mobile, shown on md+) -->
+      <div
+        class="hidden md:flex md:w-1/2 njangi-gradient p-8 lg:p-12 text-white flex-col justify-between relative overflow-hidden"
+      >
+        <!-- decorative circles -->
+        <div
+          class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-2xl"
+        ></div>
+        <div
+          class="absolute bottom-0 left-0 w-80 h-80 bg-black/10 rounded-full -ml-40 -mb-40 blur-3xl"
+        ></div>
+
+        <!-- top content -->
+        <div>
+          <!-- logo with icon -->
+          <div class="flex items-center gap-3 mb-12">
+            <div
+              class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white text-2xl border border-white/30"
+            >
+              <i class="fas fa-hand-holding-heart"></i>
             </div>
-            
-            <!-- bottom testimonial -->
-            <div class="flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20 w-fit">
-                <div class="flex -space-x-2">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-8 h-8 rounded-full border-2 border-white" alt="user">
-                    <img src="https://randomuser.me/api/portraits/men/46.jpg" class="w-8 h-8 rounded-full border-2 border-white" alt="user">
-                    <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-8 h-8 rounded-full border-2 border-white" alt="user">
-                </div>
-                <div>
-                    <div class="flex items-center gap-1 text-emerald-200">
-                        <i class="fas fa-star text-xs"></i><i class="fas fa-star text-xs"></i><i class="fas fa-star text-xs"></i><i class="fas fa-star text-xs"></i><i class="fas fa-star text-xs"></i>
-                    </div>
-                    <p class="text-sm text-white/90">2,500+ members trust us</p>
-                </div>
-            </div>
-            
-            <!-- footer note -->
-            <p class="text-sm text-white/60 mt-8">© 2026 NjangiHub · All rights reserved</p>
-        </div>
-        
-        <!-- RIGHT HALF - REGISTRATION FORM (always visible, takes full width on mobile) -->
-        <div class="w-full md:w-1/2 p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white">
-            
-            <!-- mobile-only header (shows on small screens) -->
-            <div class="md:hidden mb-8 text-center">
-                <div class="flex items-center justify-center gap-2 mb-4">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-600 flex items-center justify-center text-white">
-                        <i class="fas fa-hand-holding-heart"></i>
-                    </div>
-                    <span class="text-xl font-bold text-slate-800">Njangi<span class="text-emerald-700">Hub</span></span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-800">Create your account</h2>
-                <p class="text-slate-500 text-sm mt-1">Join the Njangi community</p>
-            </div>
-            
-            <!-- desktop header (hidden on mobile) -->
-            <div class="hidden md:block mb-8">
-                <h2 class="text-2xl lg:text-3xl font-bold text-slate-800">Create Account</h2>
-                <p class="text-slate-500 text-sm mt-1">Join us to start your savings journey</p>
-            </div>
-            
-            <!-- REGISTRATION FORM - exactly as requested but with njangi style -->
-            <form class="space-y-5">
-                <!-- First Name -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-user text-emerald-600 text-xs"></i> First Name <span class="text-emerald-600">*</span>
-                    </label>
-                    <input type="text" placeholder="Enter your first name" 
-                           class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                </div>
-                
-                <!-- Last Name -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-user text-emerald-600 text-xs"></i> Last Name <span class="text-emerald-600">*</span>
-                    </label>
-                    <input type="text" placeholder="Enter your last name" 
-                           class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                </div>
-                
-                <!-- Email Address (with demo email pre-filled as shown in your reference) -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-envelope text-emerald-600 text-xs"></i> Email Address <span class="text-emerald-600">*</span>
-                    </label>
-                    <input type="email" value="admin-elearning@gmail.com" 
-                           class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 text-slate-600">
-                </div>
-                
-                <!-- Password -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-lock text-emerald-600 text-xs"></i> Password <span class="text-emerald-600">*</span>
-                    </label>
-                    <div class="relative">
-                        <input type="password" value="********" 
-                               class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                        <i class="fas fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer"></i>
-                    </div>
-                </div>
-                
-                <!-- Confirm Password -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-lock text-emerald-600 text-xs"></i> Confirm Password <span class="text-emerald-600">*</span>
-                    </label>
-                    <div class="relative">
-                        <input type="password" placeholder="Confirm your password" 
-                               class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                        <i class="fas fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer"></i>
-                    </div>
-                </div>
-                
-                <!-- Terms and Privacy (with checkbox exactly as shown) -->
-                <div class="flex items-start gap-3 pt-2">
-                    <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
-                    <label for="terms" class="text-sm text-slate-600 leading-relaxed">
-                        I have read and agree to the <a href="#" class="text-emerald-700 font-semibold hover:underline">Terms of Service</a> and <a href="#" class="text-emerald-700 font-semibold hover:underline">Privacy Policy</a>
-                    </label>
-                </div>
-                
-                <!-- Sign Up Button -->
-                <button type="submit" class="w-full bg-gradient-to-r from-emerald-700 to-teal-700 text-white font-semibold py-4 rounded-xl mt-4 hover:opacity-90 transition-all hover-lift flex items-center justify-center gap-2 text-base">
-                    <span>Sign Up</span>
-                    <i class="fas fa-arrow-right text-sm"></i>
-                </button>
-                
-                
-                <!-- Login link -->
-                <p class="text-center text-sm text-slate-500 mt-6">
-                    Already have an account? <a href="{% url 'users:login' %}" class="text-emerald-700 font-semibold hover:underline">Sign in</a>
+            <span class="text-2xl font-bold tracking-tight"
+              >Njangi<span class="font-light text-white/90">Hub</span></span
+            >
+          </div>
+
+          <!-- headline -->
+          <h1 class="text-4xl lg:text-5xl font-bold leading-tight mb-6">
+            Grow Together,<br />
+            <span class="text-emerald-200">Save Together</span>
+          </h1>
+
+          <!-- njangi-specific features -->
+          <div class="space-y-5 mb-12">
+            <div class="flex items-center gap-4">
+              <div
+                class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200"
+              >
+                <i class="fas fa-hand-holding-usd"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-lg">Community Savings</p>
+                <p class="text-white/80 text-sm">
+                  Pool resources with trusted members
                 </p>
-            </form>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div
+                class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200"
+              >
+                <i class="fas fa-chart-pie"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-lg">Njangi Credit Score</p>
+                <p class="text-white/80 text-sm">
+                  Build credit with every contribution
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div
+                class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-emerald-200"
+              >
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-lg">Secure & Transparent</p>
+                <p class="text-white/80 text-sm">
+                  Blockchain-backed trust system
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- bottom testimonial -->
+        <div
+          class="flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20 w-fit"
+        >
+          <div class="flex -space-x-2">
+            <img
+              src="https://randomuser.me/api/portraits/women/44.jpg"
+              class="w-8 h-8 rounded-full border-2 border-white"
+              alt="user"
+            />
+            <img
+              src="https://randomuser.me/api/portraits/men/46.jpg"
+              class="w-8 h-8 rounded-full border-2 border-white"
+              alt="user"
+            />
+            <img
+              src="https://randomuser.me/api/portraits/women/68.jpg"
+              class="w-8 h-8 rounded-full border-2 border-white"
+              alt="user"
+            />
+          </div>
+          <div>
+            <div class="flex items-center gap-1 text-emerald-200">
+              <i class="fas fa-star text-xs"></i
+              ><i class="fas fa-star text-xs"></i
+              ><i class="fas fa-star text-xs"></i
+              ><i class="fas fa-star text-xs"></i
+              ><i class="fas fa-star text-xs"></i>
+            </div>
+            <p class="text-sm text-white/90">2,500+ members trust us</p>
+          </div>
+        </div>
+
+        <!-- footer note -->
+        <p class="text-sm text-white/60 mt-8">
+          © 2026 NjangiHub · All rights reserved
+        </p>
+      </div>
+
+      <!-- RIGHT HALF - REGISTRATION FORM (always visible, takes full width on mobile) -->
+      <div
+        class="w-full md:w-1/2 p-6 sm:p-8 lg:p-12 flex flex-col justify-center bg-white"
+      >
+        <!-- mobile-only header (shows on small screens) -->
+        <div class="md:hidden mb-8 text-center">
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-600 flex items-center justify-center text-white"
+            >
+              <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <span class="text-xl font-bold text-slate-800"
+              >Njangi<span class="text-emerald-700">Hub</span></span
+            >
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800">Create your account</h2>
+          <p class="text-slate-500 text-sm mt-1">Join the Njangi community</p>
+        </div>
+
+        <!-- desktop header (hidden on mobile) -->
+        <div class="hidden md:block mb-8">
+          <h2 class="text-2xl lg:text-3xl font-bold text-slate-800">
+            Create Account
+          </h2>
+          <p class="text-slate-500 text-sm mt-1">
+            Join us to start your savings journey
+          </p>
+        </div>
+
+        <!-- REGISTRATION FORM -->
+        <form
+          id="register-form"
+          action="{% url 'users:register' %}"
+          method="post"
+          class="space-y-5"
+        >
+          {% csrf_token %}
+          <!-- First Name -->
+          <div class="space-y-1.5">
+            <label
+              class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <i class="fas fa-user text-emerald-600 text-xs"></i> First Name
+              <span class="text-emerald-600">*</span>
+            </label>
+            <input
+              type="text"
+              id="first_name"
+              name="first_name"
+              placeholder="Enter your first name"
+              value="{{ first_name }}"
+              required
+              class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            />
+          </div>
+
+          <!-- Last Name -->
+          <div class="space-y-1.5">
+            <label
+              class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <i class="fas fa-user text-emerald-600 text-xs"></i> Last Name
+              <span class="text-emerald-600">*</span>
+            </label>
+            <input
+              type="text"
+              id="last_name"
+              name="last_name"
+              placeholder="Enter your last name"
+              value="{{ last_name }}"
+              class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            />
+          </div>
+
+          <!-- Email Address -->
+          <div class="space-y-1.5">
+            <label
+              class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <i class="fas fa-envelope text-emerald-600 text-xs"></i> Email
+              Address <span class="text-emerald-600">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value="{{ email }}"
+              required
+              class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 text-slate-600"
+            />
+          </div>
+
+          <!-- Password -->
+          <div class="space-y-1.5">
+            <label
+              class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <i class="fas fa-lock text-emerald-600 text-xs"></i> Password
+              <span class="text-emerald-600">*</span>
+            </label>
+            <div class="relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+              />
+              <i
+                class="fas fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer password-toggle"
+              ></i>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="space-y-1.5">
+            <label
+              class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <i class="fas fa-lock text-emerald-600 text-xs"></i> Confirm
+              Password <span class="text-emerald-600">*</span>
+            </label>
+            <div class="relative">
+              <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+              />
+              <i
+                class="fas fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer password-toggle"
+              ></i>
+            </div>
+          </div>
+
+          <!-- Terms and Privacy -->
+          <div class="flex items-start gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="terms"
+              name="terms"
+              class="mt-1 w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+              {%
+              if
+              terms
+              %}checked{%
+              endif
+              %}
+            />
+            <label for="terms" class="text-sm text-slate-600 leading-relaxed">
+              I have read and agree to the
+              <a href="#" class="text-emerald-700 font-semibold hover:underline"
+                >Terms of Service</a
+              >
+              and
+              <a href="#" class="text-emerald-700 font-semibold hover:underline"
+                >Privacy Policy</a
+              >
+            </label>
+          </div>
+
+          <!-- Sign Up Button -->
+          <button
+            type="submit"
+            id="register-button"
+            class="w-full bg-gradient-to-r from-emerald-700 to-teal-700 text-white font-semibold py-4 rounded-xl mt-4 hover:opacity-90 transition-all hover-lift flex items-center justify-center gap-2 text-base"
+          >
+            <span id="register-text">Sign Up</span>
+            <span
+              id="register-loader"
+              class="hidden animate-spin h-5 w-5 border-2 border-t-white border-gray-300 rounded-full ml-2"
+            ></span>
+          </button>
+
+          <!-- Login link -->
+          <p class="text-center text-sm text-slate-500 mt-6">
+            Already have an account?
+            <a
+              href="{% url 'users:login' %}"
+              class="text-emerald-700 font-semibold hover:underline"
+              >Sign in</a
+            >
+          </p>
+        </form>
+      </div>
     </div>
-    
-    <!-- simple password toggle script -->
+
+    <script src="{% static 'js/common/toast_manager.js' %}"></script>
+    <script src="{% static 'js/common/loader_manager.js' %}"></script>
+    <script src="{% static 'js/auth/auth_handler.js' %}"></script>
     <script>
-        document.querySelectorAll('.fa-eye').forEach(icon => {
-            icon.addEventListener('click', function() {
-                const input = this.previousElementSibling;
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                }
-            });
-        });
+      document.addEventListener("DOMContentLoaded", function () {
+        new AuthFormHandler(
+          "register-form",
+          "register-button",
+          "register-text",
+          "register-loader",
+        );
+      });
     </script>
-</body>
+  </body>
 </html>

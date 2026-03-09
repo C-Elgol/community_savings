@@ -1,0 +1,98 @@
+{% load static %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "NjangiHub Verification" %}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(to right, #0f3b3f, #0b5e4b);
+            padding: 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+            text-align: center;
+        }
+        .content h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1F2937;
+        }
+        .code {
+            display: inline-block;
+            background-color: #F3F4F6;
+            padding: 15px 25px;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #1F2937;
+        }
+        .content p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            color: #4B5563;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(to right, #0f3b3f, #0b5e4b);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .footer {
+            background-color: #F3F4F6;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+        }
+        .footer a {
+            color: #0f3b3f;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ site_name }}</h1>
+        </div>
+        {% block content %}
+        {% endblock %}
+        <div class="footer">
+            <p>{% trans "Need help? Contact us at" %} <a href="mailto:support@njangiHub.com">support@njangiHub.com</a></p>
+            <p>&copy; {{ year }} {{ site_name }}. {% trans "All rights reserved." %}</p>
+        </div>
+    </div>
+</body>
+</html>

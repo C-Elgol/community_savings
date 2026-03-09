@@ -1,0 +1,23 @@
+{% extends 'publics/emails/base.html' %}
+{% load i18n %}
+
+{% block content %}
+        <div class="content">
+            <h2>{% if is_reset %}{% trans "Your Password Reset Code" %}{% else %}{% trans "Your Verification Code" %}{% endif %}</h2>
+            <p>{% trans "Hello" %} {{ user.first_name }},</p>
+            <p>
+                {% if is_reset %}
+                    {% trans "To reset your password, use this code:" %}
+                {% else %}
+                    {% trans "To complete your registration, use this verification code:" %}
+                {% endif %}
+            </p>
+            <div class="code">{{ two_factor_code }}</div>
+            <p>
+                {% trans "This code is valid for 10 minutes. If you did not request this, ignore this email." %}
+            </p>
+            <a href="{{ protocol }}://{{ domain }}{% if is_reset %}{% url 'users:password_reset_verify' email=user.email %}{% else %}{% url 'users:verify_2fa' email=user.email %}{% endif %}" class="button">
+                {% trans "Verify Now" %}
+            </a>
+        </div>
+{% endblock %}
