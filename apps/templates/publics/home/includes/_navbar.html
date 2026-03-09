@@ -1,13 +1,196 @@
- {% load static %}
-{% load i18n %}
+{% load static %} {% load i18n %}
 
- <!-- top navbar -->
-    <header class="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30">
-        <div class="flex items-center justify-between h-16 px-4 md:px-8">
-            <div><h2 class="text-xl font-semibold text-slate-800" id="pageTitle">Dashboard</h2><p class="text-xs text-slate-500" id="pageSubtitle">Welcome back, John</p></div>
-            <div class="flex items-center gap-4">
-                <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full"><i class="fas fa-bell text-lg"></i><span class="notification-badge">3</span></button>
-                <div class="flex items-center gap-2 cursor-pointer group"><div class="hidden sm:block text-right"><p class="text-sm font-semibold text-slate-800">John Doe</p><p class="text-xs text-slate-500">Admin</p></div><div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold">JD</div><i class="fas fa-chevron-down text-slate-400 text-xs group-hover:text-slate-600"></i></div>
-            </div>
+<!-- Top Header -->
+<div class="sticky top-0 z-30">
+  <!-- Mobile Menu Button -->
+  <div class="md:hidden fixed top-3 left-3 z-50">
+    <button
+      id="menuToggle"
+      class="p-2.5 rounded-xl bg-white shadow-md text-emerald-700 border border-slate-100 transition-transform active:scale-95"
+    >
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+  </div>
+
+  <header class="bg-white/80 backdrop-blur-sm border-b border-slate-200">
+    <div class="flex justify-between items-center h-16 px-4 sm:px-6 md:px-8">
+      <div
+        class="flex items-center space-x-2 md:space-x-4 overflow-x-auto scrollbar-hide"
+      >
+        <!-- Spacing for mobile menu button -->
+        <div class="pl-12 md:pl-0 flex-shrink-0">
+          <h2
+            class="text-lg sm:text-xl font-semibold text-slate-900 whitespace-nowrap"
+            id="pageTitle"
+          >
+            {% trans "Dashboard" %}
+          </h2>
+          <p
+            class="text-xs sm:text-sm text-gray-500 whitespace-nowrap leading-tight"
+            id="pageSubtitle"
+          >
+            {% trans "Welcome back! Here's your overview" %}
+          </p>
         </div>
-    </header>
+      </div>
+
+      <div class="flex items-center space-x-2 sm:space-x-4">
+        <!-- Notifications -->
+        <div class="relative">
+          <a
+            href="{% url 'users:notification' %}"
+            class="p-2 text-slate-500 hover:text-emerald-700 hover:bg-slate-100 rounded-full transition-colors relative"
+          >
+            <i class="fas fa-bell text-base sm:text-lg"></i>
+            {% if unread_notification_count > 0 %}
+            <span
+              class="notification-badge absolute top-1 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-rose-600 rounded-full border border-white"
+            >
+              {{ unread_notification_count }}
+            </span>
+            {% endif %}
+          </a>
+        </div>
+
+        <!-- Admin Button -->
+        {% if user.is_authenticated and user.is_staff %}
+        <a
+          href="{% url 'admin:index' %}"
+          class="flex items-center justify-center text-white bg-slate-800 hover:bg-slate-900 px-3 py-2 rounded-xl shadow-sm transition-all hover-lift"
+        >
+          <i class="fas fa-tools text-xs sm:text-sm md:hidden"></i>
+          <span
+            class="hidden md:inline-flex items-center text-xs font-semibold uppercase tracking-wider"
+            >{% trans "Admin" %}</span
+          >
+        </a>
+        {% endif %}
+
+        <!-- User Profile -->
+        {% if user.is_authenticated %}
+        <div
+          class="hidden md:flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
+        >
+          <div
+            class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold border border-white shadow-sm transition-transform group-hover:scale-105"
+          >
+            {{ user.first_name|first }}{{ user.last_name|first }}
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-slate-800 leading-none"
+              >{{ user.get_full_name }}</span
+            >
+            <span
+              class="text-[10px] text-slate-500 font-medium uppercase tracking-tighter"
+              >{% trans "Member" %}</span
+            >
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Language Dropdown -->
+        <div class="relative">
+          <button
+            id="langDropdownBtn"
+            class="flex items-center gap-1.5 p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors"
+          >
+            <i class="fas fa-globe text-base"></i>
+            <span
+              id="currentLangCode"
+              class="hidden sm:inline text-xs font-bold uppercase tracking-widest"
+            >
+              {{ request.LANGUAGE_CODE|default:"en" }}
+            </span>
+            <i class="fas fa-chevron-down text-[10px] opacity-50"></i>
+          </button>
+          <div
+            id="langDropdownMenu"
+            class="hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden ring-1 ring-black/5"
+          >
+            <form
+              action="{% url 'set_language' %}"
+              method="post"
+              class="p-2 space-y-1"
+            >
+              {% csrf_token %}
+              <input name="next" type="hidden" value="{{ request.path }}" />
+              <button
+                type="submit"
+                name="language"
+                value="en"
+                class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
+                <span
+                  class="w-2 h-2 rounded-full bg-blue-500 mr-3 ring-2 ring-blue-100 group-hover:ring-blue-200"
+                ></span>
+                <span class="font-medium">English</span>
+              </button>
+              <button
+                type="submit"
+                name="language"
+                value="fr"
+                class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
+              >
+                <span
+                  class="w-2 h-2 rounded-full bg-red-500 mr-3 ring-2 ring-red-100 group-hover:ring-red-200"
+                ></span>
+                <span class="font-medium">Français</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Auth Buttons -->
+        {% if user.is_authenticated %}
+        <a
+          href="{% url 'users:logout' %}"
+          class="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-all hover:bg-rose-50 p-2 md:px-3 md:py-2 rounded-xl group"
+          title="{% trans 'Logout' %}"
+        >
+          <i
+            class="fas fa-sign-out-alt text-lg md:text-sm md:mr-2 group-hover:translate-x-0.5 transition-transform"
+          ></i>
+          <span class="hidden md:inline-flex items-center text-sm font-semibold"
+            >{% trans "Logout" %}</span
+          >
+        </a>
+        {% else %}
+        <div class="flex items-center gap-2">
+          <a
+            href="{% url 'users:login' %}"
+            class="text-sm font-semibold text-slate-700 hover:text-emerald-700 px-4 py-2 rounded-xl hover:bg-slate-100 transition-all"
+          >
+            {% trans "Login" %}
+          </a>
+          <a
+            href="{% url 'users:register' %}"
+            class="text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+          >
+            {% trans "Sign Up" %}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const langBtn = document.getElementById("langDropdownBtn");
+    const langMenu = document.getElementById("langDropdownMenu");
+
+    if (langBtn && langMenu) {
+      langBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        langMenu.classList.toggle("hidden");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!langMenu.contains(e.target) && !langBtn.contains(e.target)) {
+          langMenu.classList.add("hidden");
+        }
+      });
+    }
+  });
+</script>

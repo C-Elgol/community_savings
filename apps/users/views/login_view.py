@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
+from django.views import View
 from django.views.generic import TemplateView
 
 from apps.users.models import User
@@ -226,3 +227,14 @@ class LoginView(TemplateView):
                 self.template_name,
                 {"email": email, "show_resend": False, "next": next_url},
             )
+
+
+class LogoutView(View):
+    """
+    Handles user logout.
+    """
+    def get(self, request):
+        from django.contrib.auth import logout
+        logout(request)
+        messages.success(request, _("You have been logged out."))
+        return redirect('users:login')

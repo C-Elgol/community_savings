@@ -103,11 +103,18 @@
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold shadow-sm border border-white"
       >
-        JD
+        {% comment %} {% if user.is_authenticated %}{{ user.first_name|first }}{{
+        user.last_name|first }}{% else %}?{% endif %} {% endcomment %}
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-slate-800 truncate">John Doe</p>
-        <p class="text-xs text-slate-500 truncate">MEM-9382 · Njangi A</p>
+        <p class="text-sm font-semibold text-slate-800 truncate">
+          {% if user.is_authenticated %}{{ user.get_full_name }}{% else %}{%
+          trans "Guest" %}{% endif %}
+        </p>
+        <p class="text-xs text-slate-500 truncate">
+          {% if user.is_authenticated %}{{ user.email }}{% else %}{% trans
+          "Please log in" %}{% endif %}
+        </p>
       </div>
       <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
     </div>
