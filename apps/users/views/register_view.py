@@ -110,7 +110,6 @@ class RegisterView(TemplateView):
                     last_name=last_name,
                     is_active=False,
                     has_accepted_terms=True,
-                    terms_accepted_at=timezone.now()
                 )
 
                 # Create user profile
