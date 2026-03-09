@@ -23,5 +23,5 @@ urlpatterns = [
     path('password-reset-request/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password-reset-verify/<str:email>/', PasswordResetVerifyView.as_view(), name='password_reset_verify'),
     path('password-reset/<str:email>/', PasswordResetView.as_view(), name='password_reset'),
-    path('resend-verification/', ResendVerificationView.as_view(), name='resend_verification'),
+    path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
 ]

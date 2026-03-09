@@ -254,10 +254,10 @@ class Verify2FAView(TemplateView):
                 return JsonResponse({
                     'success': True,
                     'message': success_message,
-                    'redirect_url': reverse('core:dashboard')
+                    'redirect_url': reverse('users:login')
                 })
             messages.success(request, success_message)
-            return redirect('core:dashboard')
+            return redirect('users:login')
 
         except Exception as e:
             trace = traceback.format_exc()
