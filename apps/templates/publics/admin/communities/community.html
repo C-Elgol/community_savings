@@ -1,312 +1,420 @@
-{% extends 'publics/admin/base.html' %}
-{% load static %}
-{% load i18n %}
-{% block content %}
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} 
+{% block content %} {% block page_header %}
+<h2 class="text-xl font-semibold text-slate-800">Communities</h2>
+<p class="text-xs text-slate-500">Manage your Njangi groups and associations</p>
+{% endblock %}
+<!-- ========== COMMUNITIES PAGE ========== -->
+<div
+  class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden"
+>
+  <!-- List header with action button -->
+  <div
+    class="bg-white border-b border-slate-100 px-6 py-4 flex justify-end items-center"
+  >
+    <button
+      id="openCreateModalBtn"
+      class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2"
+    >
+      <i class="fas fa-plus-circle"></i>
+      <span>New Community</span>
+    </button>
+  </div>
+  <!-- Community cards -->
+  <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Community card 1 -->
+    <div
+      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
+    >
+      <div class="flex items-center gap-3 mb-3">
+        <div
+          class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-bold text-lg"
+        >
+          <i class="fas fa-users"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800">Njangi A</h3>
+          <p class="text-xs text-slate-500">Code: NJA-001</p>
+        </div>
+      </div>
+      <p class="text-sm text-slate-600 mb-2 line-clamp-2">
+        Main savings group for Yaoundé members
+      </p>
+      <div class="flex justify-between text-xs text-slate-400">
+        <span><i class="far fa-calendar mr-1"></i>Started Jan 2024</span>
+        <span><i class="fas fa-users mr-1"></i>24 members</span>
+      </div>
+    </div>
 
-        <!-- ========== COMMUNITIES PAGE ========== -->
-       <!-- Main page content (background) -->
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <!-- Card that represents the communities dashboard -->
-        <div class="w-full max-w-6xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-            <!-- Header -->
-            <div class="bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-800">Communities</h1>
-                    <p class="text-sm text-slate-500">Manage your Njangi groups and associations</p>
-                </div>
-                <!-- Button to trigger modal -->
-                <button id="openCreateModalBtn" class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>New Community</span>
-                </button>
-            </div>
-            
-            <!-- Communities list (mock data) -->
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Community card 1 -->
-                <div class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-bold text-lg">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-slate-800">Njangi A</h3>
-                            <p class="text-xs text-slate-500">Code: NJA-001</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-600 mb-2 line-clamp-2">Main savings group for Yaoundé members</p>
-                    <div class="flex justify-between text-xs text-slate-400">
-                        <span><i class="far fa-calendar mr-1"></i>Started Jan 2024</span>
-                        <span><i class="fas fa-users mr-1"></i>24 members</span>
-                    </div>
-                </div>
-                
-                <!-- Community card 2 -->
-                <div class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-amber-700 font-bold text-lg">
-                            <i class="fas fa-female"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-slate-800">Women's Group</h3>
-                            <p class="text-xs text-slate-500">Code: WMN-002</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-600 mb-2">Empowering women through savings and loans</p>
-                    <div class="flex justify-between text-xs text-slate-400">
-                        <span><i class="far fa-calendar mr-1"></i>Started Mar 2024</span>
-                        <span><i class="fas fa-users mr-1"></i>18 members</span>
-                    </div>
-                </div>
-                
-                <!-- Community card 3 -->
-                <div class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-lg">
-                            <i class="fas fa-briefcase"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-slate-800">Business Circle</h3>
-                            <p class="text-xs text-slate-500">Code: BIZ-003</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-600 mb-2">For entrepreneurs and small business owners</p>
-                    <div class="flex justify-between text-xs text-slate-400">
-                        <span><i class="far fa-calendar mr-1"></i>Started Feb 2024</span>
-                        <span><i class="fas fa-users mr-1"></i>32 members</span>
-                    </div>
-                </div>
-            </div>
+    <!-- Community card 2 -->
+    <div
+      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
+    >
+      <div class="flex items-center gap-3 mb-3">
+        <div
+          class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-amber-700 font-bold text-lg"
+        >
+          <i class="fas fa-female"></i>
         </div>
-    </div>
-    
-    <!-- CREATE COMMUNITY MODAL (hidden by default) -->
-    <div id="createCommunityModal" class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden">
-        <!-- Modal container -->
-        <div class="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content">
-            
-            <!-- Modal header -->
-            <div class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-800">Create New Community</h2>
-                    <p class="text-sm text-slate-500">Set up a new Njangi group for members</p>
-                </div>
-                <button id="closeModalBtn" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <!-- Multi-step indicator -->
-            <div class="px-6 pt-6 pb-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="step-indicator w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-semibold text-sm">1</div>
-                        <span class="text-sm font-medium text-slate-700">Basic Info</span>
-                    </div>
-                    <div class="flex-1 h-0.5 mx-4 bg-slate-200"></div>
-                    <div class="flex items-center gap-2">
-                        <div class="step-indicator w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-semibold text-sm">2</div>
-                        <span class="text-sm font-medium text-slate-400">Details</span>
-                    </div>
-                    <div class="flex-1 h-0.5 mx-4 bg-slate-200"></div>
-                    <div class="flex items-center gap-2">
-                        <div class="step-indicator w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-semibold text-sm">3</div>
-                        <span class="text-sm font-medium text-slate-400">Confirm</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Form (maps directly to your Community model) -->
-            <form class="p-6 space-y-6">
-                <!-- Row: Community Name & Code (side by side) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Community Name -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-sitemap text-emerald-600 text-xs"></i> Community Name <span class="text-emerald-600">*</span>
-                        </label>
-                        <input type="text" placeholder="e.g., Yaoundé Njangi Group" 
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                        <p class="text-xs text-slate-400">Must be unique</p>
-                    </div>
-                    
-                    <!-- Community Code -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-qrcode text-emerald-600 text-xs"></i> Community Code <span class="text-emerald-600">*</span>
-                        </label>
-                        <input type="text" placeholder="e.g., YDE-001" 
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                        <p class="text-xs text-slate-400">Unique identifier, will be used for joining</p>
-                    </div>
-                </div>
-                
-                <!-- Description (textarea) -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-align-left text-emerald-600 text-xs"></i> Description
-                    </label>
-                    <textarea rows="3" placeholder="Describe the purpose, rules, and goals of your community..." 
-                              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 resize-none"></textarea>
-                </div>
-                
-                <!-- Row: Community Type & Country -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Community Type (choices from enum) -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-tag text-emerald-600 text-xs"></i> Community Type <span class="text-emerald-600">*</span>
-                        </label>
-                        <select class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none">
-                            <option value="" disabled selected>Select type</option>
-                            <option value="ROTATING_SAVINGS">Rotating Savings (ROSCA)</option>
-                            <option value="ACCUMULATING_SAVINGS">Accumulating Savings (ASCRA)</option>
-                            <option value="INVESTMENT_CLUB">Investment Club</option>
-                            <option value="WOMENS_GROUP">Women's Group</option>
-                            <option value="YOUTH_GROUP">Youth Group</option>
-                            <option value="COMMUNITY_BANK">Community Bank</option>
-                            <option value="OTHER">Other</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Country -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-globe-africa text-emerald-600 text-xs"></i> Country
-                        </label>
-                        <select class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none">
-                            <option value="CM">Cameroon</option>
-                            <option value="NG">Nigeria</option>
-                            <option value="GH">Ghana</option>
-                            <option value="KE">Kenya</option>
-                            <option value="ZA">South Africa</option>
-                            <option value="UG">Uganda</option>
-                            <option value="TZ">Tanzania</option>
-                            <option value="OTHER">Other</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Row: Currency & Dates -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Currency -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-coins text-emerald-600 text-xs"></i> Currency
-                        </label>
-                        <select class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                            <option value="XAF" selected>XAF (Central African CFA)</option>
-                            <option value="XOF">XOF (West African CFA)</option>
-                            <option value="NGN">NGN (Nigerian Naira)</option>
-                            <option value="GHS">GHS (Ghanaian Cedi)</option>
-                            <option value="KES">KES (Kenyan Shilling)</option>
-                            <option value="ZAR">ZAR (South African Rand)</option>
-                            <option value="USD">USD (US Dollar)</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Start Date -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-calendar-alt text-emerald-600 text-xs"></i> Start Date
-                        </label>
-                        <input type="date" value="2026-03-09" 
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                    </div>
-                    
-                    <!-- End Date (optional) -->
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                            <i class="fas fa-calendar-check text-emerald-600 text-xs"></i> End Date
-                        </label>
-                        <input type="date" placeholder="Optional" 
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50">
-                        <p class="text-xs text-slate-400">Leave blank if ongoing</p>
-                    </div>
-                </div>
-                
-                <!-- Logo Upload (matches ImageField) -->
-                <div class="space-y-1.5">
-                    <label class="text-sm font-semibold text-slate-700 flex items-center gap-1">
-                        <i class="fas fa-image text-emerald-600 text-xs"></i> Community Logo
-                    </label>
-                    <div class="image-upload-area rounded-xl p-6 text-center cursor-pointer" id="logoUploadArea">
-                        <input type="file" id="logoInput" class="hidden" accept=".jpg,.jpeg,.png,.webp">
-                        <div class="flex flex-col items-center gap-2">
-                            <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
-                                <i class="fas fa-cloud-upload-alt text-2xl"></i>
-                            </div>
-                            <p class="text-sm font-medium text-slate-700">Click to upload logo</p>
-                            <p class="text-xs text-slate-400">JPG, JPEG, PNG, WEBP (max 5MB)</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Created By (hidden field, but showing for context) -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <p class="text-sm text-slate-600 flex items-center gap-2">
-                        <i class="fas fa-user-shield text-emerald-600"></i>
-                        <span>Created by: <span class="font-semibold">Samuel Admin</span> (you)</span>
-                    </p>
-                </div>
-                
-                <!-- Form actions -->
-                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                    <button type="button" id="cancelModalBtn" class="px-6 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-emerald-700 to-teal-700 text-white rounded-xl font-medium hover:opacity-90 transition-all hover-lift flex items-center gap-2">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Create Community</span>
-                    </button>
-                </div>
-            </form>
+        <div>
+          <h3 class="font-semibold text-slate-800">Women's Group</h3>
+          <p class="text-xs text-slate-500">Code: WMN-002</p>
         </div>
+      </div>
+      <p class="text-sm text-slate-600 mb-2">
+        Empowering women through savings and loans
+      </p>
+      <div class="flex justify-between text-xs text-slate-400">
+        <span><i class="far fa-calendar mr-1"></i>Started Mar 2024</span>
+        <span><i class="fas fa-users mr-1"></i>18 members</span>
+      </div>
     </div>
-    
-    <script>
-        // Modal functionality
-        const modal = document.getElementById('createCommunityModal');
-        const openBtn = document.getElementById('openCreateModalBtn');
-        const closeBtn = document.getElementById('closeModalBtn');
-        const cancelBtn = document.getElementById('cancelModalBtn');
-        
-        // Open modal
-        openBtn.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // prevent background scrolling
-        });
-        
-        // Close modal function
-        function closeModal() {
-            modal.classList.add('hidden');
-            document.body.style.overflow = ''; // restore scrolling
-        }
-        
-        // Close with buttons
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-        
-        // Close when clicking outside modal content
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-        
-        // Logo upload interaction
-        const logoArea = document.getElementById('logoUploadArea');
-        const logoInput = document.getElementById('logoInput');
-        
-        logoArea.addEventListener('click', () => {
-            logoInput.click();
-        });
-        
-        logoInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                const fileName = e.target.files[0].name;
-                // Visual feedback (simple)
-                logoArea.innerHTML = `
+
+    <!-- Community card 3 -->
+    <div
+      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
+    >
+      <div class="flex items-center gap-3 mb-3">
+        <div
+          class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-lg"
+        >
+          <i class="fas fa-briefcase"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800">Business Circle</h3>
+          <p class="text-xs text-slate-500">Code: BIZ-003</p>
+        </div>
+      </div>
+      <p class="text-sm text-slate-600 mb-2">
+        For entrepreneurs and small business owners
+      </p>
+      <div class="flex justify-between text-xs text-slate-400">
+        <span><i class="far fa-calendar mr-1"></i>Started Feb 2024</span>
+        <span><i class="fas fa-users mr-1"></i>32 members</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE COMMUNITY MODAL (hidden by default) -->
+<div
+  id="createCommunityModal"
+  class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden bg-black/50"
+>
+  <!-- Modal container -->
+  <div
+    class="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content"
+  >
+    <!-- Modal header -->
+    <div
+      class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10"
+    >
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">Create New Community</h2>
+        <p class="text-sm text-slate-500">
+          Set up a new Njangi group for members
+        </p>
+      </div>
+      <button
+        id="closeModalBtn"
+        class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Multi-step indicator -->
+    <div class="px-6 pt-6 pb-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div
+            class="step-indicator w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-semibold text-sm"
+          >
+            1
+          </div>
+          <span class="text-sm font-medium text-slate-700">Basic Info</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-4 bg-slate-200"></div>
+        <div class="flex items-center gap-2">
+          <div
+            class="step-indicator w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-semibold text-sm"
+          >
+            2
+          </div>
+          <span class="text-sm font-medium text-slate-400">Details</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-4 bg-slate-200"></div>
+        <div class="flex items-center gap-2">
+          <div
+            class="step-indicator w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-semibold text-sm"
+          >
+            3
+          </div>
+          <span class="text-sm font-medium text-slate-400">Confirm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form (maps directly to your Community model) -->
+    <form class="p-6 space-y-6">
+      <!-- Row: Community Name & Code (side by side) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Community Name -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-sitemap text-emerald-600 text-xs"></i> Community
+            Name <span class="text-emerald-600">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., Yaoundé Njangi Group"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+          />
+          <p class="text-xs text-slate-400">Must be unique</p>
+        </div>
+
+        <!-- Community Code -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-qrcode text-emerald-600 text-xs"></i> Community
+            Code <span class="text-emerald-600">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., YDE-001"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+          />
+          <p class="text-xs text-slate-400">
+            Unique identifier, will be used for joining
+          </p>
+        </div>
+      </div>
+
+      <!-- Description (textarea) -->
+      <div class="space-y-1.5">
+        <label
+          class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+        >
+          <i class="fas fa-align-left text-emerald-600 text-xs"></i> Description
+        </label>
+        <textarea
+          rows="3"
+          placeholder="Describe the purpose, rules, and goals of your community..."
+          class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 resize-none"
+        ></textarea>
+      </div>
+
+      <!-- Row: Community Type & Country -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Community Type (choices from enum) -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-tag text-emerald-600 text-xs"></i> Community Type
+            <span class="text-emerald-600">*</span>
+          </label>
+          <select
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none"
+          >
+            <option value="" disabled selected>Select type</option>
+            <option value="ROTATING_SAVINGS">Rotating Savings (ROSCA)</option>
+            <option value="ACCUMULATING_SAVINGS">
+              Accumulating Savings (ASCRA)
+            </option>
+            <option value="INVESTMENT_CLUB">Investment Club</option>
+            <option value="WOMENS_GROUP">Women's Group</option>
+            <option value="YOUTH_GROUP">Youth Group</option>
+            <option value="COMMUNITY_BANK">Community Bank</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <!-- Country -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-globe-africa text-emerald-600 text-xs"></i> Country
+          </label>
+          <select
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none"
+          >
+            <option value="CM">Cameroon</option>
+            <option value="NG">Nigeria</option>
+            <option value="GH">Ghana</option>
+            <option value="KE">Kenya</option>
+            <option value="ZA">South Africa</option>
+            <option value="UG">Uganda</option>
+            <option value="TZ">Tanzania</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row: Currency & Dates -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Currency -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-coins text-emerald-600 text-xs"></i> Currency
+          </label>
+          <select
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+          >
+            <option value="XAF" selected>XAF (Central African CFA)</option>
+            <option value="XOF">XOF (West African CFA)</option>
+            <option value="NGN">NGN (Nigerian Naira)</option>
+            <option value="GHS">GHS (Ghanaian Cedi)</option>
+            <option value="KES">KES (Kenyan Shilling)</option>
+            <option value="ZAR">ZAR (South African Rand)</option>
+            <option value="USD">USD (US Dollar)</option>
+          </select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-calendar-alt text-emerald-600 text-xs"></i> Start
+            Date
+          </label>
+          <input
+            type="date"
+            value="2026-03-09"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+          />
+        </div>
+
+        <!-- End Date (optional) -->
+        <div class="space-y-1.5">
+          <label
+            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+          >
+            <i class="fas fa-calendar-check text-emerald-600 text-xs"></i> End
+            Date
+          </label>
+          <input
+            type="date"
+            placeholder="Optional"
+            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+          />
+          <p class="text-xs text-slate-400">Leave blank if ongoing</p>
+        </div>
+      </div>
+
+      <!-- Logo Upload (matches ImageField) -->
+      <div class="space-y-1.5">
+        <label
+          class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+        >
+          <i class="fas fa-image text-emerald-600 text-xs"></i> Community Logo
+        </label>
+        <div
+          class="image-upload-area rounded-xl p-6 text-center cursor-pointer"
+          id="logoUploadArea"
+        >
+          <input
+            type="file"
+            id="logoInput"
+            class="hidden"
+            accept=".jpg,.jpeg,.png,.webp"
+          />
+          <div class="flex flex-col items-center gap-2">
+            <div
+              class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700"
+            >
+              <i class="fas fa-cloud-upload-alt text-2xl"></i>
+            </div>
+            <p class="text-sm font-medium text-slate-700">
+              Click to upload logo
+            </p>
+            <p class="text-xs text-slate-400">JPG, JPEG, PNG, WEBP (max 5MB)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Created By (hidden field, but showing for context) -->
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <p class="text-sm text-slate-600 flex items-center gap-2">
+          <i class="fas fa-user-shield text-emerald-600"></i>
+          <span
+            >Created by:
+            <span class="font-semibold">Samuel Admin</span> (you)</span
+          >
+        </p>
+      </div>
+
+      <!-- Form actions -->
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <button
+          type="button"
+          id="cancelModalBtn"
+          class="px-6 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-6 py-3 bg-gradient-to-r from-emerald-700 to-teal-700 text-white rounded-xl font-medium hover:opacity-90 transition-all hover-lift flex items-center gap-2"
+        >
+          <i class="fas fa-check-circle"></i>
+          <span>Create Community</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Modal functionality
+  const modal = document.getElementById("createCommunityModal");
+  const openBtn = document.getElementById("openCreateModalBtn");
+  const closeBtn = document.getElementById("closeModalBtn");
+  const cancelBtn = document.getElementById("cancelModalBtn");
+
+  // Open modal
+  openBtn.addEventListener("click", () => {
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden"; // prevent background scrolling
+  });
+
+  // Close modal function
+  function closeModal() {
+    modal.classList.add("hidden");
+    document.body.style.overflow = ""; // restore scrolling
+  }
+
+  // Close with buttons
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+
+  // Close when clicking outside modal content
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Logo upload interaction
+  const logoArea = document.getElementById("logoUploadArea");
+  const logoInput = document.getElementById("logoInput");
+
+  logoArea.addEventListener("click", () => {
+    logoInput.click();
+  });
+
+  logoInput.addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const fileName = e.target.files[0].name;
+      // Visual feedback (simple)
+      logoArea.innerHTML = `
                     <div class="flex flex-col items-center gap-2">
                         <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
                             <i class="fas fa-check-circle text-2xl"></i>
@@ -315,19 +423,19 @@
                         <p class="text-xs text-emerald-600">Ready to upload</p>
                     </div>
                 `;
-            }
-        });
-        
-        // Step indicators (visual only - for demo)
-        const steps = document.querySelectorAll('.step-indicator');
-        // Normally you'd have multi-step logic, but this is a static demo
-        
-        // Form submission prevention for demo
-        const form = document.querySelector('form');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Community created successfully! (Demo)');
-            closeModal();
-        });
-    </script>
+    }
+  });
+
+  // Step indicators (visual only - for demo)
+  const steps = document.querySelectorAll(".step-indicator");
+  // Normally you'd have multi-step logic, but this is a static demo
+
+  // Form submission prevention for demo
+  const form = document.querySelector("form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    alert("Community created successfully! (Demo)");
+    closeModal();
+  });
+</script>
 {% endblock %}

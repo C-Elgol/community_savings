@@ -1,125 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    {% include  'publics/admin/includes/_head.html' %}
+  <head>
+    {% include 'publics/admin/includes/_head.html' %}
     <script src="{% url 'javascript_catalog' %}"></script>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased">
+    <!-- mobile menu button -->
+    <div class="lg:hidden fixed top-4 left-4 z-50">
+      <button
+        id="menuToggle"
+        class="p-3 bg-white rounded-xl shadow-md text-emerald-700"
+      >
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+    </div>
 
-<!-- mobile menu button -->
-<div class="lg:hidden fixed top-4 left-4 z-50">
-    <button id="menuToggle" class="p-3 bg-white rounded-xl shadow-md text-emerald-700"><i class="fas fa-bars text-lg"></i></button>
-</div>
+    {% include 'publics/admin/includes/_sidebar.html' %}
 
-{% include 'publics/admin/includes/_sidebar.html' %}
+    <!-- ========== MAIN CONTENT AREA ========== -->
+    <div class="lg:ml-80 min-h-screen flex flex-col bg-slate-50">
+      {% include 'publics/admin/includes/_navbar.html' %}
 
-<!-- ========== MAIN CONTENT AREA ========== -->
-<div class="lg:ml-80 min-h-screen flex flex-col bg-slate-50">
-
-   {% include 'publics/admin/includes/_navbar.html' %}
-
-    <!-- main dynamic pages container -->
-    <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" id="mainContent">
-
-       {% block content %}
-
-       {% endblock %}
-
-       
-
-       
-
-
-
-        
-
-        
-
-       
-
-        
-
-       
-
-       
-
-       
-
-    </main>
-</div>
-{% include 'publics/home/includes/_js.html' %}
-<!-- javascript for navigation and interactions -->
-<script>
-    (function() {
-        // mobile toggle
-        const menuToggle = document.getElementById('menuToggle');
+      <!-- main dynamic pages container -->
+      <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" id="mainContent">
+        {% block content %} {% endblock %}
+      </main>
+    </div>
+    {% include 'publics/home/includes/_js.html' %}
+    <!-- javascript for mobile sidebar toggle -->
+    <script>
+      (function () {
+        const menuToggle = document.getElementById("menuToggle");
         if (menuToggle) {
-            menuToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector('.sidebar').classList.toggle('active');
-            });
+          menuToggle.addEventListener("click", function () {
+            document.querySelector(".sidebar").classList.toggle("active");
+          });
         }
+      })();
+    </script>
 
-        // page navigation
-        const navLinks = document.querySelectorAll('.nav-link');
-        const pages = document.querySelectorAll('.page');
-        const pageTitle = document.getElementById('pageTitle');
-        const pageSubtitle = document.getElementById('pageSubtitle');
-
-        const titles = {
-            dashboard: { title: 'Dashboard', subtitle: 'Community overview & key metrics' },
-            members: { title: 'Members', subtitle: 'Manage all community members' },
-            applications: { title: 'Membership Applications', subtitle: 'Pending requests' },
-            contributions: { title: 'Contributions', subtitle: 'Track member contributions' },
-            loans: { title: 'Loans', subtitle: 'Active loans and history' },
-            'loan-apps': { title: 'Loan Applications', subtitle: 'Review and process applications' },
-            fines: { title: 'Fines', subtitle: 'Penalties and payments' },
-            meetings: { title: 'Meetings', subtitle: 'Schedule and attendance' },
-            minutes: { title: 'Meeting Minutes', subtitle: 'Official records' },
-            reports: { title: 'Financial Reports', subtitle: 'Statements and summaries' },
-            risk: { title: 'Credit Risk Analytics', subtitle: 'Risk assessment & scoring' },
-            logs: { title: 'System Logs', subtitle: 'Audit trail and events' },
-            settings: { title: 'Settings', subtitle: 'Configure system parameters' }
-        };
-
-        function activatePage(pageId) {
-            pages.forEach(p => p.classList.remove('active-page'));
-            const target = document.getElementById(pageId);
-            if (target) target.classList.add('active-page');
-
-            navLinks.forEach(link => {
-                link.classList.remove('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
-                link.classList.add('nav-item-inactive');
-                if (link.dataset.page === pageId) {
-                    link.classList.add('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700', 'font-semibold');
-                    link.classList.remove('nav-item-inactive');
-                }
-            });
-
-            if (titles[pageId]) {
-                pageTitle.innerText = titles[pageId].title;
-                pageSubtitle.innerText = titles[pageId].subtitle;
-            }
-
-            if (window.innerWidth < 1024) {
-                document.querySelector('.sidebar').classList.remove('active');
-            }
-        }
-
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.dataset.page;
-                if (page) activatePage(page);
-            });
-        });
-
-        // dashboard active by default
-        activatePage('dashboard');
-    })();
-</script>   
-
-<!-- footer -->
-<div class="text-center text-xs text-slate-400 py-4 lg:ml-80">© 2026 NjangiAdmin · Community Financial Management</div>
-</body>
+    <!-- footer -->
+    <div class="text-center text-xs text-slate-400 py-4 lg:ml-80">
+      © 2026 NjangiAdmin · Community Financial Management
+    </div>
+  </body>
 </html>
