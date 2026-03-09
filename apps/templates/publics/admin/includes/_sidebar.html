@@ -11,8 +11,12 @@
     <!-- navigation menu (all 13 pages) -->
     <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto text-sm">
         <!-- Dashboard -->
-        <a href="#" data-page="dashboard" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-active sidebar-transition">
+        <a href="{% url 'users:admin_dashboard' %}" data-page="dashboard" class="nav-link flex {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition">
             <i class="fas fa-th-large w-5 text-emerald-700"></i><span>Dashboard</span>
+        </a>
+        <!-- Communities -->
+        <a href="{% url 'communities:communities' %}" data-page="communities" class="nav-link flex {% if request.resolver_match.url_name == 'communities' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition">
+            <i class="fas fa-users w-5 text-slate-400"></i><span>Communities</span>
         </a>
         <!-- Members -->
         <a href="#" data-page="members" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">

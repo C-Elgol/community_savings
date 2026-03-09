@@ -1,84 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjangiHub · Create New Community</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        
-        .njangi-gradient {
-            background: linear-gradient(145deg, #0f3b3f 0%, #0b5e4b 70%, #0f766e 100%);
-        }
-        
-        .modal-overlay {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(8px);
-        }
-        
-        .modal-content {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: modalSlideUp 0.3s ease-out;
-        }
-        
-        @keyframes modalSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .input-focus {
-            transition: all 0.2s ease;
-        }
-        
-        .input-focus:focus {
-            border-color: #0f766e;
-            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
-        }
-        
-        .hover-lift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
-        
-        .image-upload-area {
-            border: 2px dashed #e2e8f0;
-            transition: all 0.2s ease;
-        }
-        
-        .image-upload-area:hover {
-            border-color: #0f766e;
-            background: #f0fdf9;
-        }
-        
-        .step-indicator {
-            transition: all 0.3s ease;
-        }
-        
-        .step-active {
-            background: #0f766e;
-            color: white;
-            border-color: #0f766e;
-        }
-        
-        .step-completed {
-            background: #10b981;
-            color: white;
-            border-color: #10b981;
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-slate-50">
-    
-    <!-- Main page content (background) -->
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block content %}
+
+        <!-- ========== COMMUNITIES PAGE ========== -->
+       <!-- Main page content (background) -->
     <div class="min-h-screen flex items-center justify-center p-4">
         <!-- Card that represents the communities dashboard -->
         <div class="w-full max-w-6xl bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
@@ -404,5 +330,4 @@
             closeModal();
         });
     </script>
-</body>
-</html>
+{% endblock %}

@@ -28,4 +28,5 @@ urlpatterns = [
     path('finance/', include('apps.finance.urls', namespace='finance')),
     path('meetings/', include('apps.meetings.urls', namespace='meetings')),
     path('analytics/', include('apps.analytics.urls', namespace='analytics')),
+    path('communities/', include('apps.communities.urls', namespace='communities')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

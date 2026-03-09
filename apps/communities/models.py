@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
-
+from django.core.validators import FileExtensionValidator
 from apps.users.models import SavingsBaseModel
 from apps.global_data.enum import (
     CommunityType,
@@ -21,7 +21,13 @@ class Community(SavingsBaseModel):
     currency = models.CharField(max_length=10, default="XAF")
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-
+    logo = models.ImageField(
+        upload_to="communities/logos/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(["jpg","jpeg","png","webp"])],
+        help_text="Community logo or identity image"
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
