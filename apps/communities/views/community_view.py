@@ -31,6 +31,14 @@ def _validate_logo(file):
 
 def _community_data(community):
     """Serialize a Community instance to a dict for JSON responses."""
+    # Ensure dates are in ISO format regardless of whether they are objects or strings
+    def format_date(dt):
+        if not dt:
+            return ""
+        if hasattr(dt, "isoformat"):
+            return dt.isoformat()
+        return str(dt)
+
     return {
         "id": str(community.id),
         "name": community.name,
@@ -40,8 +48,8 @@ def _community_data(community):
         "community_type_display": community.get_community_type_display(),
         "country": community.country or "",
         "currency": community.currency,
-        "start_date": community.start_date.isoformat() if community.start_date else "",
-        "end_date": community.end_date.isoformat() if community.end_date else "",
+        "start_date": format_date(community.start_date),
+        "end_date": format_date(community.end_date),
         "logo_url": community.logo.url if community.logo else "",
         "member_count": community.memberships.filter(status="active").count(),
         "created": community.created.strftime("%b %Y") if hasattr(community, "created") else "",
