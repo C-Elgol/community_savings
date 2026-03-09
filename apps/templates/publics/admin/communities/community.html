@@ -1,409 +1,873 @@
 {% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} 
-{% block content %} {% block page_header %}
+{% block page_header %}
 <h2 class="text-xl font-semibold text-slate-800">Communities</h2>
-<p class="text-xs text-slate-500">Manage your Njangi groups and associations</p>
-{% endblock %}
-<!-- ========== COMMUNITIES PAGE ========== -->
+<p class="text-xs text-slate-500">
+  {{ total_count }} group{{ total_count|pluralize }} &middot; Manage, create and
+  edit
+</p>
+{% endblock %} {% block content %} {% csrf_token %}
+
+<!-- ─── Toolbar ─── -->
 <div
-  class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden"
+  class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
 >
-  <!-- List header with action button -->
-  <div
-    class="bg-white border-b border-slate-100 px-6 py-4 flex justify-end items-center"
+  <form method="get" class="flex flex-col sm:flex-row gap-2 flex-1">
+    <div class="relative flex-1 max-w-sm">
+      <i
+        class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+      ></i>
+      <input
+        type="text"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="Search name, code or country…"
+        class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 bg-white shadow-sm"
+      />
+    </div>
+    <select
+      name="type"
+      onchange="this.form.submit()"
+      class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-sm"
+    >
+      <option value="">All types</option>
+      {% for value, label in community_types %}
+      <option
+        value="{{ value }}"
+        {%
+        if
+        selected_type=""
+        ="value"
+        %}selected{%
+        endif
+        %}
+      >
+        {{ label }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
+  <button
+    id="openCreateDrawerBtn"
+    class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 text-sm whitespace-nowrap shadow-sm"
   >
-    <button
-      id="openCreateModalBtn"
-      class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2"
-    >
-      <i class="fas fa-plus-circle"></i>
-      <span>New Community</span>
-    </button>
-  </div>
-  <!-- Community cards -->
-  <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Community card 1 -->
-    <div
-      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
-    >
-      <div class="flex items-center gap-3 mb-3">
-        <div
-          class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-bold text-lg"
-        >
-          <i class="fas fa-users"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-slate-800">Njangi A</h3>
-          <p class="text-xs text-slate-500">Code: NJA-001</p>
-        </div>
-      </div>
-      <p class="text-sm text-slate-600 mb-2 line-clamp-2">
-        Main savings group for Yaoundé members
-      </p>
-      <div class="flex justify-between text-xs text-slate-400">
-        <span><i class="far fa-calendar mr-1"></i>Started Jan 2024</span>
-        <span><i class="fas fa-users mr-1"></i>24 members</span>
-      </div>
-      <div class="flex justify-between text-xs text-slate-400 pt-4">
-        <a href="#" class="text-sm text-slate-600 mb-2 pr-2">View</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Edit</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Delete</a>
-      </div>
-    </div>
-
-    <!-- Community card 2 -->
-    <div
-      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
-    >
-      <div class="flex items-center gap-3 mb-3">
-        <div
-          class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-amber-700 font-bold text-lg"
-        >
-          <i class="fas fa-female"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-slate-800">Women's Group</h3>
-          <p class="text-xs text-slate-500">Code: WMN-002</p>
-        </div>
-      </div>
-      <p class="text-sm text-slate-600 mb-2">
-        Empowering women through savings and loans
-      </p>
-      <div class="flex justify-between text-xs text-slate-400">
-        <span><i class="far fa-calendar mr-1"></i>Started Mar 2024</span>
-        <span><i class="fas fa-users mr-1"></i>18 members</span>
-      </div>
-       <div class="flex justify-between text-xs text-slate-400 pt-4">
-        <a href="#" class="text-sm text-slate-600 mb-2 pr-2">View</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Edit</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Delete</a>
-      </div>
-    </div>
-
-    <!-- Community card 3 -->
-    <div
-      class="border border-slate-200 rounded-xl p-4 hover:shadow-md transition"
-    >
-      <div class="flex items-center gap-3 mb-3">
-        <div
-          class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-lg"
-        >
-          <i class="fas fa-briefcase"></i>
-        </div>
-        <div>
-          <h3 class="font-semibold text-slate-800">Business Circle</h3>
-          <p class="text-xs text-slate-500">Code: BIZ-003</p>
-        </div>
-      </div>
-      <p class="text-sm text-slate-600 mb-2">
-        For entrepreneurs and small business owners
-      </p>
-      <div class="flex justify-between text-xs text-slate-400">
-        <span><i class="far fa-calendar mr-1"></i>Started Feb 2024</span>
-        <span><i class="fas fa-users mr-1"></i>32 members</span>
-      </div>
-       <div class="flex justify-between text-xs text-slate-400 pt-4">
-        <a href="#" class="text-sm text-slate-600 mb-2 pr-2">View</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Edit</a>  <a href="#" class="text-sm text-slate-600 mb-2 pr-2">Delete</a>
-      </div>
-    </div>
-  </div>
+    <i class="fas fa-plus-circle"></i> New Community
+  </button>
 </div>
 
-<!-- CREATE COMMUNITY MODAL (hidden by default) -->
+<!-- ─── Community Grid ─── -->
+{% if communities %}
 <div
-  id="createCommunityModal"
-  class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden bg-black/50"
+  id="communityGrid"
+  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"
 >
-  <!-- Modal container -->
+  {% for community in communities %}
   <div
-    class="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content"
+    id="card-{{ community.id }}"
+    class="group bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-md hover:border-emerald-200 transition-all duration-200"
   >
-    <!-- Modal header -->
-    <div
-      class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center z-10"
-    >
-      <div>
-        <h2 class="text-2xl font-bold text-slate-800">Create New Community</h2>
-        <p class="text-sm text-slate-500">
-          Set up a new Njangi group for members
+    <!-- Header -->
+    <div class="flex items-start gap-3">
+      {% if community.logo %}
+      <img
+        src="{{ community.logo.url }}"
+        alt="{{ community.name }}"
+        class="w-12 h-12 rounded-xl object-cover border border-slate-100 flex-shrink-0"
+      />
+      {% else %}
+      <div
+        class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-bold text-lg flex-shrink-0"
+      >
+        {{ community.name|first|upper }}
+      </div>
+      {% endif %}
+      <div class="flex-1 min-w-0">
+        <h3 class="font-semibold text-slate-800 truncate">
+          {{ community.name }}
+        </h3>
+        <p class="text-xs text-slate-400 font-mono mt-0.5">
+          {{ community.code }}
         </p>
       </div>
-      <button
-        id="closeModalBtn"
-        class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+      <span
+        class="flex-shrink-0 text-xs px-2.5 py-1 rounded-full font-medium {% if community.community_type == 'njangi' %}bg-emerald-100 text-emerald-700 {% elif community.community_type == 'savings' %}bg-blue-100 text-blue-700 {% elif community.community_type == 'cooperative' %}bg-violet-100 text-violet-700 {% elif community.community_type == 'investment' %}bg-amber-100 text-amber-700 {% else %}bg-slate-100 text-slate-600{% endif %}"
       >
-        <i class="fas fa-times"></i>
-      </button>
+        {{ community.get_community_type_display }}
+      </span>
     </div>
 
+    <!-- Description -->
+    {% if community.description %}
+    <p class="text-sm text-slate-500 line-clamp-2 flex-1">
+      {{ community.description }}
+    </p>
+    {% endif %}
 
-    <!-- Form (maps directly to your Community model) -->
-    <form class="p-6 space-y-6">
-      <!-- Row: Community Name & Code (side by side) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Community Name -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+    <!-- Meta -->
+    <div class="flex items-center justify-between text-xs text-slate-400">
+      <span
+        ><i class="fas fa-globe-africa mr-1"></i>{{
+        community.country|default:"—" }}</span
+      >
+      <span class="font-medium text-slate-600">{{ community.currency }}</span>
+      {% if community.start_date %}
+      <span
+        ><i class="far fa-calendar mr-1"></i>{{ community.start_date|date:"M Y"
+        }}</span
+      >
+      {% endif %}
+    </div>
+
+    <!-- Members count -->
+    <div
+      class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-100 pt-3"
+    >
+      <span class="flex items-center gap-1.5">
+        <i class="fas fa-users text-emerald-600"></i>
+        <span class="font-semibold text-slate-700"
+          >{{ community.active_member_count }}</span
+        >
+        active members
+      </span>
+      <!-- Action buttons -->
+      <div class="flex items-center gap-1">
+        <button
+          data-edit-id="{{ community.id }}"
+          class="edit-btn p-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 rounded-lg transition flex items-center gap-1"
+          title="Edit"
+        >
+          <i class="fas fa-pen text-xs"></i>
+        </button>
+        <button
+          data-delete-id="{{ community.id }}"
+          data-delete-name="{{ community.name|escapejs }}"
+          class="delete-btn p-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition flex items-center gap-1"
+          title="Delete"
+        >
+          <i class="fas fa-trash-alt text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ─── Pagination ─── -->
+{% if communities.has_other_pages %}
+<div class="flex items-center justify-center gap-2 mt-4">
+  {% if communities.has_previous %}
+  <a
+    href="?page={{ communities.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}"
+    class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition"
+  >
+    <i class="fas fa-chevron-left text-xs"></i>
+  </a>
+  {% endif %} {% for num in communities.paginator.page_range %}
+  <a
+    href="?page={{ num }}&q={{ search_query }}&type={{ selected_type }}"
+    class="px-3 py-1.5 rounded-lg border text-sm transition{% if communities.number == num %} bg-emerald-600 text-white border-emerald-600{% else %} border-slate-200 hover:bg-slate-50{% endif %}"
+  >
+    {{ num }}
+  </a>
+  {% endfor %} {% if communities.has_next %}
+  <a
+    href="?page={{ communities.next_page_number }}&q={{ search_query }}&type={{ selected_type }}"
+    class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition"
+  >
+    <i class="fas fa-chevron-right text-xs"></i>
+  </a>
+  {% endif %}
+</div>
+{% endif %} {% else %}
+<!-- ─── Empty State ─── -->
+<div class="flex flex-col items-center justify-center py-24 text-center">
+  <div
+    class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5"
+  >
+    <i class="fas fa-users text-3xl text-emerald-400"></i>
+  </div>
+  <h3 class="text-lg font-semibold text-slate-700 mb-1">
+    {% if search_query %}No results for "{{ search_query }}"{% else %}No
+    communities yet{% endif %}
+  </h3>
+  <p class="text-sm text-slate-400 mb-6">
+    {% if search_query %}Try a different search or filter.{% else %}Get started
+    by creating your first Njangi group.{% endif %}
+  </p>
+  {% if not search_query %}
+  <button
+    id="emptyStateCreateBtn"
+    class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition text-sm"
+  >
+    <i class="fas fa-plus-circle mr-2"></i>Create first community
+  </button>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════
+     RIGHT SLIDE-IN DRAWER  (Create / Edit)
+════════════════════════════════════════════ -->
+<div
+  id="drawerOverlay"
+  class="fixed inset-0 bg-black/40 z-40 hidden transition-opacity duration-300 opacity-0"
+  id="drawerOverlay"
+></div>
+
+<aside
+  id="communityDrawer"
+  class="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col"
+>
+  <!-- Drawer Header -->
+  <div
+    class="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0"
+  >
+    <div>
+      <h3 id="drawerTitle" class="text-lg font-bold text-slate-800">
+        New Community
+      </h3>
+      <p id="drawerSubtitle" class="text-xs text-slate-400 mt-0.5">
+        Fill in the details below
+      </p>
+    </div>
+    <button
+      id="closeDrawerBtn"
+      class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+    >
+      <i class="fas fa-times text-sm"></i>
+    </button>
+  </div>
+
+  <!-- Drawer Body -->
+  <div class="flex-1 overflow-y-auto px-6 py-6">
+    <form id="communityForm" novalidate>
+      <input type="hidden" id="communityId" value="" />
+
+      <!-- Name & Code -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="form-label"
+            >Community Name <span class="text-emerald-600">*</span></label
           >
-            <i class="fas fa-sitemap text-emerald-600 text-xs"></i> Community
-            Name <span class="text-emerald-600">*</span>
-          </label>
           <input
             type="text"
-            placeholder="e.g., Yaoundé Njangi Group"
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            name="name"
+            id="f_name"
+            placeholder="e.g. Yaoundé Njangi"
+            class="form-input"
+            required
           />
-          <p class="text-xs text-slate-400">Must be unique</p>
+          <p class="form-error hidden" id="err_name"></p>
         </div>
-
-        <!-- Community Code -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+        <div>
+          <label class="form-label"
+            >Code <span class="text-emerald-600">*</span></label
           >
-            <i class="fas fa-qrcode text-emerald-600 text-xs"></i> Community
-            Code <span class="text-emerald-600">*</span>
-          </label>
           <input
             type="text"
-            placeholder="e.g., YDE-001"
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            name="code"
+            id="f_code"
+            placeholder="e.g. YDE-001"
+            class="form-input uppercase"
+            required
           />
-          <p class="text-xs text-slate-400">
-            Unique identifier, will be used for joining
-          </p>
+          <p class="form-error hidden" id="err_code"></p>
         </div>
       </div>
 
-      <!-- Description (textarea) -->
-      <div class="space-y-1.5">
-        <label
-          class="text-sm font-semibold text-slate-700 flex items-center gap-1"
-        >
-          <i class="fas fa-align-left text-emerald-600 text-xs"></i> Description
-        </label>
+      <!-- Description -->
+      <div class="mb-4">
+        <label class="form-label">Description</label>
         <textarea
+          name="description"
+          id="f_description"
           rows="3"
-          placeholder="Describe the purpose, rules, and goals of your community..."
-          class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 resize-none"
+          placeholder="Purpose, rules and goals…"
+          class="form-input resize-none"
         ></textarea>
       </div>
 
-      <!-- Row: Community Type & Country -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Community Type (choices from enum) -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+      <!-- Type & Country -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="form-label"
+            >Community Type <span class="text-emerald-600">*</span></label
           >
-            <i class="fas fa-tag text-emerald-600 text-xs"></i> Community Type
-            <span class="text-emerald-600">*</span>
-          </label>
           <select
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none"
+            name="community_type"
+            id="f_community_type"
+            class="form-input"
+            required
           >
-            <option value="" disabled selected>Select type</option>
-            <option value="ROTATING_SAVINGS">Rotating Savings (ROSCA)</option>
-            <option value="ACCUMULATING_SAVINGS">
-              Accumulating Savings (ASCRA)
-            </option>
-            <option value="INVESTMENT_CLUB">Investment Club</option>
-            <option value="WOMENS_GROUP">Women's Group</option>
-            <option value="YOUTH_GROUP">Youth Group</option>
-            <option value="COMMUNITY_BANK">Community Bank</option>
-            <option value="OTHER">Other</option>
+            <option value="">Select type</option>
+            {% for value, label in community_types %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
           </select>
+          <p class="form-error hidden" id="err_community_type"></p>
         </div>
-
-        <!-- Country -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
-          >
-            <i class="fas fa-globe-africa text-emerald-600 text-xs"></i> Country
-          </label>
-          <select
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50 appearance-none"
-          >
-            <option value="CM">Cameroon</option>
-            <option value="NG">Nigeria</option>
-            <option value="GH">Ghana</option>
-            <option value="KE">Kenya</option>
-            <option value="ZA">South Africa</option>
-            <option value="UG">Uganda</option>
-            <option value="TZ">Tanzania</option>
-            <option value="OTHER">Other</option>
-          </select>
+        <div>
+          <label class="form-label">Country</label>
+          <input
+            type="text"
+            name="country"
+            id="f_country"
+            placeholder="e.g. Cameroon"
+            class="form-input"
+          />
         </div>
       </div>
 
-      <!-- Row: Currency & Dates -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Currency -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
-          >
-            <i class="fas fa-coins text-emerald-600 text-xs"></i> Currency
-          </label>
-          <select
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
-          >
-            <option value="XAF" selected>XAF (Central African CFA)</option>
-            <option value="XOF">XOF (West African CFA)</option>
-            <option value="NGN">NGN (Nigerian Naira)</option>
-            <option value="GHS">GHS (Ghanaian Cedi)</option>
-            <option value="KES">KES (Kenyan Shilling)</option>
-            <option value="ZAR">ZAR (South African Rand)</option>
-            <option value="USD">USD (US Dollar)</option>
+      <!-- Currency & Dates -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="form-label">Currency</label>
+          <select name="currency" id="f_currency" class="form-input">
+            <option value="XAF">XAF – CFA</option>
+            <option value="XOF">XOF – CFA</option>
+            <option value="NGN">NGN</option>
+            <option value="GHS">GHS</option>
+            <option value="KES">KES</option>
+            <option value="ZAR">ZAR</option>
+            <option value="USD">USD</option>
           </select>
         </div>
-
-        <!-- Start Date -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
-          >
-            <i class="fas fa-calendar-alt text-emerald-600 text-xs"></i> Start
-            Date
-          </label>
+        <div>
+          <label class="form-label">Start Date</label>
           <input
             type="date"
-            value="2026-03-09"
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            name="start_date"
+            id="f_start_date"
+            class="form-input"
           />
         </div>
-
-        <!-- End Date (optional) -->
-        <div class="space-y-1.5">
-          <label
-            class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+        <div>
+          <label class="form-label"
+            >End Date
+            <span class="text-slate-400 font-normal text-xs"
+              >(optional)</span
+            ></label
           >
-            <i class="fas fa-calendar-check text-emerald-600 text-xs"></i> End
-            Date
-          </label>
           <input
             type="date"
-            placeholder="Optional"
-            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none input-focus bg-slate-50/50"
+            name="end_date"
+            id="f_end_date"
+            class="form-input"
           />
-          <p class="text-xs text-slate-400">Leave blank if ongoing</p>
         </div>
       </div>
 
-      <!-- Logo Upload (matches ImageField) -->
-      <div class="space-y-1.5">
-        <label
-          class="text-sm font-semibold text-slate-700 flex items-center gap-1"
+      <!-- Logo Upload -->
+      <div class="mb-2">
+        <label class="form-label"
+          >Logo
+          <span class="text-slate-400 font-normal text-xs"
+            >(optional, max 5 MB)</span
+          ></label
         >
-          <i class="fas fa-image text-emerald-600 text-xs"></i> Community Logo
-        </label>
         <div
-          class="image-upload-area rounded-xl p-6 text-center cursor-pointer"
-          id="logoUploadArea"
+          id="logoDropzone"
+          class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center cursor-pointer hover:border-emerald-400 transition-colors"
         >
           <input
             type="file"
-            id="logoInput"
+            name="logo"
+            id="f_logo"
             class="hidden"
             accept=".jpg,.jpeg,.png,.webp"
           />
-          <div class="flex flex-col items-center gap-2">
+          <div id="logoPlaceholder" class="flex flex-col items-center gap-2">
             <div
-              class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700"
+              class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"
             >
-              <i class="fas fa-cloud-upload-alt text-2xl"></i>
+              <i class="fas fa-cloud-upload-alt text-xl"></i>
             </div>
-            <p class="text-sm font-medium text-slate-700">
-              Click to upload logo
+            <p class="text-sm text-slate-600">Click to upload logo</p>
+            <p class="text-xs text-slate-400">JPG, PNG, WEBP</p>
+          </div>
+          <div id="logoPreview" class="hidden flex-col items-center gap-2">
+            <img
+              id="logoImg"
+              src=""
+              alt="Logo preview"
+              class="w-20 h-20 rounded-xl object-cover border border-slate-200"
+            />
+            <p id="logoFileName" class="text-xs text-slate-500"></p>
+            <p class="text-xs text-emerald-600 font-medium">
+              ✓ Ready to upload
             </p>
-            <p class="text-xs text-slate-400">JPG, JPEG, PNG, WEBP (max 5MB)</p>
           </div>
         </div>
-      </div>
-
-
-      <!-- Form actions -->
-      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-        <button
-          type="button"
-          id="cancelModalBtn"
-          class="px-6 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          class="px-6 py-3 bg-gradient-to-r from-emerald-700 to-teal-700 text-white rounded-xl font-medium hover:opacity-90 transition-all hover-lift flex items-center gap-2"
-        >
-          <i class="fas fa-check-circle"></i>
-          <span>Create Community</span>
-        </button>
+        <p class="form-error hidden" id="err_logo"></p>
       </div>
     </form>
   </div>
+
+  <!-- Drawer Footer -->
+  <div
+    class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 flex-shrink-0"
+  >
+    <button
+      id="cancelDrawerBtn"
+      type="button"
+      class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-100 transition"
+    >
+      Cancel
+    </button>
+    <button
+      id="drawerSubmitBtn"
+      type="button"
+      class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 transition flex items-center gap-2"
+    >
+      <i class="fas fa-check-circle" id="drawerSubmitIcon"></i>
+      <span id="drawerSubmitLabel">Create Community</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+════════════════════════════════════════════ -->
+<div
+  id="deleteModal"
+  class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4 flex"
+>
+  <div
+    class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6"
+    id="deleteModalInner"
+  >
+    <div
+      class="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4"
+    >
+      <i class="fas fa-trash-alt text-rose-500 text-xl"></i>
+    </div>
+    <h3 class="text-center text-lg font-bold text-slate-800 mb-1">
+      Delete Community?
+    </h3>
+    <p class="text-center text-sm text-slate-500 mb-6">
+      You are about to delete
+      <strong id="deleteCommunityName" class="text-slate-800"></strong>. This
+      action cannot be undone.
+    </p>
+    <div class="flex gap-3">
+      <button
+        id="cancelDeleteBtn"
+        class="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+      >
+        Cancel
+      </button>
+      <button
+        id="confirmDeleteBtn"
+        class="flex-1 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 transition flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-trash-alt"></i> Delete
+      </button>
+    </div>
+  </div>
 </div>
 
-<script>
-  // Modal functionality
-  const modal = document.getElementById("createCommunityModal");
-  const openBtn = document.getElementById("openCreateModalBtn");
-  const closeBtn = document.getElementById("closeModalBtn");
-  const cancelBtn = document.getElementById("cancelModalBtn");
-
-  // Open modal
-  openBtn.addEventListener("click", () => {
-    modal.classList.remove("hidden");
-    document.body.style.overflow = "hidden"; // prevent background scrolling
-  });
-
-  // Close modal function
-  function closeModal() {
-    modal.classList.add("hidden");
-    document.body.style.overflow = ""; // restore scrolling
+<!-- ─── Styles ─── -->
+<style>
+  .form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155; /* slate-700 */
+    margin-bottom: 0.375rem;
   }
+  .form-input {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid #e2e8f0; /* slate-200 */
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    background-color: rgb(248 250 252 / 0.5); /* slate-50/50 */
+    transition: all 0.2s;
+  }
+  .form-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3); /* focus:ring-emerald-500/30 */
+    border-color: #10b981;
+  }
+  .form-input.error {
+    border-color: #fb7185; /* rose-400 */
+  }
+  .form-input.error:focus {
+    box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.3); /* focus:ring-rose-400/30 */
+  }
+  .form-error {
+    font-size: 0.75rem;
+    color: #f43f5e; /* rose-500 */
+    margin-top: 0.25rem;
+  }
+</style>
+{% comment %} <script src="{% static 'js/common/toast_manager.js' %}"></script> {% endcomment %}
+<script src="{% static 'js/common/loader_manager.js' %}"></script>
 
-  // Close with buttons
-  closeBtn.addEventListener("click", closeModal);
-  cancelBtn.addEventListener("click", closeModal);
+<!-- ─── CRUD JavaScript ─── -->
+<script>
+  (function () {
+    "use strict";
 
-  // Close when clicking outside modal content
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      closeModal();
+    /* ─── URLs ─── */
+    const CREATE_URL = "{% url 'communities:community_create' %}";
+    const DETAIL_URL = (id) => `/communities/communities/${id}/`;
+    const UPDATE_URL = (id) => `/communities/communities/${id}/update/`;
+    const DELETE_URL = (id) => `/communities/communities/${id}/delete/`;
+
+    /* ─── CSRF ─── */
+    const CSRF = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    /* ─── Loader ─── */
+    const drawerLoader = new SectionLoaderManager(
+      "communityDrawer",
+      "fill-emerald-500",
+      0.3,
+    );
+
+    /* ─── State ─── */
+    let editMode = false;
+    let currentDeleteId = null;
+
+    /* ═══════════════════════
+     DRAWER
+  ═══════════════════════ */
+    function openDrawer(mode = "create") {
+      editMode = mode === "edit";
+      document.getElementById("drawerTitle").textContent = editMode
+        ? "Edit Community"
+        : "New Community";
+      document.getElementById("drawerSubtitle").textContent = editMode
+        ? "Update the details below"
+        : "Fill in the details below";
+      document.getElementById("drawerSubmitLabel").textContent = editMode
+        ? "Save Changes"
+        : "Create Community";
+
+      const overlay = document.getElementById("drawerOverlay");
+      const drawer = document.getElementById("communityDrawer");
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() =>
+        overlay.classList.replace("opacity-0", "opacity-100"),
+      );
+      drawer.classList.remove("translate-x-full");
+      document.body.style.overflow = "hidden";
     }
-  });
 
-  // Logo upload interaction
-  const logoArea = document.getElementById("logoUploadArea");
-  const logoInput = document.getElementById("logoInput");
-
-  logoArea.addEventListener("click", () => {
-    logoInput.click();
-  });
-
-  logoInput.addEventListener("change", (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const fileName = e.target.files[0].name;
-      // Visual feedback (simple)
-      logoArea.innerHTML = `
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                            <i class="fas fa-check-circle text-2xl"></i>
-                        </div>
-                        <p class="text-sm font-medium text-slate-700">${fileName}</p>
-                        <p class="text-xs text-emerald-600">Ready to upload</p>
-                    </div>
-                `;
+    function closeDrawer() {
+      const overlay = document.getElementById("drawerOverlay");
+      const drawer = document.getElementById("communityDrawer");
+      overlay.classList.replace("opacity-100", "opacity-0");
+      setTimeout(() => overlay.classList.add("hidden"), 300);
+      drawer.classList.add("translate-x-full");
+      document.body.style.overflow = "";
+      clearErrors();
+      resetLogoPreview();
+      document.getElementById("communityForm").reset();
+      document.getElementById("communityId").value = "";
     }
-  });
 
-  // Step indicators (visual only - for demo)
-  const steps = document.querySelectorAll(".step-indicator");
-  // Normally you'd have multi-step logic, but this is a static demo
+    /* ═══════════════════════
+     CREATE
+  ═══════════════════════ */
+    document
+      .getElementById("openCreateDrawerBtn")
+      ?.addEventListener("click", () => {
+        openDrawer("create");
+      });
+    document
+      .getElementById("emptyStateCreateBtn")
+      ?.addEventListener("click", () => {
+        openDrawer("create");
+      });
 
-  // Form submission prevention for demo
-  const form = document.querySelector("form");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    alert("Community created successfully! (Demo)");
-    closeModal();
-  });
+    /* ═══════════════════════
+     EDIT — load community data
+  ═══════════════════════ */
+    document.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.editId;
+        document.getElementById("communityId").value = id;
+        openDrawer("edit");
+        drawerLoader.showLoader();
+
+        try {
+          const res = await fetch(DETAIL_URL(id), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            const c = data.community;
+            setValue("f_name", c.name);
+            setValue("f_code", c.code);
+            setValue("f_description", c.description);
+            setValue("f_community_type", c.community_type);
+            setValue("f_country", c.country);
+            setValue("f_currency", c.currency);
+            setValue("f_start_date", c.start_date);
+            setValue("f_end_date", c.end_date);
+            if (c.logo_url) showExistingLogo(c.logo_url);
+          } else {
+            toast("danger", data.message || "Failed to load community.");
+            closeDrawer();
+          }
+        } catch {
+          toast("danger", "Network error. Please try again.");
+          closeDrawer();
+        } finally {
+          drawerLoader.hideLoader();
+        }
+      });
+    });
+
+    /* ═══════════════════════
+     SUBMIT (Create / Update)
+  ═══════════════════════ */
+    document
+      .getElementById("drawerSubmitBtn")
+      .addEventListener("click", async () => {
+        clearErrors();
+        const btn = document.getElementById("drawerSubmitBtn");
+        const label = document.getElementById("drawerSubmitLabel");
+        const icon = document.getElementById("drawerSubmitIcon");
+        const id = document.getElementById("communityId").value;
+
+        setLoading(btn, label, icon, true);
+
+        const formEl = document.getElementById("communityForm");
+        const formData = new FormData(formEl);
+        const url = editMode && id ? UPDATE_URL(id) : CREATE_URL;
+
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": CSRF,
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            closeDrawer();
+            toast("success", data.message);
+            setTimeout(() => window.location.reload(), 900);
+          } else {
+            if (data.errors) displayErrors(data.errors);
+            toast("warning", data.message || "Please fix the errors below.");
+          }
+        } catch {
+          toast("danger", "Network error. Please try again.");
+        } finally {
+          setLoading(
+            btn,
+            label,
+            icon,
+            false,
+            editMode ? "Save Changes" : "Create Community",
+          );
+        }
+      });
+
+    /* ═══════════════════════
+     DELETE
+  ═══════════════════════ */
+    document.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentDeleteId = btn.dataset.deleteId;
+        document.getElementById("deleteCommunityName").textContent =
+          btn.dataset.deleteName;
+        document
+          .getElementById("deleteModal")
+          .classList.replace("hidden", "flex");
+      });
+    });
+
+    document
+      .getElementById("cancelDeleteBtn")
+      .addEventListener("click", closeDeleteModal);
+
+    document
+      .getElementById("confirmDeleteBtn")
+      .addEventListener("click", async () => {
+        if (!currentDeleteId) return;
+        const btn = document.getElementById("confirmDeleteBtn");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<svg class="animate-spin w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Deleting…';
+
+        try {
+          const res = await fetch(DELETE_URL(currentDeleteId), {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": CSRF,
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            closeDeleteModal();
+            toast("success", data.message);
+            const card = document.getElementById(`card-${data.deleted_id}`);
+            if (card) {
+              card.style.transition = "opacity 0.3s, transform 0.3s";
+              card.style.opacity = "0";
+              card.style.transform = "scale(0.95)";
+              setTimeout(() => {
+                card.remove();
+                updateEmptyState();
+              }, 350);
+            }
+          } else {
+            toast("danger", data.message || "Failed to delete.");
+          }
+        } catch {
+          toast("danger", "Network error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete';
+          currentDeleteId = null;
+        }
+      });
+
+    function closeDeleteModal() {
+      document
+        .getElementById("deleteModal")
+        .classList.replace("flex", "hidden");
+      currentDeleteId = null;
+    }
+
+    /* ═══════════════════════
+     CLOSE HANDLERS
+  ═══════════════════════ */
+    document
+      .getElementById("closeDrawerBtn")
+      .addEventListener("click", closeDrawer);
+    document
+      .getElementById("cancelDrawerBtn")
+      .addEventListener("click", closeDrawer);
+    document
+      .getElementById("drawerOverlay")
+      .addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeDrawer();
+        closeDeleteModal();
+      }
+    });
+
+    /* ═══════════════════════
+     LOGO UPLOAD
+  ═══════════════════════ */
+    const dropzone = document.getElementById("logoDropzone");
+    const logoInput = document.getElementById("f_logo");
+
+    dropzone.addEventListener("click", () => logoInput.click());
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("border-emerald-400");
+    });
+    dropzone.addEventListener("dragleave", () =>
+      dropzone.classList.remove("border-emerald-400"),
+    );
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("border-emerald-400");
+      if (e.dataTransfer.files.length) {
+        const dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        logoInput.files = dt.files;
+        logoInput.dispatchEvent(new Event("change"));
+      }
+    });
+    logoInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById("logoImg").src = reader.result;
+        document.getElementById("logoFileName").textContent = file.name;
+        document.getElementById("logoPlaceholder").classList.add("hidden");
+        document.getElementById("logoPreview").classList.remove("hidden");
+        document.getElementById("logoPreview").classList.add("flex");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resetLogoPreview() {
+      document.getElementById("logoPlaceholder").classList.remove("hidden");
+      document.getElementById("logoPreview").classList.add("hidden");
+      document.getElementById("logoPreview").classList.remove("flex");
+      document.getElementById("logoImg").src = "";
+    }
+
+    function showExistingLogo(url) {
+      document.getElementById("logoImg").src = url;
+      document.getElementById("logoFileName").textContent = "Current logo";
+      document.getElementById("logoPlaceholder").classList.add("hidden");
+      document.getElementById("logoPreview").classList.remove("hidden");
+      document.getElementById("logoPreview").classList.add("flex");
+    }
+
+    /* ═══════════════════════
+     HELPERS
+  ═══════════════════════ */
+    function toast(type, message) {
+      window.toastManager
+        .buildToast()
+        .setMessage(message)
+        .setType(type)
+        .setPosition("top-right")
+        .setDuration(5000)
+        .show();
+    }
+
+    function setValue(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val || "";
+    }
+
+    function setLoading(btn, label, icon, isLoading, resetLabel = "") {
+      btn.disabled = isLoading;
+      if (isLoading) {
+        icon.className = "fas fa-spinner fa-spin";
+        label.textContent = "Saving…";
+      } else {
+        icon.className = "fas fa-check-circle";
+        label.textContent = resetLabel;
+      }
+    }
+
+    function clearErrors() {
+      document.querySelectorAll(".form-error").forEach((el) => {
+        el.classList.add("hidden");
+        el.textContent = "";
+      });
+      document
+        .querySelectorAll(".form-input")
+        .forEach((el) => el.classList.remove("error"));
+    }
+
+    function displayErrors(errors) {
+      Object.entries(errors).forEach(([field, msgs]) => {
+        const errEl = document.getElementById(`err_${field}`);
+        const inputEl = document.getElementById(`f_${field}`);
+        if (errEl) {
+          errEl.textContent = msgs[0];
+          errEl.classList.remove("hidden");
+        }
+        if (inputEl) inputEl.classList.add("error");
+      });
+    }
+
+    function updateEmptyState() {
+      const grid = document.getElementById("communityGrid");
+      if (grid && grid.querySelectorAll("[id^='card-']").length === 0) {
+        window.location.reload();
+      }
+    }
+  })();
 </script>
 {% endblock %}
