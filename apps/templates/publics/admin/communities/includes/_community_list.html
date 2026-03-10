@@ -1,7 +1,7 @@
 {% if communities %}
 <div
   id="communityGrid"
-  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"
+  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5 mb-6"
 >
   {% for community in communities %}
   <div
@@ -27,7 +27,7 @@
         <h3 class="font-semibold text-slate-800 truncate">
           {{ community.name }}
         </h3>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">
+        <p class="text-xs text-slate-400 font-mono mt-0.5">Code:
           {{ community.code }}
         </p>
       </div>
