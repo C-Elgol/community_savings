@@ -27,8 +27,8 @@
         <h3 class="font-semibold text-slate-800 truncate">
           {{ community.name }}
         </h3>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">Code:
-          {{ community.code }}
+        <p class="text-xs text-slate-400 font-mono mt-0.5">
+          Code: {{ community.code }}
         </p>
       </div>
       <span
@@ -67,6 +67,18 @@
         >
         active members
       </span>
+      <a
+        href="#"
+        class="setup-policy-btn text-emerald-600 font-medium hover:underline"
+        data-comp-id="{{ community.id }}"
+        >setup Policy</a
+      >
+      <a
+        href="#"
+        class="view-policy-btn text-slate-500 font-medium hover:underline ml-2"
+        data-comp-id="{{ community.id }}"
+        >view Policy</a
+      >
       <!-- Action buttons -->
       <div class="flex items-center gap-1">
         <button

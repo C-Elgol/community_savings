@@ -90,9 +90,13 @@ class CommunityListView(LoginRequiredMixin, TemplateView):
             page_number = 1
         communities = paginator.get_page(page_number)
 
+        from apps.global_data.enum import RegistrationFeeMode, ContributionFrequency
+
         ctx.update({
             "communities": communities,
             "community_types": CommunityType.choices,
+            "registration_fee_modes": RegistrationFeeMode.choices,
+            "contribution_frequencies": ContributionFrequency.choices,
             "search_query": q,
             "selected_type": selected_type,
             "total_count": paginator.count,

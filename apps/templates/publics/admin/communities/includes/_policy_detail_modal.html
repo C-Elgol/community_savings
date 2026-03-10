@@ -1,0 +1,213 @@
+<div
+  id="policyModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] hidden items-center justify-center p-4 transition-all duration-300"
+>
+  <div
+    class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]"
+  >
+    <!-- Header -->
+    <div
+      class="px-8 py-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between"
+    >
+      <div>
+        <h2 class="text-2xl font-bold" id="modalCommunityName">
+          Community Policy
+        </h2>
+        <p class="text-emerald-50/80 text-sm mt-1">
+          Rules and regulations overview
+        </p>
+      </div>
+      <button
+        id="closePolicyModalBtn"
+        class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 transition-colors"
+      >
+        <i class="fas fa-times text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Read-only Body -->
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+      <div id="policyModalContent" class="space-y-8">
+        <!-- Loader during fetch -->
+        <div
+          id="policyModalLoader"
+          class="flex flex-col items-center justify-center py-12 hidden"
+        >
+          <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i>
+          <p class="text-slate-400 text-sm mt-4 italic">
+            Loading policy details...
+          </p>
+        </div>
+
+        <div id="policyDisplay" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Item Template -->
+          <div
+            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
+          >
+            <div
+              class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0"
+            >
+              <i class="fas fa-id-card"></i>
+            </div>
+            <div>
+              <p
+                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
+              >
+                Registration Mode
+              </p>
+              <p
+                id="view_registration_mode"
+                class="text-slate-800 font-semibold"
+              >
+                -
+              </p>
+              <p
+                id="view_registration_amount"
+                class="text-emerald-600 font-bold text-lg mt-1"
+              >
+                -
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
+          >
+            <div
+              class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0"
+            >
+              <i class="fas fa-sync"></i>
+            </div>
+            <div>
+              <p
+                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
+              >
+                Contribution Frequency
+              </p>
+              <p
+                id="view_contribution_frequency"
+                class="text-slate-800 font-semibold"
+              >
+                -
+              </p>
+              <p
+                id="view_contribution_amount"
+                class="text-blue-600 font-bold text-lg mt-1"
+              >
+                -
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
+          >
+            <div
+              class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0"
+            >
+              <i class="fas fa-hourglass-end"></i>
+            </div>
+            <div>
+              <p
+                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
+              >
+                Late Fine
+              </p>
+              <p
+                id="view_late_fine"
+                class="text-rose-600 font-bold text-lg mt-1"
+              >
+                -
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
+          >
+            <div
+              class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0"
+            >
+              <i class="fas fa-user-times"></i>
+            </div>
+            <div>
+              <p
+                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
+              >
+                Absence Fine
+              </p>
+              <p
+                id="view_absence_fine"
+                class="text-rose-500 font-bold text-lg mt-1"
+              >
+                -
+              </p>
+            </div>
+          </div>
+
+          <!-- Loan section -->
+          <div
+            class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100"
+          >
+            <div
+              class="col-span-2 md:col-span-4 flex items-center gap-2 text-slate-800 mb-2"
+            >
+              <i class="fas fa-money-check-alt text-emerald-600"></i>
+              <h4 class="font-bold text-sm">Loan Parameters</h4>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-400">
+                Interest Rate
+              </p>
+              <p
+                id="view_interest_rate"
+                class="text-slate-800 font-bold text-base"
+              >
+                -
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-400">
+                Max Active Loans
+              </p>
+              <p id="view_max_loans" class="text-slate-800 font-bold text-base">
+                -
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-400">
+                Min Wait Time
+              </p>
+              <p id="view_wait_time" class="text-slate-800 font-bold text-base">
+                -
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-400">
+                Guarantor Req.
+              </p>
+              <p
+                id="view_guarantor_req"
+                class="text-slate-800 font-bold text-base"
+              >
+                -
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end"
+    >
+      <button
+        id="closePolicyModalBtn2"
+        class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
+      >
+        Close Overview
+      </button>
+    </div>
+  </div>
+</div>

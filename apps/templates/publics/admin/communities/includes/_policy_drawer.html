@@ -1,0 +1,340 @@
+<div
+  id="policyDrawerOverlay"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[60] hidden opacity-0 transition-opacity duration-300"
+></div>
+
+<div
+  id="policyDrawer"
+  class="fixed inset-y-0 right-0 w-full max-w-lg bg-slate-50 shadow-2xl z-[70] transform translate-x-full transition-transform duration-500 ease-out flex flex-col font-sans"
+>
+  <!-- Header -->
+  <div
+    class="px-6 py-5 bg-white border-b border-slate-200 flex items-center justify-between"
+  >
+    <div>
+      <h2 id="policyDrawerTitle" class="text-xl font-bold text-slate-800">
+        Community Policy
+      </h2>
+      <p id="policyDrawerSubtitle" class="text-xs text-slate-500 mt-1">
+        Configure rules for your community
+      </p>
+    </div>
+    <button
+      id="closePolicyDrawerBtn"
+      class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+    >
+      <i class="fas fa-times text-lg"></i>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto custom-scrollbar">
+    <div id="policyDrawerLoader" class="hidden">
+      <!-- Loader will be handled by SectionLoaderManager -->
+    </div>
+
+    <form id="policyForm" class="p-6 space-y-8">
+      {% csrf_token %}
+      <input type="hidden" name="policy_id" id="policyId" />
+
+      <!-- Registration Fee Section -->
+      <section class="space-y-4">
+        <div class="flex items-center gap-2 text-emerald-700">
+          <i class="fas fa-id-card"></i>
+          <h3 class="font-bold text-sm uppercase tracking-wider">
+            Registration Policy
+          </h3>
+        </div>
+        <div
+          class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+        >
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Registration Mode</label
+            >
+            <select
+              name="registration_fee_mode"
+              id="p_registration_fee_mode"
+              class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            >
+              {% for val, label in registration_fee_modes %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Amount</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
+                >XAF</span
+              >
+              <input
+                type="number"
+                name="registration_fee_amount"
+                id="p_registration_fee_amount"
+                step="0.01"
+                value="0.00"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-12 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+              />
+            </div>
+            <p
+              id="err_registration_fee_amount"
+              class="form-error hidden text-rose-500 text-[10px] mt-1 ml-1"
+            ></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contribution Section -->
+      <section class="space-y-4">
+        <div class="flex items-center gap-2 text-blue-700">
+          <i class="fas fa-hand-holding-usd"></i>
+          <h3 class="font-bold text-sm uppercase tracking-wider">
+            Contribution Rules
+          </h3>
+        </div>
+        <div
+          class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+        >
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Frequency</label
+            >
+            <select
+              name="contribution_frequency"
+              id="p_contribution_frequency"
+              class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            >
+              {% for val, label in contribution_frequencies %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Default Amount</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
+                >XAF</span
+              >
+              <input
+                type="number"
+                name="default_contribution_amount"
+                id="p_default_contribution_amount"
+                step="0.01"
+                value="0.00"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-12 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fines Section -->
+      <section class="space-y-4">
+        <div class="flex items-center gap-2 text-rose-700">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3 class="font-bold text-sm uppercase tracking-wider">
+            Fines & Penalties
+          </h3>
+        </div>
+        <div
+          class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-4"
+        >
+          <div class="col-span-1">
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Late Fine</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium"
+                >XAF</span
+              >
+              <input
+                type="number"
+                name="late_contribution_fine_amount"
+                id="p_late_contribution_fine_amount"
+                step="0.01"
+                value="0.00"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
+              />
+            </div>
+          </div>
+          <div class="col-span-1">
+            <label
+              class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+              >Absence Fine</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium"
+                >XAF</span
+              >
+              <input
+                type="number"
+                name="absence_fine_amount"
+                id="p_absence_fine_amount"
+                step="0.01"
+                value="0.00"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loans Section -->
+      <section class="space-y-4">
+        <div class="flex items-center gap-2 text-amber-700">
+          <i class="fas fa-money-bill-wave"></i>
+          <h3 class="font-bold text-sm uppercase tracking-wider">
+            Loan Policy
+          </h3>
+        </div>
+        <div
+          class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+        >
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+                >Min Membership (Days)</label
+              >
+              <input
+                type="number"
+                name="minimum_membership_days_before_loan"
+                id="p_minimum_membership_days_before_loan"
+                value="30"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+                >Max Active Loans</label
+              >
+              <input
+                type="number"
+                name="max_active_loans_per_member"
+                id="p_max_active_loans_per_member"
+                value="1"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+                >Interest Rate (%)</label
+              >
+              <div class="relative">
+                <input
+                  type="number"
+                  name="default_interest_rate"
+                  id="p_default_interest_rate"
+                  step="0.1"
+                  value="5.0"
+                  class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-4 pr-8 py-2 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                  >%</span
+                >
+              </div>
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
+                >Loan Multiplier (x Savings)</label
+              >
+              <input
+                type="number"
+                name="max_loan_multiple_of_savings"
+                id="p_max_loan_multiple_of_savings"
+                step="0.1"
+                value="2.0"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+              />
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-amber-600 shadow-sm"
+              >
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-amber-900">
+                  Guarantor Required
+                </p>
+                <p class="text-[10px] text-amber-700">
+                  Require at least 1 guarantor per loan
+                </p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="requires_guarantor"
+                id="p_requires_guarantor"
+                class="sr-only peer"
+                checked
+              />
+              <div
+                class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"
+              ></div>
+            </label>
+          </div>
+
+          <div id="guarantorsCountGroup" class="space-y-1.5 px-1">
+            <label class="block text-xs font-semibold text-slate-500"
+              >Minimum Guarantors</label
+            >
+            <input
+              type="number"
+              name="minimum_guarantors"
+              id="p_minimum_guarantors"
+              value="1"
+              class="form-input w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+            />
+          </div>
+        </div>
+      </section>
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <div
+    class="px-6 py-5 bg-white border-t border-slate-200 flex items-center gap-3"
+  >
+    <button
+      id="cancelPolicyBtn"
+      class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 active:scale-95 transition-all"
+    >
+      Cancel
+    </button>
+    <button
+      id="savePolicyBtn"
+      class="flex-[2] bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm shadow-emerald-200"
+    >
+      <i id="policySaveIcon" class="fas fa-save"></i>
+      <span id="policySaveLabel">Save Policy</span>
+    </button>
+  </div>
+</div>

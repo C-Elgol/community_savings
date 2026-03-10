@@ -66,12 +66,11 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     RIGHT SLIDE-IN DRAWER  (Create / Edit)
-════════════════════════════════════════════ -->
+     RIGHT SLIDE-IN DRAWER  (Create / Edit Community)
+     ════════════════════════════════════════════ -->
 <div
   id="drawerOverlay"
   class="fixed inset-0 bg-black/40 z-40 hidden transition-opacity duration-300 opacity-0"
-  id="drawerOverlay"
 ></div>
 
 <aside
@@ -287,7 +286,7 @@
 
 <!-- ════════════════════════════════════════════
      DELETE CONFIRMATION MODAL
-════════════════════════════════════════════ -->
+     ════════════════════════════════════════════ -->
 <div
   id="deleteModal"
   class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4 flex"
@@ -326,6 +325,10 @@
   </div>
 </div>
 
+<!-- ─── Policy Management Partials ─── -->
+{% include 'publics/admin/communities/includes/_policy_drawer.html' %} 
+{% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
+
 <!-- ─── Styles ─── -->
 <style>
   .form-label {
@@ -361,9 +364,7 @@
     margin-top: 0.25rem;
   }
 </style>
-{% comment %}
-<script src="{% static 'js/common/toast_manager.js' %}"></script>
-{% endcomment %}
+
 <script src="{% static 'js/common/loader_manager.js' %}"></script>
 
 <!-- ─── CRUD JavaScript ─── -->
@@ -377,12 +378,23 @@
     const UPDATE_URL = (id) => `/communities/communities/${id}/update/`;
     const DELETE_URL = (id) => `/communities/communities/${id}/delete/`;
 
+    // Policy URLs
+    const POLICY_DETAIL_URL = (compId) =>
+      `/communities/communities/${compId}/policy/`;
+    const POLICY_UPDATE_URL = (compId) =>
+      `/communities/communities/${compId}/policy/update/`;
+
     /* ─── CSRF ─── */
     const CSRF = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-    /* ─── Loader ─── */
+    /* ─── Loaders ─── */
     const drawerLoader = new SectionLoaderManager(
       "communityDrawer",
+      "fill-emerald-500",
+      0.3,
+    );
+    const policyDrawerLoader = new SectionLoaderManager(
+      "policyDrawer",
       "fill-emerald-500",
       0.3,
     );
@@ -391,9 +403,10 @@
     let editMode = false;
     let currentDeleteId = null;
     let currentId = null;
+    let currentPolicyCommunityId = null;
 
     /* ═══════════════════════
-       DRAWER
+       DRAWER (Community)
     ═══════════════════════ */
     function openDrawer(mode = "create") {
       editMode = mode === "edit";
@@ -428,6 +441,45 @@
       resetLogoPreview();
       document.getElementById("communityForm").reset();
       document.getElementById("communityId").value = "";
+    }
+
+    /* ═══════════════════════
+       POLICY DRAWER
+    ═══════════════════════ */
+    function openPolicyDrawer() {
+      const overlay = document.getElementById("policyDrawerOverlay");
+      const drawer = document.getElementById("policyDrawer");
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() =>
+        overlay.classList.replace("opacity-0", "opacity-100"),
+      );
+      drawer.classList.remove("translate-x-full");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePolicyDrawer() {
+      const overlay = document.getElementById("policyDrawerOverlay");
+      const drawer = document.getElementById("policyDrawer");
+      overlay.classList.replace("opacity-100", "opacity-0");
+      setTimeout(() => overlay.classList.add("hidden"), 300);
+      drawer.classList.add("translate-x-full");
+      document.body.style.overflow = "";
+      document.getElementById("policyForm").reset();
+    }
+
+    /* ═══════════════════════
+       POLICY MODAL
+    ═══════════════════════ */
+    function openPolicyModal() {
+      const modal = document.getElementById("policyModal");
+      modal.classList.replace("hidden", "flex");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePolicyModal() {
+      const modal = document.getElementById("policyModal");
+      modal.classList.replace("flex", "hidden");
+      document.body.style.overflow = "";
     }
 
     /* ═══════════════════════
@@ -482,13 +534,16 @@
     typeFilter?.addEventListener("change", () => performSearch());
 
     /* ═══════════════════════
-       EVENT DELEGATION (Edit/Delete/Pagination/EmptyState)
+       EVENT DELEGATION (Edit/Delete/Pagination/EmptyState/Policy)
     ═══════════════════════ */
     container.addEventListener("click", async (e) => {
       const editBtn = e.target.closest(".edit-btn");
       const deleteBtn = e.target.closest(".delete-btn");
       const pageLink = e.target.closest(".page-link");
       const emptyStateBtn = e.target.closest("#emptyStateCreateBtn");
+
+      const setupPolicyBtn = e.target.closest(".setup-policy-btn");
+      const viewPolicyBtn = e.target.closest(".view-policy-btn");
 
       if (editBtn) {
         e.preventDefault();
@@ -536,8 +591,167 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else if (emptyStateBtn) {
         openDrawer("create");
+      } else if (setupPolicyBtn) {
+        e.preventDefault();
+        const id = setupPolicyBtn.dataset.compId;
+        currentPolicyCommunityId = id;
+        loadPolicyToDrawer(id);
+      } else if (viewPolicyBtn) {
+        e.preventDefault();
+        const id = viewPolicyBtn.dataset.compId;
+        loadPolicyToModal(id);
       }
     });
+
+    /* ═══════════════════════
+       POLICY LOGIC
+    ═══════════════════════ */
+    async function loadPolicyToDrawer(compId) {
+      policyDrawerLoader.showLoader();
+      openPolicyDrawer();
+      try {
+        const res = await fetch(POLICY_DETAIL_URL(compId), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const p = data.policy;
+          document.getElementById("policyDrawerTitle").textContent =
+            `${data.community_name} Policy`;
+          setValue("p_registration_fee_mode", p.registration_fee_mode);
+          setValue("p_registration_fee_amount", p.registration_fee_amount);
+          setValue("p_contribution_frequency", p.contribution_frequency);
+          setValue(
+            "p_default_contribution_amount",
+            p.default_contribution_amount,
+          );
+          setValue(
+            "p_late_contribution_fine_amount",
+            p.late_contribution_fine_amount,
+          );
+          setValue("p_absence_fine_amount", p.absence_fine_amount);
+          setValue(
+            "p_minimum_membership_days_before_loan",
+            p.minimum_membership_days_before_loan,
+          );
+          setValue(
+            "p_max_active_loans_per_member",
+            p.max_active_loans_per_member,
+          );
+          setValue(
+            "p_max_loan_multiple_of_savings",
+            p.max_loan_multiple_of_savings,
+          );
+          setValue("p_default_interest_rate", p.default_interest_rate);
+          setValue("p_minimum_guarantors", p.minimum_guarantors);
+          document.getElementById("p_requires_guarantor").checked =
+            p.requires_guarantor;
+        }
+      } catch (err) {
+        toast("danger", "Failed to load policy.");
+        closePolicyDrawer();
+      } finally {
+        policyDrawerLoader.hideLoader();
+      }
+    }
+
+    async function loadPolicyToModal(compId) {
+      document.getElementById("policyDisplay").classList.add("hidden");
+      document.getElementById("policyModalLoader").classList.remove("hidden");
+      openPolicyModal();
+      try {
+        const res = await fetch(POLICY_DETAIL_URL(compId), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const p = data.policy;
+          document.getElementById("modalCommunityName").textContent =
+            `${data.community_name} Policy`;
+
+          document.getElementById("view_registration_mode").textContent =
+            p.registration_fee_mode_display;
+          document.getElementById("view_registration_amount").textContent =
+            `${p.registration_fee_amount} XAF`;
+          document.getElementById("view_contribution_frequency").textContent =
+            p.contribution_frequency_display;
+          document.getElementById("view_contribution_amount").textContent =
+            `${p.default_contribution_amount} XAF`;
+          document.getElementById("view_late_fine").textContent =
+            `${p.late_contribution_fine_amount} XAF`;
+          document.getElementById("view_absence_fine").textContent =
+            `${p.absence_fine_amount} XAF`;
+          document.getElementById("view_interest_rate").textContent =
+            `${p.default_interest_rate}%`;
+          document.getElementById("view_max_loans").textContent =
+            p.max_active_loans_per_member;
+          document.getElementById("view_wait_time").textContent =
+            `${p.minimum_membership_days_before_loan} Days`;
+          document.getElementById("view_guarantor_req").textContent =
+            p.requires_guarantor ? "Yes" : "No";
+        }
+      } catch (err) {
+        toast("danger", "Failed to fetch policy detail.");
+        closePolicyModal();
+      } finally {
+        document.getElementById("policyModalLoader").classList.add("hidden");
+        document.getElementById("policyDisplay").classList.remove("hidden");
+      }
+    }
+
+    /* ═══════════════════════
+       SUBMIT (Policy)
+    ═══════════════════════ */
+    document
+      .getElementById("savePolicyBtn")
+      .addEventListener("click", async () => {
+        const btn = document.getElementById("savePolicyBtn");
+        const label = document.getElementById("policySaveLabel");
+        const icon = document.getElementById("policySaveIcon");
+
+        setLoading(btn, label, icon, true, "Save Policy");
+
+        const formData = new FormData(document.getElementById("policyForm"));
+
+        try {
+          const res = await fetch(POLICY_UPDATE_URL(currentPolicyCommunityId), {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": CSRF,
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.success) {
+            toast("success", data.message);
+            closePolicyDrawer();
+          } else {
+            toast("warning", data.message || "Failed to save policy.");
+          }
+        } catch (err) {
+          toast("danger", "Network error. Try again.");
+        } finally {
+          setLoading(btn, label, icon, false, "Save Policy");
+        }
+      });
+
+    document
+      .getElementById("closePolicyDrawerBtn")
+      .addEventListener("click", closePolicyDrawer);
+    document
+      .getElementById("cancelPolicyBtn")
+      .addEventListener("click", closePolicyDrawer);
+    document
+      .getElementById("policyDrawerOverlay")
+      .addEventListener("click", closePolicyDrawer);
+
+    document
+      .getElementById("closePolicyModalBtn")
+      .addEventListener("click", closePolicyModal);
+    document
+      .getElementById("closePolicyModalBtn2")
+      .addEventListener("click", closePolicyModal);
 
     document
       .getElementById("openCreateDrawerBtn")
@@ -546,7 +760,7 @@
       });
 
     /* ═══════════════════════
-       SUBMIT (Create / Update)
+       SUBMIT (Community Create/Update)
     ═══════════════════════ */
     document
       .getElementById("drawerSubmitBtn")
@@ -660,6 +874,8 @@
       if (e.key === "Escape") {
         closeDrawer();
         closeDeleteModal();
+        closePolicyDrawer();
+        closePolicyModal();
       }
     });
 
@@ -742,7 +958,7 @@
         label.textContent = "Saving…";
       } else {
         icon.className = "fas fa-check-circle";
-        label.textContent = resetLabel;
+        if (resetLabel) label.textContent = resetLabel;
       }
     }
 
