@@ -60,9 +60,15 @@ class CommunityListView(LoginRequiredMixin, TemplateView):
     """Renders the communities page with search + type filter support."""
     template_name = "publics/admin/communities/community.html"
 
+    def get_template_names(self):
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest' or self.request.GET.get('partial'):
+            return ["publics/admin/communities/includes/_community_list.html"]
+        return [self.template_name]
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         from django.db.models import Count, Q
+        from django.core.paginator import Paginator
 
         qs = Community.objects.annotate(
             active_member_count=Count('memberships', filter=Q(memberships__status='active'))
@@ -72,7 +78,6 @@ class CommunityListView(LoginRequiredMixin, TemplateView):
         selected_type = self.request.GET.get("type", "")
 
         if q:
-            from django.db.models import Q
             qs = qs.filter(Q(name__icontains=q) | Q(code__icontains=q) | Q(country__icontains=q))
         if selected_type:
             qs = qs.filter(community_type=selected_type)

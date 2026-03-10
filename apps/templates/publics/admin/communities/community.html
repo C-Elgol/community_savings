@@ -11,7 +11,11 @@
 <div
   class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
 >
-  <form method="get" class="flex flex-col sm:flex-row gap-2 flex-1">
+  <form
+    id="searchForm"
+    method="get"
+    class="flex flex-col sm:flex-row gap-2 flex-1"
+  >
     <div class="relative flex-1 max-w-sm">
       <i
         class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
@@ -19,14 +23,16 @@
       <input
         type="text"
         name="q"
+        id="searchInput"
         value="{{ search_query }}"
         placeholder="Search name, code or country…"
         class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 bg-white shadow-sm"
+        autocomplete="off"
       />
     </div>
     <select
       name="type"
-      onchange="this.form.submit()"
+      id="typeFilter"
       class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-sm"
     >
       <option value="">All types</option>
@@ -54,153 +60,10 @@
   </button>
 </div>
 
-<!-- ─── Community Grid ─── -->
-{% if communities %}
-<div
-  id="communityGrid"
-  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"
->
-  {% for community in communities %}
-  <div
-    id="card-{{ community.id }}"
-    class="group bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-3 hover:shadow-md hover:border-emerald-200 transition-all duration-200"
-  >
-    <!-- Header -->
-    <div class="flex items-start gap-3">
-      {% if community.logo %}
-      <img
-        src="{{ community.logo.url }}"
-        alt="{{ community.name }}"
-        class="w-12 h-12 rounded-xl object-cover border border-slate-100 flex-shrink-0"
-      />
-      {% else %}
-      <div
-        class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-bold text-lg flex-shrink-0"
-      >
-        {{ community.name|first|upper }}
-      </div>
-      {% endif %}
-      <div class="flex-1 min-w-0">
-        <h3 class="font-semibold text-slate-800 truncate">
-          {{ community.name }}
-        </h3>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">
-          {{ community.code }}
-        </p>
-      </div>
-      <span
-        class="flex-shrink-0 text-xs px-2.5 py-1 rounded-full font-medium {% if community.community_type == 'njangi' %}bg-emerald-100 text-emerald-700 {% elif community.community_type == 'savings' %}bg-blue-100 text-blue-700 {% elif community.community_type == 'cooperative' %}bg-violet-100 text-violet-700 {% elif community.community_type == 'investment' %}bg-amber-100 text-amber-700 {% else %}bg-slate-100 text-slate-600{% endif %}"
-      >
-        {{ community.get_community_type_display }}
-      </span>
-    </div>
-
-    <!-- Description -->
-    {% if community.description %}
-    <p class="text-sm text-slate-500 line-clamp-2 flex-1">
-      {{ community.description }}
-    </p>
-    {% endif %}
-
-    <!-- Meta -->
-    <div class="flex items-center justify-between text-xs text-slate-400">
-      <span
-        ><i class="fas fa-globe-africa mr-1"></i>{{ community.country|default:"—" }}</span
-      >
-      <span class="font-medium text-slate-600">{{ community.currency }}</span>
-      {% if community.start_date %}
-      <span
-        >started {{ community.start_date|date:"M Y"}}</span
-      >
-      {% endif %}
-    </div>
-
-    <!-- Members count -->
-    <div
-      class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-100 pt-3"
-    >
-      <span class="flex items-center gap-1.5">
-        <i class="fas fa-users text-emerald-600"></i>
-        <span class="font-semibold text-slate-700"
-          >{{ community.active_member_count }}</span
-        >
-        active members
-      </span>
-      <!-- Action buttons -->
-      <div class="flex items-center gap-1">
-        <button
-          data-edit-id="{{ community.id }}"
-          class="edit-btn p-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 rounded-lg transition flex items-center gap-1"
-          title="Edit"
-        >
-          <i class="fas fa-pen text-xs"></i>
-        </button>
-        <button
-          data-delete-id="{{ community.id }}"
-          data-delete-name="{{ community.name|escapejs }}"
-          class="delete-btn p-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50 rounded-lg transition flex items-center gap-1"
-          title="Delete"
-        >
-          <i class="fas fa-trash-alt text-xs"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
+<!-- ─── Community List Container ─── -->
+<div id="communityContainer" class="relative min-h-[400px]">
+  {% include 'publics/admin/communities/includes/_community_list.html' %}
 </div>
-
-<!-- ─── Pagination ─── -->
-{% if communities.has_other_pages %}
-<div class="flex items-center justify-center gap-2 mt-4">
-  {% if communities.has_previous %}
-  <a
-    href="?page={{ communities.previous_page_number }}&q={{ search_query }}&type={{ selected_type }}"
-    class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition"
-  >
-    <i class="fas fa-chevron-left text-xs"></i>
-  </a>
-  {% endif %} {% for num in communities.paginator.page_range %}
-  <a
-    href="?page={{ num }}&q={{ search_query }}&type={{ selected_type }}"
-    class="px-3 py-1.5 rounded-lg border text-sm transition{% if communities.number == num %} bg-emerald-600 text-white border-emerald-600{% else %} border-slate-200 hover:bg-slate-50{% endif %}"
-  >
-    {{ num }}
-  </a>
-  {% endfor %} {% if communities.has_next %}
-  <a
-    href="?page={{ communities.next_page_number }}&q={{ search_query }}&type={{ selected_type }}"
-    class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-50 transition"
-  >
-    <i class="fas fa-chevron-right text-xs"></i>
-  </a>
-  {% endif %}
-</div>
-{% endif %} {% else %}
-<!-- ─── Empty State ─── -->
-<div class="flex flex-col items-center justify-center py-24 text-center">
-  <div
-    class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5"
-  >
-    <i class="fas fa-users text-3xl text-emerald-400"></i>
-  </div>
-  <h3 class="text-lg font-semibold text-slate-700 mb-1">
-    {% if search_query %}No results for "{{ search_query }}"{% else %}No
-    communities yet{% endif %}
-  </h3>
-  <p class="text-sm text-slate-400 mb-6">
-    {% if search_query %}Try a different search or filter.{% else %}Get started
-    by creating your first Njangi group.{% endif %}
-  </p>
-  {% if not search_query %}
-  <button
-    id="emptyStateCreateBtn"
-    class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:opacity-90 transition text-sm"
-  >
-    <i class="fas fa-plus-circle mr-2"></i>Create first community
-  </button>
-  {% endif %}
-</div>
-{% endif %}
 
 <!-- ════════════════════════════════════════════
      RIGHT SLIDE-IN DRAWER  (Create / Edit)
@@ -498,7 +361,9 @@
     margin-top: 0.25rem;
   }
 </style>
-{% comment %} <script src="{% static 'js/common/toast_manager.js' %}"></script> {% endcomment %}
+{% comment %}
+<script src="{% static 'js/common/toast_manager.js' %}"></script>
+{% endcomment %}
 <script src="{% static 'js/common/loader_manager.js' %}"></script>
 
 <!-- ─── CRUD JavaScript ─── -->
@@ -525,10 +390,11 @@
     /* ─── State ─── */
     let editMode = false;
     let currentDeleteId = null;
+    let currentId = null;
 
     /* ═══════════════════════
-     DRAWER
-  ═══════════════════════ */
+       DRAWER
+    ═══════════════════════ */
     function openDrawer(mode = "create") {
       editMode = mode === "edit";
       document.getElementById("drawerTitle").textContent = editMode
@@ -565,35 +431,76 @@
     }
 
     /* ═══════════════════════
-     CREATE
-  ═══════════════════════ */
-    document
-      .getElementById("openCreateDrawerBtn")
-      ?.addEventListener("click", () => {
-        openDrawer("create");
-      });
-    document
-      .getElementById("emptyStateCreateBtn")
-      ?.addEventListener("click", () => {
-        openDrawer("create");
-      });
+       LIVE SEARCH
+    ═══════════════════════ */
+    let searchTimeout;
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+    const container = document.getElementById("communityContainer");
+
+    const performSearch = async (targetUrl = null) => {
+      const url = targetUrl
+        ? new URL(targetUrl)
+        : new URL(window.location.href);
+      if (!targetUrl) {
+        url.searchParams.set("q", searchInput.value);
+        url.searchParams.set("type", typeFilter.value);
+        url.searchParams.delete("page");
+      }
+      url.searchParams.set("partial", "1");
+
+      container.classList.add("opacity-50", "pointer-events-none");
+      try {
+        const res = await fetch(url, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const html = await res.text();
+        container.innerHTML = html;
+
+        if (!targetUrl) {
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.set("q", searchInput.value);
+          cleanUrl.searchParams.set("type", typeFilter.value);
+          cleanUrl.searchParams.delete("page");
+          window.history.pushState({}, "", cleanUrl);
+        } else {
+          window.history.pushState({}, "", targetUrl);
+        }
+      } catch (err) {
+        console.error("Search failed:", err);
+      } finally {
+        container.classList.remove("opacity-50", "pointer-events-none");
+      }
+    };
+
+    const debouncedSearch = () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => performSearch(), 400);
+    };
+
+    searchInput?.addEventListener("input", debouncedSearch);
+    typeFilter?.addEventListener("change", () => performSearch());
 
     /* ═══════════════════════
-     EDIT — load community data
-  ═══════════════════════ */
-    document.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.editId;
+       EVENT DELEGATION (Edit/Delete/Pagination/EmptyState)
+    ═══════════════════════ */
+    container.addEventListener("click", async (e) => {
+      const editBtn = e.target.closest(".edit-btn");
+      const deleteBtn = e.target.closest(".delete-btn");
+      const pageLink = e.target.closest(".page-link");
+      const emptyStateBtn = e.target.closest("#emptyStateCreateBtn");
+
+      if (editBtn) {
+        e.preventDefault();
+        const id = editBtn.dataset.editId;
         document.getElementById("communityId").value = id;
         openDrawer("edit");
         drawerLoader.showLoader();
-
         try {
           const res = await fetch(DETAIL_URL(id), {
             headers: { "X-Requested-With": "XMLHttpRequest" },
           });
           const data = await res.json();
-
           if (data.success) {
             const c = data.community;
             setValue("f_name", c.name);
@@ -610,17 +517,37 @@
             closeDrawer();
           }
         } catch {
-          toast("danger", "Network error. Please try again.");
+          toast("danger", "Network error.");
           closeDrawer();
         } finally {
           drawerLoader.hideLoader();
         }
-      });
+      } else if (deleteBtn) {
+        e.preventDefault();
+        currentDeleteId = deleteBtn.dataset.deleteId;
+        document.getElementById("deleteCommunityName").textContent =
+          deleteBtn.dataset.deleteName;
+        document
+          .getElementById("deleteModal")
+          .classList.replace("hidden", "flex");
+      } else if (pageLink) {
+        e.preventDefault();
+        performSearch(pageLink.href);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (emptyStateBtn) {
+        openDrawer("create");
+      }
     });
 
+    document
+      .getElementById("openCreateDrawerBtn")
+      ?.addEventListener("click", () => {
+        openDrawer("create");
+      });
+
     /* ═══════════════════════
-     SUBMIT (Create / Update)
-  ═══════════════════════ */
+       SUBMIT (Create / Update)
+    ═══════════════════════ */
     document
       .getElementById("drawerSubmitBtn")
       .addEventListener("click", async () => {
@@ -650,7 +577,7 @@
           if (data.success) {
             closeDrawer();
             toast("success", data.message);
-            setTimeout(() => window.location.reload(), 900);
+            performSearch();
           } else {
             if (data.errors) displayErrors(data.errors);
             toast("warning", data.message || "Please fix the errors below.");
@@ -669,19 +596,8 @@
       });
 
     /* ═══════════════════════
-     DELETE
-  ═══════════════════════ */
-    document.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        currentDeleteId = btn.dataset.deleteId;
-        document.getElementById("deleteCommunityName").textContent =
-          btn.dataset.deleteName;
-        document
-          .getElementById("deleteModal")
-          .classList.replace("hidden", "flex");
-      });
-    });
-
+       DELETE
+    ═══════════════════════ */
     document
       .getElementById("cancelDeleteBtn")
       .addEventListener("click", closeDeleteModal);
@@ -708,16 +624,7 @@
           if (data.success) {
             closeDeleteModal();
             toast("success", data.message);
-            const card = document.getElementById(`card-${data.deleted_id}`);
-            if (card) {
-              card.style.transition = "opacity 0.3s, transform 0.3s";
-              card.style.opacity = "0";
-              card.style.transform = "scale(0.95)";
-              setTimeout(() => {
-                card.remove();
-                updateEmptyState();
-              }, 350);
-            }
+            performSearch();
           } else {
             toast("danger", data.message || "Failed to delete.");
           }
@@ -738,8 +645,8 @@
     }
 
     /* ═══════════════════════
-     CLOSE HANDLERS
-  ═══════════════════════ */
+       CLOSE HANDLERS
+    ═══════════════════════ */
     document
       .getElementById("closeDrawerBtn")
       .addEventListener("click", closeDrawer);
@@ -757,8 +664,8 @@
     });
 
     /* ═══════════════════════
-     LOGO UPLOAD
-  ═══════════════════════ */
+       LOGO UPLOAD
+    ═══════════════════════ */
     const dropzone = document.getElementById("logoDropzone");
     const logoInput = document.getElementById("f_logo");
 
@@ -780,6 +687,7 @@
         logoInput.dispatchEvent(new Event("change"));
       }
     });
+
     logoInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -810,11 +718,11 @@
     }
 
     /* ═══════════════════════
-     HELPERS
-  ═══════════════════════ */
+       HELPERS
+    ═══════════════════════ */
     function toast(type, message) {
       window.toastManager
-        .buildToast()
+        ?.buildToast()
         .setMessage(message)
         .setType(type)
         .setPosition("top-right")
@@ -858,13 +766,6 @@
         }
         if (inputEl) inputEl.classList.add("error");
       });
-    }
-
-    function updateEmptyState() {
-      const grid = document.getElementById("communityGrid");
-      if (grid && grid.querySelectorAll("[id^='card-']").length === 0) {
-        window.location.reload();
-      }
     }
   })();
 </script>
