@@ -472,14 +472,24 @@
     ═══════════════════════ */
     function openPolicyModal() {
       const modal = document.getElementById("policyModal");
+      const content = document.getElementById("policyModalContent");
       modal.classList.replace("hidden", "flex");
+      requestAnimationFrame(() => {
+        content.classList.replace("scale-95", "scale-100");
+        content.classList.replace("opacity-0", "opacity-100");
+      });
       document.body.style.overflow = "hidden";
     }
 
     function closePolicyModal() {
       const modal = document.getElementById("policyModal");
-      modal.classList.replace("flex", "hidden");
-      document.body.style.overflow = "";
+      const content = document.getElementById("policyModalContent");
+      content.classList.replace("scale-100", "scale-95");
+      content.classList.replace("opacity-100", "opacity-0");
+      setTimeout(() => {
+        modal.classList.replace("flex", "hidden");
+        document.body.style.overflow = "";
+      }, 300);
     }
 
     /* ═══════════════════════
@@ -646,6 +656,14 @@
           setValue("p_minimum_guarantors", p.minimum_guarantors);
           document.getElementById("p_requires_guarantor").checked =
             p.requires_guarantor;
+
+          // Update currencies
+          document.querySelectorAll(".community-currency").forEach((el) => {
+            el.textContent = data.community_currency;
+          });
+
+          // Toggle registration fee visibility
+          toggleRegistrationFeeAmount(p.registration_fee_mode);
         }
       } catch (err) {
         toast("danger", "Failed to load policy.");
@@ -669,18 +687,19 @@
           document.getElementById("modalCommunityName").textContent =
             `${data.community_name} Policy`;
 
+          const curr = data.community_currency;
           document.getElementById("view_registration_mode").textContent =
             p.registration_fee_mode_display;
           document.getElementById("view_registration_amount").textContent =
-            `${p.registration_fee_amount} XAF`;
+            `${p.registration_fee_amount} ${curr}`;
           document.getElementById("view_contribution_frequency").textContent =
             p.contribution_frequency_display;
           document.getElementById("view_contribution_amount").textContent =
-            `${p.default_contribution_amount} XAF`;
+            `${p.default_contribution_amount} ${curr}`;
           document.getElementById("view_late_fine").textContent =
-            `${p.late_contribution_fine_amount} XAF`;
+            `${p.late_contribution_fine_amount} ${curr}`;
           document.getElementById("view_absence_fine").textContent =
-            `${p.absence_fine_amount} XAF`;
+            `${p.absence_fine_amount} ${curr}`;
           document.getElementById("view_interest_rate").textContent =
             `${p.default_interest_rate}%`;
           document.getElementById("view_max_loans").textContent =
@@ -745,6 +764,24 @@
     document
       .getElementById("policyDrawerOverlay")
       .addEventListener("click", closePolicyDrawer);
+
+    // Registration Mode Change Handler
+    document
+      .getElementById("p_registration_fee_mode")
+      .addEventListener("change", (e) => {
+        toggleRegistrationFeeAmount(e.target.value);
+      });
+
+    function toggleRegistrationFeeAmount(mode) {
+      const group = document.getElementById("registrationFeeAmountGroup");
+      const amountInput = document.getElementById("p_registration_fee_amount");
+      if (mode === "NONE") {
+        group.classList.add("hidden");
+        amountInput.value = "0.00";
+      } else {
+        group.classList.remove("hidden");
+      }
+    }
 
     document
       .getElementById("closePolicyModalBtn")

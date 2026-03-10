@@ -40,7 +40,8 @@ class CommunityPolicyDetailView(LoginRequiredMixin, View):
             return JsonResponse({
                 "success": True, 
                 "policy": _policy_data(policy),
-                "community_name": community.name
+                "community_name": community.name,
+                "community_currency": community.currency
             })
         except Community.DoesNotExist:
             return JsonResponse({"success": False, "message": str(_("Community not found."))}, status=404)

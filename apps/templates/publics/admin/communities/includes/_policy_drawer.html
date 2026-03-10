@@ -63,24 +63,24 @@
               {% endfor %}
             </select>
           </div>
-          <div>
+          <div id="registrationFeeAmountGroup">
             <label
               class="block text-xs font-semibold text-slate-500 mb-1.5 px-1"
               >Amount</label
             >
             <div class="relative">
-              <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
-                >XAF</span
-              >
               <input
                 type="number"
                 name="registration_fee_amount"
                 id="p_registration_fee_amount"
                 step="0.01"
                 value="0.00"
-                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-12 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pr-12 pl-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
               />
+              <span
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium community-currency"
+                >XAF</span
+              >
             </div>
             <p
               id="err_registration_fee_amount"
@@ -122,18 +122,18 @@
               >Default Amount</label
             >
             <div class="relative">
-              <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium"
-                >XAF</span
-              >
               <input
                 type="number"
                 name="default_contribution_amount"
                 id="p_default_contribution_amount"
                 step="0.01"
                 value="0.00"
-                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-12 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pr-12 pl-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
               />
+              <span
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium community-currency"
+                >XAF</span
+              >
             </div>
           </div>
         </div>
@@ -156,18 +156,18 @@
               >Late Fine</label
             >
             <div class="relative">
-              <span
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium"
-                >XAF</span
-              >
               <input
                 type="number"
                 name="late_contribution_fine_amount"
                 id="p_late_contribution_fine_amount"
                 step="0.01"
                 value="0.00"
-                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pr-10 pl-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
               />
+              <span
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium community-currency"
+                >XAF</span
+              >
             </div>
           </div>
           <div class="col-span-1">
@@ -176,18 +176,18 @@
               >Absence Fine</label
             >
             <div class="relative">
-              <span
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium"
-                >XAF</span
-              >
               <input
                 type="number"
                 name="absence_fine_amount"
                 id="p_absence_fine_amount"
                 step="0.01"
                 value="0.00"
-                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
+                class="form-input w-full bg-slate-50 border-slate-200 rounded-xl pr-10 pl-3 py-2 text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
               />
+              <span
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium community-currency"
+                >XAF</span
+              >
             </div>
           </div>
         </div>

@@ -1,210 +1,197 @@
 <div
   id="policyModal"
-  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] hidden items-center justify-center p-4 transition-all duration-300"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 font-sans"
 >
   <div
-    class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]"
+    class="bg-white rounded-[2rem] shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
+    id="policyModalContent"
   >
-    <!-- Header -->
+    <!-- Modal Header -->
     <div
-      class="px-8 py-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-between"
+      class="relative h-32 bg-gradient-to-br from-emerald-600 to-teal-700 p-8 flex flex-col justify-end"
     >
-      <div>
-        <h2 class="text-2xl font-bold" id="modalCommunityName">
-          Community Policy
-        </h2>
-        <p class="text-emerald-50/80 text-sm mt-1">
-          Rules and regulations overview
-        </p>
-      </div>
       <button
         id="closePolicyModalBtn"
-        class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 transition-colors"
+        class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-md"
       >
-        <i class="fas fa-times text-lg"></i>
+        <i class="fas fa-times"></i>
       </button>
-    </div>
-
-    <!-- Read-only Body -->
-    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-      <div id="policyModalContent" class="space-y-8">
-        <!-- Loader during fetch -->
+      <div class="flex items-center gap-4">
         <div
-          id="policyModalLoader"
-          class="flex flex-col items-center justify-center py-12 hidden"
+          class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-2xl shadow-inner"
         >
-          <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-500"></i>
-          <p class="text-slate-400 text-sm mt-4 italic">
-            Loading policy details...
+          <i class="fas fa-scroll"></i>
+        </div>
+        <div>
+          <h3
+            id="modalCommunityName"
+            class="text-2xl font-black text-white leading-tight"
+          >
+            Community Policy
+          </h3>
+          <p
+            class="text-emerald-50/80 text-xs font-semibold uppercase tracking-widest mt-1"
+          >
+            Rules & Regulations
           </p>
         </div>
+      </div>
+    </div>
 
-        <div id="policyDisplay" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Item Template -->
-          <div
-            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
-          >
-            <div
-              class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0"
+    <!-- Modal Body -->
+    <div class="p-8">
+      <!-- Loader state -->
+      <div
+        id="policyModalLoader"
+        class="flex flex-col items-center py-12 hidden"
+      >
+        <div
+          class="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"
+        ></div>
+        <p class="text-slate-400 text-sm mt-4 font-medium">
+          Fetching policy data...
+        </p>
+      </div>
+
+      <div id="policyDisplay" class="grid grid-cols-2 gap-6">
+        <!-- Registration & Contribution -->
+        <div class="col-span-2 sm:col-span-1 space-y-6">
+          <div class="group">
+            <h4
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"
             >
-              <i class="fas fa-id-card"></i>
-            </div>
-            <div>
-              <p
-                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
-              >
-                Registration Mode
-              </p>
-              <p
-                id="view_registration_mode"
-                class="text-slate-800 font-semibold"
-              >
-                -
-              </p>
-              <p
-                id="view_registration_amount"
-                class="text-emerald-600 font-bold text-lg mt-1"
-              >
-                -
-              </p>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Registration
+            </h4>
+            <div
+              class="bg-slate-50 rounded-2xl p-4 border border-slate-100 group-hover:border-emerald-100 transition-colors"
+            >
+              <p class="text-xs text-slate-500 font-medium mb-1">Fee & Mode</p>
+              <div class="flex items-baseline gap-2">
+                <span
+                  id="view_registration_amount"
+                  class="text-xl font-bold text-slate-800"
+                  >0 XAF</span
+                >
+                <span
+                  id="view_registration_mode"
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"
+                  >NONE</span
+                >
+              </div>
             </div>
           </div>
 
-          <div
-            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
-          >
-            <div
-              class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0"
+          <div class="group">
+            <h4
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"
             >
-              <i class="fas fa-sync"></i>
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Contribution
+            </h4>
+            <div
+              class="bg-slate-50 rounded-2xl p-4 border border-slate-100 group-hover:border-blue-100 transition-colors"
+            >
+              <p class="text-xs text-slate-500 font-medium mb-1">
+                Standard Share
+              </p>
+              <div class="flex items-baseline gap-2">
+                <span
+                  id="view_contribution_amount"
+                  class="text-xl font-bold text-slate-800"
+                  >0 XAF</span
+                >
+                <span
+                  id="view_contribution_frequency"
+                  class="text-[10px] font-bold text-blue-600 uppercase"
+                  >MONTHLY</span
+                >
+              </div>
             </div>
-            <div>
-              <p
-                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
-              >
-                Contribution Frequency
-              </p>
-              <p
-                id="view_contribution_frequency"
-                class="text-slate-800 font-semibold"
-              >
-                -
-              </p>
-              <p
-                id="view_contribution_amount"
-                class="text-blue-600 font-bold text-lg mt-1"
-              >
-                -
-              </p>
+          </div>
+        </div>
+
+        <!-- Fines & Penalties -->
+        <div class="col-span-2 sm:col-span-1 space-y-4">
+          <div
+            class="group bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-rose-100 transition-colors"
+          >
+            <h4
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"
+            >
+              <i class="fas fa-hand-paper text-rose-500"></i> Fines
+            </h4>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-slate-500">Late Payment</span>
+                <span
+                  id="view_late_fine"
+                  class="text-sm font-bold text-rose-600"
+                  >0 XAF</span
+                >
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-slate-500">Absence</span>
+                <span
+                  id="view_absence_fine"
+                  class="text-sm font-bold text-rose-600"
+                  >0 XAF</span
+                >
+              </div>
             </div>
           </div>
 
+          <!-- Loans Brief -->
           <div
-            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
+            class="group bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-amber-100 transition-colors"
           >
-            <div
-              class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0"
+            <h4
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"
             >
-              <i class="fas fa-hourglass-end"></i>
-            </div>
-            <div>
-              <p
-                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
-              >
-                Late Fine
-              </p>
-              <p
-                id="view_late_fine"
-                class="text-rose-600 font-bold text-lg mt-1"
-              >
-                -
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4"
-          >
-            <div
-              class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0"
-            >
-              <i class="fas fa-user-times"></i>
-            </div>
-            <div>
-              <p
-                class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-0.5"
-              >
-                Absence Fine
-              </p>
-              <p
-                id="view_absence_fine"
-                class="text-rose-500 font-bold text-lg mt-1"
-              >
-                -
-              </p>
-            </div>
-          </div>
-
-          <!-- Loan section -->
-          <div
-            class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100"
-          >
-            <div
-              class="col-span-2 md:col-span-4 flex items-center gap-2 text-slate-800 mb-2"
-            >
-              <i class="fas fa-money-check-alt text-emerald-600"></i>
-              <h4 class="font-bold text-sm">Loan Parameters</h4>
-            </div>
-            <div>
-              <p class="text-[10px] uppercase font-bold text-slate-400">
-                Interest Rate
-              </p>
-              <p
-                id="view_interest_rate"
-                class="text-slate-800 font-bold text-base"
-              >
-                -
-              </p>
-            </div>
-            <div>
-              <p class="text-[10px] uppercase font-bold text-slate-400">
-                Max Active Loans
-              </p>
-              <p id="view_max_loans" class="text-slate-800 font-bold text-base">
-                -
-              </p>
-            </div>
-            <div>
-              <p class="text-[10px] uppercase font-bold text-slate-400">
-                Min Wait Time
-              </p>
-              <p id="view_wait_time" class="text-slate-800 font-bold text-base">
-                -
-              </p>
-            </div>
-            <div>
-              <p class="text-[10px] uppercase font-bold text-slate-400">
-                Guarantor Req.
-              </p>
-              <p
-                id="view_guarantor_req"
-                class="text-slate-800 font-bold text-base"
-              >
-                -
-              </p>
+              <i class="fas fa-percentage text-amber-500"></i> Loans
+            </h4>
+            <div class="grid grid-cols-2 gap-y-3">
+              <div>
+                <p class="text-[10px] text-slate-400">Interest</p>
+                <p
+                  id="view_interest_rate"
+                  class="text-sm font-bold text-slate-700"
+                >
+                  5%
+                </p>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-400">Max Active</p>
+                <p id="view_max_loans" class="text-sm font-bold text-slate-700">
+                  1
+                </p>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-400">Wait Time</p>
+                <p id="view_wait_time" class="text-sm font-bold text-slate-700">
+                  30 Days
+                </p>
+              </div>
+              <div>
+                <p class="text-[10px] text-slate-400">Guarantors</p>
+                <p
+                  id="view_guarantor_req"
+                  class="text-sm font-bold text-slate-700"
+                >
+                  Yes
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Footer -->
-    <div
-      class="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end"
-    >
+    <!-- Modal Footer -->
+    <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
       <button
         id="closePolicyModalBtn2"
-        class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-100 active:scale-95 transition-all shadow-sm"
+        class="px-10 py-3 bg-white border border-slate-200 rounded-2xl text-slate-700 font-bold text-sm hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
       >
         Close Overview
       </button>
