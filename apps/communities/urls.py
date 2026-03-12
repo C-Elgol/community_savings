@@ -10,7 +10,13 @@ from apps.communities.views.policy_view import (
     CommunityPolicyDetailView,
     CommunityPolicyUpdateView,
 )
-from apps.communities.views.community_space_view import CommunitySpaceView
+from apps.communities.views.community_space_view import (
+    CommunitySpaceListView,
+    CommunitySpaceCreateView,
+    CommunitySpaceDetailView,
+    CommunitySpaceUpdateView,
+    CommunitySpaceDeleteView,
+)
 
 app_name = "communities"
 
@@ -26,5 +32,9 @@ urlpatterns = [
     path("communities/<uuid:community_pk>/policy/update/", CommunityPolicyUpdateView.as_view(), name="policy_update"),
 
     # Community Space
-    path("communities-space", CommunitySpaceView.as_view(), name="community_space"),
+    path("communities-space", CommunitySpaceListView.as_view(), name="community_space"),
+    path("communities-space/create/", CommunitySpaceCreateView.as_view(), name="community_space_create"),
+    path("communities-space/<uuid:pk>/", CommunitySpaceDetailView.as_view(), name="community_space_detail"),
+    path("communities-space/<uuid:pk>/update/", CommunitySpaceUpdateView.as_view(), name="community_space_update"),
+    path("communities-space/<uuid:pk>/delete/", CommunitySpaceDeleteView.as_view(), name="community_space_delete"),
 ]

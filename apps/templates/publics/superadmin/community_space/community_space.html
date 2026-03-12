@@ -4,81 +4,91 @@
 <div id="spaces" class="page active-page">
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-bold">Community Spaces</h2>
+      <h2 class="text-xl font-bold">{% trans "Community Spaces" %}</h2>
       <button
         id="openSpaceModalBtn"
         class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2"
       >
         <i class="fas fa-plus-circle"></i>
-        <span>New Space</span>
+        <span>{% trans "New Space" %}</span>
       </button>
+    </div>
+
+    <!-- Search bar -->
+    <div class="mb-6">
+        <form method="GET" class="flex gap-2">
+            <div class="relative flex-1">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" name="q" value="{{ search_query }}" placeholder="{% trans "Search spaces..." %}" class="w-full pl-11 pr-4 py-3 border rounded-xl focus:outline-none input-focus">
+            </div>
+            <button type="submit" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all">{% trans "Filter" %}</button>
+        </form>
     </div>
 
     <!-- spaces table -->
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-sm" id="spacesTable">
         <thead class="bg-slate-50 text-slate-600">
           <tr>
-            <th class="px-4 py-3 text-left">Space Name</th>
-            <th class="px-4 py-3 text-left">Slug</th>
-            <th class="px-4 py-3 text-left">Status</th>
-            <th class="px-4 py-3 text-left">Owner</th>
-            <th class="px-4 py-3 text-left">Created</th>
-            <th class="px-4 py-3 text-left">Actions</th>
+            <th class="px-4 py-3 text-left">{% trans "Space Name" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Slug" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Status" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Owner" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Created" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Actions" %}</th>
           </tr>
         </thead>
         <tbody class="divide-y">
-          <tr>
-            <td class="px-4 py-3 font-medium">Njangi Central</td>
-            <td class="px-4 py-3">njangi-central</td>
-            <td class="px-4 py-3">
-              <span class="status-badge status-active"
-                ><i class="fas fa-circle text-[8px]"></i> Active</span
-              >
+          {% for space in spaces %}
+          <tr data-id="{{ space.id }}">
+            <td class="px-4 py-3 font-medium flex items-center gap-3">
+              {% if space.logo %}
+                <img src="{{ space.logo.url }}" class="w-8 h-8 rounded-lg object-cover">
+              {% else %}
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">{{ space.name|slice:":1" }}</div>
+              {% endif %}
+              {{ space.name }}
             </td>
-            <td>John Doe</td>
-            <td>2024-01-15</td>
-            <td>
-              <button class="text-emerald-700 mr-2">
-                <i class="fas fa-edit"></i></button
-              ><button class="text-rose-700">
+            <td class="px-4 py-3 text-slate-500">{{ space.slug }}</td>
+            <td class="px-4 py-3">
+              {% if space.status == 'ACTIVE' %}
+                <span class="status-badge status-active"><i class="fas fa-circle text-[8px]"></i> {% trans "Active" %}</span>
+              {% elif space.status == 'INACTIVE' %}
+                <span class="status-badge status-inactive"><i class="fas fa-circle text-[8px]"></i> {% trans "Inactive" %}</span>
+              {% else %}
+                <span class="status-badge status-pending"><i class="fas fa-clock"></i> {{ space.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">{{ space.owner.get_full_name|default:"N/A" }}</td>
+            <td class="px-4 py-3">{{ space.created|date:"Y-m-d" }}</td>
+            <td class="px-4 py-3">
+              <button class="text-emerald-700 mr-2 edit-space-btn" data-id="{{ space.id }}" title="{% trans "Edit" %}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="text-rose-700 delete-space-btn" data-id="{{ space.id }}" data-name="{{ space.name }}" title="{% trans "Delete" %}">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
           </tr>
+          {% empty %}
           <tr>
-            <td class="px-4 py-3 font-medium">Yaoundé Hub</td>
-            <td class="px-4 py-3">yaounde-hub</td>
-            <td class="px-4 py-3">
-              <span class="status-badge status-active"
-                ><i class="fas fa-circle"></i> Active</span
-              >
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                <div class="flex flex-col items-center gap-2">
+                    <i class="fas fa-folder-open text-4xl text-slate-200"></i>
+                    <p>{% trans "No community spaces found." %}</p>
+                </div>
             </td>
-            <td>Jane Smith</td>
-            <td>2024-02-20</td>
-            <td></td>
           </tr>
-          <tr>
-            <td class="px-4 py-3 font-medium">Douala Business</td>
-            <td class="px-4 py-3">douala-biz</td>
-            <td class="px-4 py-3">
-              <span class="status-badge status-pending"
-                ><i class="fas fa-clock"></i> Pending</span
-              >
-            </td>
-            <td>Pending</td>
-            <td>2024-03-10</td>
-            <td></td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ========== CREATE COMMUNITY SPACE MODAL ========== -->
+<!-- ========== COMMUNITY SPACE MODAL ========== -->
 <div
-  id="createSpaceModal"
+  id="spaceModal"
   class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden"
 >
   <div
@@ -89,10 +99,10 @@
       class="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex justify-between items-center"
     >
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">
-          Create Community Space
+        <h2 class="text-2xl font-bold text-slate-800" id="modalTitle">
+          {% trans "Create Community Space" %}
         </h2>
-        <p class="text-sm text-slate-500">Set up a new tenant workspace</p>
+        <p class="text-sm text-slate-500" id="modalSubtitle">{% trans "Set up a new tenant workspace" %}</p>
       </div>
       <button
         id="closeSpaceModalBtn"
@@ -102,100 +112,102 @@
       </button>
     </div>
 
-    <!-- form (maps to CommunitySpace model) -->
-    <form class="p-6 space-y-5">
+    <!-- form -->
+    <form id="spaceForm" class="p-6 space-y-5" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="spaceId" name="id">
+      
       <!-- Name -->
       <div class="space-y-1.5">
         <label class="text-sm font-semibold text-slate-700"
-          >Space Name <span class="text-emerald-600">*</span></label
+          >{% trans "Space Name" %} <span class="text-emerald-600">*</span></label
         >
         <input
           type="text"
+          id="id_name"
+          name="name"
           placeholder="e.g., Yaoundé Hub"
           class="w-full px-4 py-3 border rounded-xl focus:outline-none input-focus"
+          required
         />
-        <p class="text-xs text-slate-400">
-          Will be used to generate unique slug
-        </p>
-      </div>
-
-      <!-- Slug (auto-generated but editable) -->
-      <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-slate-700">Slug</label>
-        <input
-          type="text"
-          placeholder="yaounde-hub"
-          class="w-full px-4 py-3 border rounded-xl focus:outline-none input-focus bg-slate-50"
-        />
-        <p class="text-xs text-slate-400">URL-friendly identifier</p>
+        <div id="error_name" class="text-xs text-rose-500 mt-1 hidden"></div>
       </div>
 
       <!-- Description -->
       <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-slate-700">Description</label>
+        <label class="text-sm font-semibold text-slate-700">{% trans "Description" %}</label>
         <textarea
+          id="id_description"
+          name="description"
           rows="3"
-          placeholder="Describe this community space..."
+          placeholder="{% trans "Describe this community space..." %}"
           class="w-full px-4 py-3 border rounded-xl focus:outline-none input-focus"
         ></textarea>
+        <div id="error_description" class="text-xs text-rose-500 mt-1 hidden"></div>
       </div>
 
-      <!-- Owner (user selection) -->
+      <!-- Owner -->
       <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-slate-700">Space Owner</label>
+        <label class="text-sm font-semibold text-slate-700">{% trans "Space Owner" %}</label>
         <select
+          id="id_owner"
+          name="owner"
           class="w-full px-4 py-3 border rounded-xl focus:outline-none input-focus"
         >
-          <option value="">Select a user</option>
-          <option value="1">John Doe (john@example.com)</option>
-          <option value="2">Jane Smith (jane@example.com)</option>
-          <option value="3">Assign later</option>
+          <option value="">{% trans "Select a user" %}</option>
+          {% for user in users %}
+            <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.email }})</option>
+          {% endfor %}
         </select>
+        <div id="error_owner" class="text-xs text-rose-500 mt-1 hidden"></div>
       </div>
 
       <!-- Status -->
       <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-slate-700">Status</label>
+        <label class="text-sm font-semibold text-slate-700">{% trans "Status" %}</label>
         <select
+          id="id_status"
+          name="status"
           class="w-full px-4 py-3 border rounded-xl focus:outline-none input-focus"
         >
-          <option value="ACTIVE" selected>Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="SUSPENDED">Suspended</option>
+          {% for val, label in space_statuses %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
         </select>
+        <div id="error_status" class="text-xs text-rose-500 mt-1 hidden"></div>
       </div>
 
       <!-- Logo Upload -->
       <div class="space-y-1.5">
-        <label class="text-sm font-semibold text-slate-700">Space Logo</label>
+        <label class="text-sm font-semibold text-slate-700">{% trans "Space Logo" %}</label>
         <div
           class="image-upload-area rounded-xl p-6 text-center cursor-pointer"
-          id="spaceLogoUpload"
+          id="spaceLogoUploadArea"
         >
           <input
             type="file"
-            id="spaceLogoInput"
+            id="spaceLogoInputFile"
+            name="logo"
             class="hidden"
             accept=".jpg,.jpeg,.png,.webp"
           />
-          <div class="flex flex-col items-center gap-2">
+          <div class="flex flex-col items-center gap-2" id="logoUploadPlaceholder">
             <div
               class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700"
             >
               <i class="fas fa-cloud-upload-alt text-2xl"></i>
             </div>
             <p class="text-sm font-medium text-slate-700">
-              Click to upload logo
+              {% trans "Click to upload logo" %}
             </p>
-            <p class="text-xs text-slate-400">JPG, JPEG, PNG, WEBP (max 5MB)</p>
+            <p class="text-xs text-slate-400">JPG, JPEG, PNG, WEBP ({% trans "max" %} 5MB)</p>
+          </div>
+          <div id="logoPreview" class="hidden flex flex-col items-center gap-2">
+              <img src="" id="logoPreviewImg" class="w-16 h-16 rounded-full object-cover">
+              <p class="text-xs text-emerald-600">{% trans "New logo selected" %}</p>
           </div>
         </div>
-      </div>
-
-      <!-- Created by (hidden) -->
-      <div class="bg-slate-50 p-3 rounded-xl text-sm">
-        <i class="fas fa-info-circle text-emerald-600 mr-2"></i>
-        Created by: <span class="font-semibold">Super Admin</span> (you)
+        <div id="error_logo" class="text-xs text-rose-500 mt-1 hidden"></div>
       </div>
 
       <!-- Actions -->
@@ -205,16 +217,243 @@
           id="cancelSpaceModalBtn"
           class="px-6 py-3 border rounded-xl text-slate-700 font-medium hover:bg-slate-50"
         >
-          Cancel
+          {% trans "Cancel" %}
         </button>
         <button
           type="submit"
+          id="submitBtn"
           class="px-6 py-3 gradient-bg text-white rounded-xl font-medium hover:opacity-90 flex items-center gap-2"
         >
-          <i class="fas fa-check-circle"></i> Create Space
+          <i class="fas fa-check-circle"></i> 
+          <span id="btnText">{% trans "Create Space" %}</span>
         </button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 modal-content">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">{% trans "Delete Community Space" %}</h3>
+            <p class="text-slate-500 mb-6">{% trans "Are you sure you want to delete" %} "<span id="deleteSpaceName" class="font-bold text-slate-800"></span>"? {% trans "This action cannot be undone." %}</p>
+            <div class="flex gap-3">
+                <button type="button" id="cancelDeleteBtn" class="flex-1 px-4 py-3 border rounded-xl text-slate-700 font-medium hover:bg-slate-50">{% trans "Cancel" %}</button>
+                <button type="button" id="confirmDeleteBtn" class="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700">{% trans "Delete" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loaderManager = new SectionLoaderManager();
+
+    const spaceModal = document.getElementById('spaceModal');
+    const spaceForm = document.getElementById('spaceForm');
+    const openBtn = document.getElementById('openSpaceModalBtn');
+    const closeBtn = document.getElementById('closeSpaceModalBtn');
+    const cancelBtn = document.getElementById('cancelSpaceModalBtn');
+    const spaceIdInput = document.getElementById('spaceId');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const btnText = document.getElementById('btnText');
+    const logoInput = document.getElementById('spaceLogoInputFile');
+    const logoArea = document.getElementById('spaceLogoUploadArea');
+    const logoPlaceholder = document.getElementById('logoUploadPlaceholder');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoPreviewImg = document.getElementById('logoPreviewImg');
+
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const deleteSpaceName = document.getElementById('deleteSpaceName');
+    let spaceIdToDelete = null;
+
+    openBtn.addEventListener('click', () => {
+        spaceForm.reset();
+        spaceIdInput.value = '';
+        modalTitle.innerText = '{% trans "Create Community Space" %}';
+        modalSubtitle.innerText = '{% trans "Set up a new tenant workspace" %}';
+        btnText.innerText = '{% trans "Create Space" %}';
+        clearErrors();
+        resetLogoArea();
+        spaceModal.classList.remove('hidden');
+    });
+
+    const closeModal = () => {
+        spaceModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    [closeBtn, cancelBtn].forEach(b => b.addEventListener('click', closeModal));
+
+    logoArea.addEventListener('click', () => logoInput.click());
+
+    logoInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                logoPreviewImg.src = e.target.result;
+                logoPlaceholder.classList.add('hidden');
+                logoPreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    function resetLogoArea(imgSrc = null) {
+        if (imgSrc) {
+            logoPreviewImg.src = imgSrc;
+            logoPlaceholder.classList.add('hidden');
+            logoPreview.classList.remove('hidden');
+        } else {
+            logoPlaceholder.classList.remove('hidden');
+            logoPreview.classList.add('hidden');
+        }
+    }
+
+    function clearErrors() {
+        document.querySelectorAll('[id^="error_"]').forEach(el => {
+            el.innerText = '';
+            el.classList.add('hidden');
+        });
+        document.querySelectorAll('.border-rose-500').forEach(el => el.classList.remove('border-rose-500'));
+    }
+
+    function showErrors(errors) {
+        for (const [field, messages] of Object.entries(errors)) {
+            const errorEl = document.getElementById(`error_${field}`);
+            if (errorEl) {
+                errorEl.innerText = messages[0];
+                errorEl.classList.remove('hidden');
+            }
+            const inputEl = document.getElementById(`id_${field}`);
+            if (inputEl) {
+                inputEl.classList.add('border-rose-500');
+            }
+        }
+    }
+
+    // Edit Button
+    document.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-space-btn');
+        if (editBtn) {
+            const id = editBtn.dataset.id;
+            clearErrors();
+            loaderManager.showLoader();
+            try {
+                const response = await fetch(`/communities/communities-space/${id}/`);
+                const data = await response.json();
+                if (data.success) {
+                    const space = data.space;
+                    spaceIdInput.value = space.id;
+                    document.getElementById('id_name').value = space.name;
+                    document.getElementById('id_description').value = space.description;
+                    document.getElementById('id_status').value = space.status;
+                    document.getElementById('id_owner').value = space.owner_id;
+
+                    modalTitle.innerText = '{% trans "Edit Community Space" %}';
+                    modalSubtitle.innerText = '{% trans "Update details for" %} ' + space.name;
+                    btnText.innerText = '{% trans "Update Space" %}';
+
+                    resetLogoArea(space.logo_url);
+                    spaceModal.classList.remove('hidden');
+                } else {
+                    toastManager.showToast({ message: data.message || '{% trans "Error fetching details" %}', type: 'danger' });
+                }
+            } catch (err) {
+                console.error(err);
+                toastManager.showToast({ message: '{% trans "Network error occurred." %}', type: 'danger' });
+            } finally {
+                loaderManager.hideLoader();
+            }
+        }
+
+        const deleteBtn = e.target.closest('.delete-space-btn');
+        if (deleteBtn) {
+            spaceIdToDelete = deleteBtn.dataset.id;
+            deleteSpaceName.innerText = deleteBtn.dataset.name;
+            deleteModal.classList.remove('hidden');
+        }
+    });
+
+    // Submit Form
+    spaceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearErrors();
+
+        const id = spaceIdInput.value;
+        const url = id ? `/communities/communities-space/${id}/update/` : '/communities/communities-space/create/';
+        const formData = new FormData(spaceForm);
+
+        loaderManager.showLoader();
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            });
+            
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await response.json();
+                if (data.success) {
+                    toastManager.showToast({ message: data.message, type: 'success' });
+                    closeModal();
+                    setTimeout(() => window.location.reload(), 1500);
+                } else if (response.status === 422) {
+                    showErrors(data.errors);
+                    toastManager.showToast({ message: data.message, type: 'warning' });
+                } else {
+                    toastManager.showToast({ message: data.message || '{% trans "An error occurred." %}', type: 'danger' });
+                }
+            } else {
+                toastManager.showToast({ message: '{% trans "Server returned an unexpected response." %}', type: 'danger' });
+            }
+        } catch (err) {
+            console.error(err);
+            toastManager.showToast({ message: '{% trans "Network error occurred." %}', type: 'danger' });
+        } finally {
+            loaderManager.hideLoader();
+        }
+    });
+
+    // Delete Logic
+    cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.add('hidden'));
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!spaceIdToDelete) return;
+
+        loaderManager.showLoader();
+        try {
+            const response = await fetch(`/communities/communities-space/${spaceIdToDelete}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                toastManager.showToast({ message: data.message, type: 'success' });
+                deleteModal.classList.add('hidden');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                toastManager.showToast({ message: data.message, type: 'danger' });
+            }
+        } catch (err) {
+            console.error(err);
+            toastManager.showToast({ message: '{% trans "Network error occurred." %}', type: 'danger' });
+        } finally {
+            loaderManager.hideLoader();
+        }
+    });
+});
+</script>
 {% endblock %}

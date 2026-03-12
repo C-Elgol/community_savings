@@ -149,62 +149,6 @@
 
         // Run initialization
         initNavigation();
-
-        // Modal functionality for Community Space creation
-        const modal = document.getElementById("createSpaceModal");
-        const openBtn = document.getElementById("openSpaceModalBtn");
-        const closeBtn = document.getElementById("closeSpaceModalBtn");
-        const cancelBtn = document.getElementById("cancelSpaceModalBtn");
-
-        if (openBtn) {
-          openBtn.addEventListener("click", () => {
-            modal.classList.remove("hidden");
-            document.body.style.overflow = "hidden";
-          });
-        }
-
-        function closeModal() {
-          modal.classList.add("hidden");
-          document.body.style.overflow = "";
-        }
-
-        if (closeBtn) closeBtn.addEventListener("click", closeModal);
-        if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
-
-        modal.addEventListener("click", (e) => {
-          if (e.target === modal) closeModal();
-        });
-
-        // Logo upload interaction
-        const logoArea = document.getElementById("spaceLogoUpload");
-        const logoInput = document.getElementById("spaceLogoInput");
-
-        if (logoArea && logoInput) {
-          logoArea.addEventListener("click", () => logoInput.click());
-          logoInput.addEventListener("change", (e) => {
-            if (e.target.files[0]) {
-              logoArea.innerHTML = `
-                        <div class="flex flex-col items-center gap-2">
-                            <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                                <i class="fas fa-check-circle text-2xl"></i>
-                            </div>
-                            <p class="text-sm font-medium text-slate-700">${e.target.files[0].name}</p>
-                            <p class="text-xs text-emerald-600">Ready to upload</p>
-                        </div>
-                    `;
-            }
-          });
-        }
-
-        // Form submission demo
-        const form = document.querySelector("#createSpaceModal form");
-        if (form) {
-          form.addEventListener("submit", (e) => {
-            e.preventDefault();
-            alert("Community space created! (Demo)");
-            closeModal();
-          });
-        }
       })();
     </script>
   </body>
