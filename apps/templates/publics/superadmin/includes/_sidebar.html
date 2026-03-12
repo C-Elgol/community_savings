@@ -2,6 +2,7 @@
 
 <!-- ========== SIDEBAR ========== -->
 <aside class="sidebar fixed inset-y-0 left-0 z-40 w-80 bg-white border-r border-slate-200 shadow-lg lg:translate-x-0 flex flex-col overflow-y-auto">
+    <a href="{% url 'users:home' %}">
     <!-- logo -->
     <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-800 to-teal-700 flex items-center justify-center text-white shadow-sm">
@@ -10,7 +11,7 @@
         <span class="text-xl font-bold tracking-tight text-slate-800">Njangi<span class="text-emerald-700">Admin</span></span>
         <span class="ml-auto text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">Super</span>
     </div>
-
+    </a>
     <!-- navigation -->
     <nav class="flex-1 px-4 py-6 space-y-1 text-sm">
         <a href="{% url 'users:superadmin_dashboard' %}" data-page="dashboard" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-active sidebar-transition">
