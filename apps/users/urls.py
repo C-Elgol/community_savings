@@ -9,11 +9,13 @@ from apps.users.views.login_view import LoginView, LogoutView
 from apps.users.views.password_reset_view import PasswordResetRequestView, PasswordResetVerifyView, PasswordResetView
 from apps.users.views.resend_verification_view import ResendVerificationView
 from apps.users.views.admin_member_view import AdminMemberView
+from apps.users.views.welcome_view import WelcomeView
 
 app_name = "users"
     
 urlpatterns = [
-    path('', HomeView.as_view(), name='home'),
+    path('', WelcomeView.as_view(), name='home'),
+    path('dashboard/', HomeView.as_view(), name='dashboard'),
     path('profile/', MemberProfileView.as_view(), name='member_profile'),
     path('notification/', NotificationView.as_view(), name='notification'),
     path('admin-dashboard/', AdminDashboardView.as_view(), name='admin_dashboard'),
