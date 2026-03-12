@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include 'publics/superadmin/includes/_head.html' %}
+<script src="{% url 'javascript_catalog' %}"></script>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<!-- mobile menu button -->
+<div class="lg:hidden fixed top-4 left-4 z-50">
+    <button id="menuToggle" class="p-3 bg-white rounded-xl shadow-md text-emerald-700"><i class="fas fa-bars text-lg"></i></button>
+</div>
+
+{% include 'publics/superadmin/includes/_sidebar.html' %}
+
+<!-- ========== MAIN CONTENT ========== -->
+<div class="lg:ml-80 min-h-screen flex flex-col bg-slate-50">
+
+    {% include 'publics/superadmin/includes/_navbar.html' %}
+
+    <!-- main dynamic pages -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto" id="mainContent">
+
+       {% block content %}
+
+       {% endblock %}
+        
+
+    </main>
+</div>
+
+{% include 'publics/home/includes/_js.html' %}
+<script>
+    (function() {
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+        }
+
+        // Page navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        const titles = {
+            dashboard: { title: 'SuperAdmin Dashboard', subtitle: 'Complete system oversight' },
+            spaces: { title: 'Community Spaces', subtitle: 'Manage all tenant workspaces' },
+            users: { title: 'User Management', subtitle: 'Control user access and roles' },
+            communities: { title: 'All Communities', subtitle: 'View all Njangi groups' },
+            logs: { title: 'System Logs', subtitle: 'Audit trail and events' },
+            activity: { title: 'Activity Feed', subtitle: 'Real-time platform activity' },
+            settings: { title: 'System Settings', subtitle: 'Configure platform parameters' }
+        };
+
+        function activatePage(pageId) {
+            pages.forEach(p => p.classList.remove('active-page'));
+            document.getElementById(pageId)?.classList.add('active-page');
+
+            navLinks.forEach(link => {
+                link.classList.remove('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700');
+                link.classList.add('nav-item-inactive');
+                if (link.dataset.page === pageId) {
+                    link.classList.add('nav-item-active', 'bg-emerald-50', 'border-l-4', 'border-emerald-700');
+                    link.classList.remove('nav-item-inactive');
+                }
+            });
+
+            if (titles[pageId]) {
+                pageTitle.innerText = titles[pageId].title;
+                pageSubtitle.innerText = titles[pageId].subtitle;
+            }
+
+            if (window.innerWidth < 1024) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                activatePage(link.dataset.page);
+            });
+        });
+
+        // Modal functionality for Community Space creation
+        const modal = document.getElementById('createSpaceModal');
+        const openBtn = document.getElementById('openSpaceModalBtn');
+        const closeBtn = document.getElementById('closeSpaceModalBtn');
+        const cancelBtn = document.getElementById('cancelSpaceModalBtn');
+
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Logo upload interaction
+        const logoArea = document.getElementById('spaceLogoUpload');
+        const logoInput = document.getElementById('spaceLogoInput');
+        
+        if (logoArea && logoInput) {
+            logoArea.addEventListener('click', () => logoInput.click());
+            logoInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    logoArea.innerHTML = `
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                                <i class="fas fa-check-circle text-2xl"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-700">${e.target.files[0].name}</p>
+                            <p class="text-xs text-emerald-600">Ready to upload</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Form submission demo
+        const form = document.querySelector('#createSpaceModal form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Community space created! (Demo)');
+                closeModal();
+            });
+        }
+    })();
+</script>
+</body>
+</html>

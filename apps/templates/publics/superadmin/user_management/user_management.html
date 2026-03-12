@@ -1,0 +1,40 @@
+{% extends 'publics/superadmin/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+
+ <!-- ========== USER MANAGEMENT PAGE ========== -->
+        <div id="users" class="page">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">User Management</h2>
+                    <button class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add User</span>
+                    </button>
+                </div>
+                
+                <!-- user stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded-xl"><span class="text-sm text-slate-500">Total Users</span><p class="text-xl font-bold">2,847</p></div>
+                    <div class="bg-slate-50 p-4 rounded-xl"><span class="text-sm text-slate-500">Active</span><p class="text-xl font-bold text-emerald-600">2,541</p></div>
+                    <div class="bg-slate-50 p-4 rounded-xl"><span class="text-sm text-slate-500">Pending</span><p class="text-xl font-bold text-amber-600">189</p></div>
+                    <div class="bg-slate-50 p-4 rounded-xl"><span class="text-sm text-slate-500">Suspended</span><p class="text-xl font-bold text-rose-600">117</p></div>
+                </div>
+                
+                <!-- user table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50"><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Spaces</th><th>Joined</th></tr></thead>
+                        <tbody class="divide-y">
+                            <tr><td class="px-4 py-3">John Doe</td><td>john@example.com</td><td>Space Admin</td><td><span class="status-active px-2 py-1 rounded-full text-xs">Active</span></td><td>3</td><td>2024-01-15</td></tr>
+                            <tr><td>Jane Smith</td><td>jane@example.com</td><td>Owner</td><td><span class="status-active">Active</span></td><td>2</td><td>2024-02-20</td></tr>
+                            <tr><td>Bob Johnson</td><td>bob@example.com</td><td>Viewer</td><td><span class="status-pending">Pending</span></td><td>1</td><td>2024-03-10</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}

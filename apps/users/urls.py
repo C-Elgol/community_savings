@@ -10,6 +10,7 @@ from apps.users.views.password_reset_view import PasswordResetRequestView, Passw
 from apps.users.views.resend_verification_view import ResendVerificationView
 from apps.users.views.admin_member_view import AdminMemberView
 from apps.users.views.welcome_view import WelcomeView
+from apps.users.views.super_admin_dashboard_view import SuperAdminDashboardView
 
 app_name = "users"
     
@@ -28,4 +29,5 @@ urlpatterns = [
     path('password-reset/<str:email>/', PasswordResetView.as_view(), name='password_reset'),
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
     path('admin-members/', AdminMemberView.as_view(), name='admin_members'),
+    path('superadmin-dashboard/', SuperAdminDashboardView.as_view(), name='superadmin_dashboard'),
 ]
