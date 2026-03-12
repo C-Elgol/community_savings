@@ -2,6 +2,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from django.utils.text import slugify
+
 from apps.users.models import SavingsBaseModel
 from apps.global_data.enum import (
     CommunityType,
@@ -9,25 +11,130 @@ from apps.global_data.enum import (
     MembershipStatus,
     RegistrationFeeMode,
     ContributionFrequency,
+    CommunitySpaceRole,
+    CommunitySpaceStatus,
 )
 
 
-class Community(SavingsBaseModel):
+class CommunitySpace(SavingsBaseModel):
+    """
+    Top-level tenant/workspace.
+    Created by system admin and assigned to one or more users.
+    Communities live inside a community space.
+    """
     name = models.CharField(max_length=255, unique=True)
-    code = models.CharField(max_length=50, unique=True, db_index=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    description = models.TextField(blank=True)
+    logo = models.ImageField(
+        upload_to="community_spaces/logos/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(["jpg", "jpeg", "png", "webp"])],
+        help_text="Community space logo or identity image",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=CommunitySpaceStatus.choices,
+        default=CommunitySpaceStatus.ACTIVE,
+        db_index=True,
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_community_spaces",
+        help_text="System admin who created this community space.",
+    )
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_community_spaces",
+        help_text="Primary owner assigned to this community space.",
+    )
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Community Space"
+        verbose_name_plural = "Community Spaces"
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["status"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class CommunitySpaceMembership(SavingsBaseModel):
+    """
+    Controls which users can access which community spaces.
+    """
+    community_space = models.ForeignKey(
+        CommunitySpace,
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="community_space_memberships",
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=CommunitySpaceRole.choices,
+        default=CommunitySpaceRole.VIEWER,
+    )
+    is_default = models.BooleanField(default=False)
+    joined_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("community_space", "user")]
+        indexes = [
+            models.Index(fields=["community_space", "role"]),
+            models.Index(fields=["user", "role"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.community_space.name} ({self.role})"
+
+
+class Community(SavingsBaseModel):
+    """
+    Actual njangi/savings/cooperative/meeting group inside a space.
+    """
+    community_space = models.ForeignKey(
+        CommunitySpace,
+        on_delete=models.CASCADE,
+        related_name="communities"
+    )
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, db_index=True)
+    slug = models.SlugField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     community_type = models.CharField(max_length=30, choices=CommunityType.choices, db_index=True)
     country = models.CharField(max_length=100, blank=True)
     currency = models.CharField(max_length=10, default="XAF")
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
+
     logo = models.ImageField(
         upload_to="communities/logos/",
         null=True,
         blank=True,
-        validators=[FileExtensionValidator(["jpg","jpeg","png","webp"])],
+        validators=[FileExtensionValidator(["jpg", "jpeg", "png", "webp"])],
         help_text="Community logo or identity image"
     )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -38,6 +145,19 @@ class Community(SavingsBaseModel):
 
     class Meta:
         ordering = ["name"]
+        unique_together = [
+            ("community_space", "name"),
+            ("community_space", "code"),
+        ]
+        indexes = [
+            models.Index(fields=["community_space", "community_type"]),
+            models.Index(fields=["community_space", "name"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(f"{self.community_space.name}-{self.name}")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

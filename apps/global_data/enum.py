@@ -10,6 +10,17 @@ class CommunityType(models.TextChoices):
     INVESTMENT = "investment", _("Investment Group")
     OTHER = "other", _("Other")
 
+class CommunitySpaceRole(models.TextChoices):
+    OWNER = "owner", _("Owner")
+    ADMIN = "admin", _("Admin")
+    MANAGER = "manager", _("Manager")
+    VIEWER = "viewer", _("Viewer")
+
+
+class CommunitySpaceStatus(models.TextChoices):
+    ACTIVE = "active", _("Active")
+    SUSPENDED = "suspended", _("Suspended")
+    ARCHIVED = "archived", _("Archived")
 
 class MembershipRole(models.TextChoices):
     MEMBER = "member", _("Member")
