@@ -33,11 +33,62 @@
           0 20px 25px -5px rgba(0, 0, 0, 0.1),
           0 10px 10px -5px rgba(0, 0, 0, 0.04);
       }
+
+      /* Drawer & Form Styles */
+      .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+      .form-input {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border: 2px solid #f1f5f9;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        background-color: #f8fafc;
+        transition: all 0.2s;
+        font-weight: 600;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: #10b981;
+        background-color: #fff;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+      }
+      .form-input.error {
+        border-color: #fb7185;
+        background-color: #fff1f2;
+      }
+      .form-error {
+        font-size: 0.7rem;
+        color: #f43f5e;
+        margin-top: 0.25rem;
+        font-weight: 700;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
     </style>
   </head>
-  <body class="bg-slate-50 min-h-screen">
+  <body class="bg-slate-50 min-h-screen flex flex-col">
+    <!-- CSRF Token for JS -->
+    {% csrf_token %}
+
     <!-- Top Navigation Bar -->
-    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo -->
@@ -150,7 +201,7 @@
           {% if user.is_authenticated %}
           <div class="flex flex-col gap-3">
             <button
-              id="createCommunityBtn"
+              id="openCreateDrawerBtn"
               class="bg-white text-emerald-800 px-8 py-4 rounded-2xl font-black shadow-2xl shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all text-lg"
             >
               <i class="fas fa-plus-circle mr-2"></i>{% trans "New Community" %}
@@ -164,12 +215,12 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 -mt-16 relative z-10 pb-20">
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-6 -mt-16 relative z-10 pb-20 w-full">
       <div
         class="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 min-h-[500px]"
       >
-        <!-- List Header -->
+        <!-- Toolbar -->
         <div
           class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
         >
@@ -182,222 +233,389 @@
             </p>
           </div>
 
-          <form method="get" class="flex items-center gap-3 w-full md:w-auto">
+          <div class="flex items-center gap-3 w-full md:w-auto">
             <div class="relative flex-1 md:w-80">
               <i
                 class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               ></i>
               <input
                 type="text"
-                name="q"
+                id="searchInput"
                 value="{{ search_query }}"
-                placeholder="{% trans 'Search by name or code...' %}"
-                class="w-full pl-11 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none"
+                placeholder="{% trans 'Search name or code...' %}"
+                class="w-full pl-11 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none shadow-sm"
               />
             </div>
-            <button
-              type="submit"
-              class="bg-emerald-700 text-white p-4 rounded-2xl hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20"
-            >
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </form>
+          </div>
         </div>
 
-        <!-- Grid -->
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          id="communities-grid"
-        >
-          {% for community in communities %}
+        <!-- Grid Container -->
+        <div id="communityContainer" class="relative">
           <div
-            class="group bg-white rounded-3xl border border-slate-100 p-8 card-hover relative overflow-hidden"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            id="communitiesGrid"
           >
+            {% for community in communities %}
             <div
-              class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"
-            ></div>
-
-            <div class="relative">
+              class="group bg-white rounded-3xl border border-slate-100 p-8 card-hover relative overflow-hidden flex flex-col h-full"
+              id="card-{{ community.id }}"
+            >
               <div
-                class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-3xl font-bold mb-6"
-              >
-                {% if community.logo %}
-                <img
-                  src="{{ community.logo.url }}"
-                  class="w-full h-full object-cover rounded-2xl"
-                />
-                {% else %} {{ community.name|slice:":1"|upper }} {% endif %}
+                class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"
+              ></div>
+
+              <div class="relative flex-1">
+                <div class="flex items-start justify-between mb-6">
+                  <div
+                    class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-3xl font-bold"
+                  >
+                    {% if community.logo %}
+                    <img
+                      src="{{ community.logo.url }}"
+                      class="w-full h-full object-cover rounded-2xl"
+                    />
+                    {% else %} {{ community.name|slice:":1"|upper }} {% endif %}
+                  </div>
+                  <span
+                    class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                  >
+                    {{ community.get_community_type_display }}
+                  </span>
+                </div>
+
+                <h3
+                  class="text-2xl font-bold text-slate-800 mb-2 group-hover:text-emerald-700 transition-colors"
+                >
+                  {{ community.name }}
+                </h3>
+                <p class="text-xs text-slate-400 font-mono mb-4">
+                  Code: {{ community.code }}
+                </p>
+                <p
+                  class="text-sm text-slate-500 mb-6 leading-relaxed line-clamp-3"
+                >
+                  {{ community.description|default:"No description provided." }}
+                </p>
+
+                <div
+                  class="flex items-center justify-between text-xs text-slate-400 mb-6 font-medium"
+                >
+                  <span
+                    ><i class="fas fa-globe-africa mr-1"></i>{{
+                    community.country|default:"Cameroon" }}</span
+                  >
+                  <span
+                    class="bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold uppercase"
+                    >{{ community.currency }}</span
+                  >
+                </div>
               </div>
 
-              <h3
-                class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-emerald-700 transition-colors"
-              >
-                {{ community.name }}
-              </h3>
-              <p
-                class="text-sm text-slate-500 mb-8 leading-relaxed line-clamp-3"
-              >
-                {{ community.description }}
-              </p>
-
-              <div
-                class="flex items-center justify-between pt-8 border-t border-slate-50"
-              >
-                <span
-                  class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest"
-                >
-                  {{ community.get_community_type_display }}
-                </span>
+              <div class="relative pt-6 border-t border-slate-50">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex flex-col gap-1">
+                    <a
+                      href="#"
+                      class="setup-policy-btn text-emerald-600 font-bold text-xs hover:underline decoration-2"
+                      data-comp-id="{{ community.id }}"
+                      >{% trans "Setup Policy" %}</a
+                    >
+                    <a
+                      href="#"
+                      class="view-policy-btn text-slate-400 font-bold text-xs hover:underline decoration-2"
+                      data-comp-id="{{ community.id }}"
+                      >{% trans "View Details" %}</a
+                    >
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      data-edit-id="{{ community.id }}"
+                      class="edit-btn p-3 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                      title="Edit"
+                    >
+                      <i class="fas fa-pen text-xs"></i>
+                    </button>
+                    <button
+                      data-delete-id="{{ community.id }}"
+                      data-delete-name="{{ community.name|escapejs }}"
+                      class="delete-btn p-3 bg-slate-50 text-slate-600 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all"
+                      title="Delete"
+                    >
+                      <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                  </div>
+                </div>
                 <button
-                  class="flex items-center gap-2 text-emerald-700 font-black text-sm hover:gap-3 transition-all"
+                  class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
                 >
-                  {% trans "Request to Join" %}
-                  <i class="fas fa-chevron-right text-xs"></i>
+                  {% trans "Request Membership" %}
                 </button>
               </div>
             </div>
-          </div>
-          {% empty %}
-          <div class="col-span-full py-32 text-center" id="empty-state">
-            <div
-              class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8"
-            >
-              <i class="fas fa-users-slash text-slate-200 text-5xl"></i>
+            {% empty %}
+            <div class="col-span-full py-32 text-center" id="emptyState">
+              <div
+                class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 text-slate-200"
+              >
+                <i class="fas fa-users-slash text-5xl"></i>
+              </div>
+              <h3 class="text-2xl font-black text-slate-800 mb-2">
+                {% trans "Empty Space" %}
+              </h3>
+              <p class="text-slate-500 font-medium">
+                {% trans "No communities established here yet. Be the visionary
+                leader!" %}
+              </p>
             </div>
-            <h3 class="text-2xl font-black text-slate-800 mb-2">
-              {% trans "No communities found" %}
-            </h3>
-            <p class="text-slate-500 font-medium">
-              {% trans "Be the first to build a legacy in this space!" %}
-            </p>
+            {% endfor %}
           </div>
-          {% endfor %}
         </div>
       </div>
     </main>
 
-    {% if user.is_authenticated %}
-    <!-- Creation Modal -->
+    <!-- ════════════════════════════════════════════
+         DRAWER OVERLAY & SIDEBAR (Create / Edit)
+         ════════════════════════════════════════════ -->
     <div
-      id="createModal"
-      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"
-    >
-      <div
-        class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-95 opacity-0 duration-300"
-        id="modalContent"
-      >
-        <div
-          class="p-8 border-b border-slate-100 flex items-center justify-between"
-        >
-          <div>
-            <h3 class="text-2xl font-black text-slate-800">
-              {% trans "Create New Community" %}
-            </h3>
-            <p class="text-xs text-slate-500 mt-1">
-              {% trans "Start your financial journey in this space" %}
-            </p>
-          </div>
-          <button
-            id="closeModal"
-            class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
+      id="drawerOverlay"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"
+    ></div>
 
-        <form id="communityForm" class="p-8 space-y-6">
-          {% csrf_token %}
+    <aside
+      id="communityDrawer"
+      class="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-500 flex flex-col"
+    >
+      <!-- Header -->
+      <div
+        class="flex items-center justify-between px-8 py-6 border-b border-slate-100"
+      >
+        <div>
+          <h3 id="drawerTitle" class="text-2xl font-black text-slate-800">
+            New Community
+          </h3>
+          <p id="drawerSubtitle" class="text-sm text-slate-400 font-medium">
+            Establish a new community in this space
+          </p>
+        </div>
+        <button
+          id="closeDrawerBtn"
+          class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
+        <form id="communityForm" class="space-y-6">
+          <input type="hidden" id="communityId" name="community_id" />
           <input
             type="hidden"
             name="community_space_pk"
             value="{{ space.pk }}"
           />
 
-          <div class="grid grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label
-                class="text-xs font-black text-slate-400 uppercase tracking-widest"
-                >{% trans "Community Name" %}</label
-              >
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="form-label">Name *</label>
               <input
                 type="text"
                 name="name"
+                id="f_name"
                 required
-                class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold"
+                class="form-input"
               />
-              <p
-                class="text-[10px] text-rose-500 hidden font-bold"
-                id="error-name"
-              ></p>
+              <p class="form-error hidden" id="err_name"></p>
             </div>
-            <div class="space-y-2">
-              <label
-                class="text-xs font-black text-slate-400 uppercase tracking-widest"
-                >{% trans "Unique Code" %}</label
-              >
+            <div class="space-y-1">
+              <label class="form-label">Code *</label>
               <input
                 type="text"
                 name="code"
+                id="f_code"
                 required
-                placeholder="e.g. YDE-01"
-                class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold uppercase"
+                class="form-input uppercase"
               />
-              <p
-                class="text-[10px] text-rose-500 hidden font-bold"
-                id="error-code"
-              ></p>
+              <p class="form-error hidden" id="err_code"></p>
             </div>
           </div>
 
-          <div class="space-y-2">
-            <label
-              class="text-xs font-black text-slate-400 uppercase tracking-widest"
-              >{% trans "Community Type" %}</label
-            >
-            <select
-              name="community_type"
-              required
-              class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold"
-            >
-              <option value="">{% trans "Select Type" %}</option>
-              {% for value, label in community_types %}
-              <option value="{{ value }}">{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="space-y-2">
-            <label
-              class="text-xs font-black text-slate-400 uppercase tracking-widest"
-              >{% trans "Small Description" %}</label
-            >
+          <div class="space-y-1">
+            <label class="form-label">Description</label>
             <textarea
               name="description"
+              id="f_description"
               rows="3"
-              class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold resize-none"
+              class="form-input resize-none"
             ></textarea>
           </div>
 
-          <div class="flex gap-4 pt-4">
-            <button
-              type="button"
-              id="cancelBtn"
-              class="flex-1 px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="form-label">Type *</label>
+              <select
+                name="community_type"
+                id="f_community_type"
+                required
+                class="form-input"
+              >
+                <option value="">{% trans "Select" %}</option>
+                {% for val, label in community_types %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-error hidden" id="err_community_type"></p>
+            </div>
+            <div class="space-y-1">
+              <label class="form-label">Country</label>
+              <input
+                type="text"
+                name="country"
+                id="f_country"
+                value="{{ space.country|default:'Cameroon' }}"
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-1">
+              <label class="form-label">Currency</label>
+              <select name="currency" id="f_currency" class="form-input">
+                <option value="XAF">XAF</option>
+                <option value="XOF">XOF</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="form-label">Starts</label>
+              <input
+                type="date"
+                name="start_date"
+                id="f_start_date"
+                class="form-input px-2 text-xs"
+              />
+            </div>
+            <div class="space-y-1">
+              <label class="form-label">Ends</label>
+              <input
+                type="date"
+                name="end_date"
+                id="f_end_date"
+                class="form-input px-2 text-xs"
+              />
+            </div>
+          </div>
+
+          <!-- Logo Section -->
+          <div class="space-y-1">
+            <label class="form-label">Community Logo</label>
+            <div
+              id="logoDropzone"
+              class="border-2 border-dashed border-slate-200 rounded-3xl p-6 text-center cursor-pointer hover:border-emerald-400 bg-slate-50 transition-all"
             >
-              {% trans "Dismiss" %}
-            </button>
-            <button
-              type="submit"
-              id="submitBtn"
-              class="flex-1 px-8 py-4 gradient-bg text-white rounded-2xl font-black hover:opacity-95 transition-all shadow-xl shadow-emerald-900/40"
-            >
-              {% trans "Launch Now" %}
-            </button>
+              <input
+                type="file"
+                name="logo"
+                id="f_logo"
+                class="hidden"
+                accept="image/*"
+              />
+              <div
+                id="logoPlaceholder"
+                class="flex flex-col items-center gap-3"
+              >
+                <div
+                  class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-slate-300 shadow-sm"
+                >
+                  <i class="fas fa-cloud-upload-alt text-2xl"></i>
+                </div>
+                <p class="text-xs font-bold text-slate-400">
+                  Drag or click to upload
+                </p>
+              </div>
+              <div id="logoPreview" class="hidden flex-col items-center gap-3">
+                <img
+                  id="logoImg"
+                  src=""
+                  class="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl"
+                />
+                <button
+                  type="button"
+                  onclick="resetLogoPreview()"
+                  class="text-[10px] font-black text-rose-500 uppercase"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           </div>
         </form>
       </div>
+
+      <!-- Footer -->
+      <div class="px-8 py-6 border-t border-slate-100 bg-slate-50 flex gap-4">
+        <button
+          id="cancelDrawerBtn"
+          class="flex-1 py-4 px-6 border-2 border-slate-200 text-slate-500 rounded-2xl font-black text-sm hover:bg-white transition-all"
+        >
+          Cancel
+        </button>
+        <button
+          id="drawerSubmitBtn"
+          class="flex-[2] py-4 px-6 gradient-bg text-white rounded-2xl font-black text-sm hover:opacity-95 shadow-xl shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-check-circle" id="drawerSubmitIcon"></i>
+          <span id="drawerSubmitLabel">Create Community</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ════════════════════════════════════════════
+         POLICY PARTIALS
+         ════════════════════════════════════════════ -->
+    {% include 'publics/admin/communities/includes/_policy_drawer.html' %} {%
+    include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
+
+    <!-- ════════════════════════════════════════════
+         DELETE MODAL
+         ════════════════════════════════════════════ -->
+    <div
+      id="deleteModal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 text-center animate-in fade-in zoom-in duration-300"
+      >
+        <div
+          class="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 text-3xl mx-auto mb-6"
+        >
+          <i class="fas fa-trash-alt"></i>
+        </div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2">
+          Delete Community?
+        </h3>
+        <p class="text-slate-500 text-sm mb-8">
+          This will dismantle
+          <strong id="deleteCommunityName"></strong> forever. All data will be
+          lost.
+        </p>
+        <div class="flex gap-4">
+          <button
+            id="cancelDeleteBtn"
+            class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black transition-all"
+          >
+            No, Keep
+          </button>
+          <button
+            id="confirmDeleteBtn"
+            class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black transition-all hover:bg-rose-700 shadow-xl shadow-rose-900/20"
+          >
+            Yes, Delete
+          </button>
+        </div>
+      </div>
     </div>
-    {% endif %}
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-12 mt-auto">
@@ -419,99 +637,510 @@
     </footer>
 
     {% include 'publics/home/includes/_js.html' %}
+    <script src="{% static 'js/common/loader_manager.js' %}"></script>
+
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const createBtn = document.getElementById("createCommunityBtn");
-        const modal = document.getElementById("createModal");
-        const modalContent = document.getElementById("modalContent");
-        const closeModal = document.getElementById("closeModal");
-        const cancelBtn = document.getElementById("cancelBtn");
-        const form = document.getElementById("communityForm");
+      (function () {
+        "use strict";
 
-        const toggleModal = (show) => {
-          if (!modal) return;
-          if (show) {
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-            setTimeout(() => {
-              modalContent.classList.remove("scale-95", "opacity-0");
-              modalContent.classList.add("scale-100", "opacity-100");
-            }, 10);
+        /* --- CONFIG --- */
+        const CREATE_URL = "{% url 'communities:community_create' %}";
+        const DETAIL_URL = (id) => `/communities/communities/${id}/`;
+        const UPDATE_URL = (id) => `/communities/communities/${id}/update/`;
+        const DELETE_URL = (id) => `/communities/communities/${id}/delete/`;
+        const POLICY_DETAIL_URL = (id) =>
+          `/communities/communities/${id}/policy/`;
+        const POLICY_UPDATE_URL = (id) =>
+          `/communities/communities/${id}/policy/update/`;
+        const CSRF = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        /* --- LOADERS --- */
+        const drawerLoader = new SectionLoaderManager(
+          "communityDrawer",
+          "fill-emerald-500",
+          0.3,
+        );
+        const policyDrawerLoader = new SectionLoaderManager(
+          "policyDrawer",
+          "fill-emerald-500",
+          0.3,
+        );
+
+        /* --- STATE --- */
+        let editMode = false;
+        let currentDeleteId = null;
+        let currentPolicyCommunityId = null;
+
+        /* --- DRAWER LOGIC --- */
+        function openDrawer(mode = "create") {
+          editMode = mode === "edit";
+          document.getElementById("drawerTitle").textContent = editMode
+            ? "Edit Community"
+            : "New Community";
+          document.getElementById("drawerSubmitLabel").textContent = editMode
+            ? "Save Changes"
+            : "Launch Community";
+
+          const overlay = document.getElementById("drawerOverlay");
+          const drawer = document.getElementById("communityDrawer");
+          overlay.classList.remove("hidden");
+          setTimeout(
+            () => overlay.classList.replace("opacity-0", "opacity-100"),
+            10,
+          );
+          drawer.classList.remove("translate-x-full");
+          document.body.style.overflow = "hidden";
+        }
+
+        function closeDrawer() {
+          const overlay = document.getElementById("drawerOverlay");
+          const drawer = document.getElementById("communityDrawer");
+          overlay.classList.replace("opacity-100", "opacity-0");
+          setTimeout(() => overlay.classList.add("hidden"), 300);
+          drawer.classList.add("translate-x-full");
+          document.body.style.overflow = "";
+          clearErrors();
+          resetLogoPreview();
+          document.getElementById("communityForm").reset();
+          document.getElementById("communityId").value = "";
+        }
+
+        /* --- POLICY DRAWER --- */
+        function openPolicyDrawer() {
+          const overlay = document.getElementById("policyDrawerOverlay");
+          const drawer = document.getElementById("policyDrawer");
+          overlay.classList.remove("hidden");
+          setTimeout(
+            () => overlay.classList.replace("opacity-0", "opacity-100"),
+            10,
+          );
+          drawer.classList.remove("translate-x-full");
+          document.body.style.overflow = "hidden";
+        }
+
+        function closePolicyDrawer() {
+          const overlay = document.getElementById("policyDrawerOverlay");
+          const drawer = document.getElementById("policyDrawer");
+          overlay.classList.replace("opacity-100", "opacity-0");
+          setTimeout(() => overlay.classList.add("hidden"), 300);
+          drawer.classList.add("translate-x-full");
+          document.body.style.overflow = "";
+          document.getElementById("policyForm").reset();
+        }
+
+        /* --- POLICY MODAL --- */
+        function openPolicyModal() {
+          const modal = document.getElementById("policyModal");
+          const content = document.getElementById("policyModalContent");
+          modal.classList.replace("hidden", "flex");
+          setTimeout(() => {
+            content.classList.replace("scale-95", "scale-100");
+            content.classList.replace("opacity-0", "opacity-100");
+          }, 10);
+        }
+
+        function closePolicyModal() {
+          const modal = document.getElementById("policyModal");
+          const content = document.getElementById("policyModalContent");
+          content.classList.replace("scale-100", "scale-95");
+          content.classList.replace("opacity-100", "opacity-0");
+          setTimeout(() => modal.classList.replace("flex", "hidden"), 300);
+          document.body.style.overflow = "";
+        }
+
+        /* --- SEARCH --- */
+        const searchInput = document.getElementById("searchInput");
+        const grid = document.getElementById("communitiesGrid");
+
+        searchInput.addEventListener("input", (e) => {
+          const q = e.target.value.toLowerCase().trim();
+          const cards = document.querySelectorAll(
+            '#communitiesGrid [id^="card-"]',
+          );
+          let found = 0;
+
+          cards.forEach((card) => {
+            const name = card.querySelector("h3").textContent.toLowerCase();
+            const code = card
+              .querySelector("p.font-mono")
+              .textContent.toLowerCase();
+            if (name.includes(q) || code.includes(q)) {
+              card.classList.remove("hidden");
+              found++;
+            } else {
+              card.classList.add("hidden");
+            }
+          });
+
+          const emptyState = document.getElementById("emptyState");
+          if (found === 0) {
+            if (!emptyState) {
+              grid.insertAdjacentHTML(
+                "beforeend",
+                `<div class="col-span-full py-20 text-center" id="searchEmpty"><p class="text-slate-400 font-bold">No matches for "${q}"</p></div>`,
+              );
+            } else {
+              emptyState.classList.remove("hidden");
+            }
           } else {
-            modalContent.classList.remove("scale-100", "opacity-100");
-            modalContent.classList.add("scale-95", "opacity-0");
-            setTimeout(() => {
-              modal.classList.remove("flex");
-              modal.classList.add("hidden");
-              form.reset();
-              document
-                .querySelectorAll('[id^="error-"]')
-                .forEach((el) => el.classList.add("hidden"));
-            }, 300);
+            document.getElementById("searchEmpty")?.remove();
+            emptyState?.classList.add("hidden");
           }
-        };
+        });
 
-        if (createBtn)
-          createBtn.addEventListener("click", () => toggleModal(true));
-        if (closeModal)
-          closeModal.addEventListener("click", () => toggleModal(false));
-        if (cancelBtn)
-          cancelBtn.addEventListener("click", () => toggleModal(false));
+        /* --- EVENT DELEGATION --- */
+        document.addEventListener("click", async (e) => {
+          const editBtn = e.target.closest(".edit-btn");
+          const deleteBtn = e.target.closest(".delete-btn");
+          const setupBtn = e.target.closest(".setup-policy-btn");
+          const viewBtn = e.target.closest(".view-policy-btn");
 
-        if (form) {
-          form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const submitBtn = document.getElementById("submitBtn");
-            const originalText = submitBtn.innerText;
+          if (editBtn) {
+            const id = editBtn.dataset.editId;
+            document.getElementById("communityId").value = id;
+            openDrawer("edit");
+            drawerLoader.showLoader();
+            try {
+              const res = await fetch(DETAIL_URL(id), {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+              });
+              const data = await res.json();
+              if (data.success) {
+                const c = data.community;
+                setValue("f_name", c.name);
+                setValue("f_code", c.code);
+                setValue("f_description", c.description);
+                setValue("f_community_type", c.community_type);
+                setValue("f_country", c.country);
+                setValue("f_currency", c.currency);
+                setValue("f_start_date", c.start_date);
+                setValue("f_end_date", c.end_date);
+                if (c.logo_url) showExistingLogo(c.logo_url);
+              }
+            } finally {
+              drawerLoader.hideLoader();
+            }
+          } else if (deleteBtn) {
+            currentDeleteId = deleteBtn.dataset.deleteId;
+            document.getElementById("deleteCommunityName").textContent =
+              deleteBtn.dataset.deleteName;
+            document
+              .getElementById("deleteModal")
+              .classList.replace("hidden", "flex");
+          } else if (setupBtn) {
+            const id = setupBtn.dataset.compId;
+            currentPolicyCommunityId = id;
+            openPolicyDrawer();
+            policyDrawerLoader.showLoader();
+            try {
+              const res = await fetch(POLICY_DETAIL_URL(id), {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+              });
+              const data = await res.json();
+              if (data.success) {
+                const p = data.policy;
+                document.getElementById("policyDrawerTitle").textContent =
+                  `${data.community_name} Policy`;
+                setValue("p_registration_fee_mode", p.registration_fee_mode);
+                setValue(
+                  "p_registration_fee_amount",
+                  p.registration_fee_amount,
+                );
+                setValue("p_contribution_frequency", p.contribution_frequency);
+                setValue(
+                  "p_default_contribution_amount",
+                  p.default_contribution_amount,
+                );
+                setValue(
+                  "p_late_contribution_fine_amount",
+                  p.late_contribution_fine_amount,
+                );
+                setValue("p_absence_fine_amount", p.absence_fine_amount);
+                setValue(
+                  "p_minimum_membership_days_before_loan",
+                  p.minimum_membership_days_before_loan,
+                );
+                setValue(
+                  "p_max_active_loans_per_member",
+                  p.max_active_loans_per_member,
+                );
+                setValue(
+                  "p_max_loan_multiple_of_savings",
+                  p.max_loan_multiple_of_savings,
+                );
+                setValue("p_default_interest_rate", p.default_interest_rate);
+                setValue("p_minimum_guarantors", p.minimum_guarantors);
+                document.getElementById("p_requires_guarantor").checked =
+                  p.requires_guarantor;
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+                document
+                  .querySelectorAll(".community-currency")
+                  .forEach((el) => (el.textContent = data.community_currency));
+              }
+            } finally {
+              policyDrawerLoader.hideLoader();
+            }
+          } else if (viewBtn) {
+            const id = viewBtn.dataset.compId;
+            document.getElementById("policyDisplay").classList.add("hidden");
+            document
+              .getElementById("policyModalLoader")
+              .classList.remove("hidden");
+            openPolicyModal();
+            try {
+              const res = await fetch(POLICY_DETAIL_URL(id), {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+              });
+              const data = await res.json();
+              if (data.success) {
+                const p = data.policy;
+                document.getElementById("modalCommunityName").textContent =
+                  `${data.community_name} Policy`;
+                const curr = data.community_currency;
+                document.getElementById("view_registration_mode").textContent =
+                  p.registration_fee_mode_display;
+                document.getElementById(
+                  "view_registration_amount",
+                ).textContent = `${p.registration_fee_amount} ${curr}`;
+                document.getElementById(
+                  "view_contribution_frequency",
+                ).textContent = p.contribution_frequency_display;
+                document.getElementById(
+                  "view_contribution_amount",
+                ).textContent = `${p.default_contribution_amount} ${curr}`;
+                document.getElementById("view_late_fine").textContent =
+                  `${p.late_contribution_fine_amount} ${curr}`;
+                document.getElementById("view_absence_fine").textContent =
+                  `${p.absence_fine_amount} ${curr}`;
+                document.getElementById("view_interest_rate").textContent =
+                  `${p.default_interest_rate}%`;
+                document.getElementById("view_max_loans").textContent =
+                  p.max_active_loans_per_member;
+                document.getElementById("view_wait_time").textContent =
+                  `${p.minimum_membership_days_before_loan} Days`;
+                document.getElementById("view_guarantor_req").textContent =
+                  p.requires_guarantor ? "Yes" : "No";
+              }
+            } finally {
+              document
+                .getElementById("policyModalLoader")
+                .classList.add("hidden");
+              document
+                .getElementById("policyDisplay")
+                .classList.remove("hidden");
+            }
+          }
+        });
+
+        /* --- FORM SUBMISSIONS --- */
+        document
+          .getElementById("drawerSubmitBtn")
+          .addEventListener("click", async () => {
+            const btn = document.getElementById("drawerSubmitBtn");
+            const label = document.getElementById("drawerSubmitLabel");
+            const icon = document.getElementById("drawerSubmitIcon");
+            setLoading(btn, label, icon, true);
+
+            const formEl = document.getElementById("communityForm");
+            const formData = new FormData(formEl);
+            const url = editMode
+              ? UPDATE_URL(document.getElementById("communityId").value)
+              : CREATE_URL;
 
             try {
-              const formData = new FormData(form);
-              const response = await fetch(
-                '{% url "communities:community_create" %}',
+              const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "X-CSRFToken": CSRF,
+                  "X-Requested-With": "XMLHttpRequest",
+                },
+                body: formData,
+              });
+              const data = await res.json();
+              if (data.success) {
+                toast("success", data.message);
+                closeDrawer();
+                setTimeout(() => window.location.reload(), 800);
+              } else {
+                if (data.errors) displayErrors(data.errors);
+                toast("warning", "Missing fields.");
+              }
+            } catch {
+              toast("danger", "Network error.");
+            } finally {
+              setLoading(
+                btn,
+                label,
+                icon,
+                false,
+                editMode ? "Save Changes" : "Launch Community",
+              );
+            }
+          });
+
+        document
+          .getElementById("savePolicyBtn")
+          .addEventListener("click", async () => {
+            const btn = document.getElementById("savePolicyBtn");
+            const label = document.getElementById("policySaveLabel");
+            const icon = document.getElementById("policySaveIcon");
+            setLoading(btn, label, icon, true, "Saving...");
+
+            const formData = new FormData(
+              document.getElementById("policyForm"),
+            );
+            try {
+              const res = await fetch(
+                POLICY_UPDATE_URL(currentPolicyCommunityId),
                 {
                   method: "POST",
                   headers: {
-                    "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+                    "X-CSRFToken": CSRF,
                     "X-Requested-With": "XMLHttpRequest",
                   },
                   body: formData,
                 },
               );
-
-              const data = await response.json();
-
+              const data = await res.json();
               if (data.success) {
-                if (window.toastManager) {
-                  toastManager.showToast({
-                    message: data.message,
-                    type: "success",
-                  });
-                }
-                toggleModal(false);
-                setTimeout(() => window.location.reload(), 1000);
-              } else {
-                if (data.errors) {
-                  Object.keys(data.errors).forEach((key) => {
-                    const errorEl = document.getElementById(`error-${key}`);
-                    if (errorEl) {
-                      errorEl.innerText = data.errors[key][0];
-                      errorEl.classList.remove("hidden");
-                    }
-                  });
-                }
+                toast("success", data.message);
+                closePolicyDrawer();
               }
-            } catch (error) {
-              console.error("Error:", error);
             } finally {
-              submitBtn.disabled = false;
-              submitBtn.innerText = originalText;
+              setLoading(btn, label, icon, false, "Save Policy");
             }
           });
+
+        document
+          .getElementById("confirmDeleteBtn")
+          .addEventListener("click", async () => {
+            const btn = document.getElementById("confirmDeleteBtn");
+            btn.disabled = true;
+            btn.textContent = "Deleting...";
+            try {
+              const res = await fetch(DELETE_URL(currentDeleteId), {
+                method: "POST",
+                headers: {
+                  "X-CSRFToken": CSRF,
+                  "X-Requested-With": "XMLHttpRequest",
+                },
+              });
+              const data = await res.json();
+              if (data.success) {
+                window.location.reload();
+              }
+            } finally {
+              btn.disabled = false;
+            }
+          });
+
+        /* --- HELPERS --- */
+        function toast(type, msg) {
+          window.toastManager
+            ?.buildToast()
+            .setMessage(msg)
+            .setType(type)
+            .show();
         }
-      });
+        function setValue(id, val) {
+          const el = document.getElementById(id);
+          if (el) el.value = val || "";
+        }
+        function setLoading(btn, label, icon, isLoading, resetText = "") {
+          btn.disabled = isLoading;
+          if (isLoading) {
+            icon.className = "fas fa-spinner fa-spin";
+            label.textContent = "Processing...";
+          } else {
+            icon.className = "fas fa-check-circle";
+            label.textContent = resetText;
+          }
+        }
+        function clearErrors() {
+          document
+            .querySelectorAll(".form-error")
+            .forEach((el) => el.classList.add("hidden"));
+          document
+            .querySelectorAll(".form-input")
+            .forEach((el) => el.classList.remove("error"));
+        }
+        function displayErrors(errors) {
+          Object.entries(errors).forEach(([key, msgs]) => {
+            const errEl = document.getElementById(`err_${key}`);
+            const inpEl = document.getElementById(`f_${key}`);
+            if (errEl) {
+              errEl.textContent = msgs[0];
+              errEl.classList.remove("hidden");
+            }
+            if (inpEl) inpEl.classList.add("error");
+          });
+        }
+
+        /* --- UI TRIGGERS --- */
+        document
+          .getElementById("openCreateDrawerBtn")
+          ?.addEventListener("click", () => openDrawer("create"));
+        document
+          .getElementById("closeDrawerBtn")
+          .addEventListener("click", closeDrawer);
+        document
+          .getElementById("cancelDrawerBtn")
+          .addEventListener("click", closeDrawer);
+        document
+          .getElementById("drawerOverlay")
+          .addEventListener("click", closeDrawer);
+        document
+          .getElementById("cancelDeleteBtn")
+          .addEventListener("click", () =>
+            document
+              .getElementById("deleteModal")
+              .classList.replace("flex", "hidden"),
+          );
+        document
+          .getElementById("closePolicyDrawerBtn")
+          .addEventListener("click", closePolicyDrawer);
+        document
+          .getElementById("cancelPolicyBtn")
+          .addEventListener("click", closePolicyDrawer);
+        document
+          .getElementById("policyDrawerOverlay")
+          .addEventListener("click", closePolicyDrawer);
+        document
+          .getElementById("closePolicyModalBtn")
+          .addEventListener("click", closePolicyModal);
+        document
+          .getElementById("closePolicyModalBtn2")
+          .addEventListener("click", closePolicyModal);
+
+        /* --- LOGO --- */
+        const dropzone = document.getElementById("logoDropzone");
+        const logoInput = document.getElementById("f_logo");
+        dropzone.addEventListener("click", () => logoInput.click());
+        logoInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const r = new FileReader();
+          r.onload = () => {
+            document.getElementById("logoImg").src = r.result;
+            document.getElementById("logoPlaceholder").classList.add("hidden");
+            document.getElementById("logoPreview").classList.remove("hidden");
+            document.getElementById("logoPreview").classList.add("flex");
+          };
+          r.readAsDataURL(file);
+        });
+        window.resetLogoPreview = function () {
+          logoInput.value = "";
+          document.getElementById("logoPlaceholder").classList.remove("hidden");
+          document.getElementById("logoPreview").classList.add("hidden");
+          document.getElementById("logoPreview").classList.remove("flex");
+        };
+        function showExistingLogo(url) {
+          document.getElementById("logoImg").src = url;
+          document.getElementById("logoPlaceholder").classList.add("hidden");
+          document.getElementById("logoPreview").classList.remove("hidden");
+          document.getElementById("logoPreview").classList.add("flex");
+        }
+      })();
     </script>
   </body>
 </html>

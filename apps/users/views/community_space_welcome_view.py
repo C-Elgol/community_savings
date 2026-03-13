@@ -2,7 +2,7 @@ from django.views.generic import DetailView
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 from apps.communities.models import CommunitySpace, Community
-from apps.global_data.enum import CommunityType
+from apps.global_data.enum import CommunityType, RegistrationFeeMode, ContributionFrequency
 
 class CommunitySpaceWelcomeView(LoginRequiredMixin, DetailView):
     """
@@ -27,6 +27,8 @@ class CommunitySpaceWelcomeView(LoginRequiredMixin, DetailView):
         ctx.update({
             'communities': communities,
             'community_types': CommunityType.choices,
+            'registration_fee_modes': RegistrationFeeMode.choices,
+            'contribution_frequencies': ContributionFrequency.choices,
             'search_query': q,
         })
         return ctx
