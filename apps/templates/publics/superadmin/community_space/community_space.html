@@ -51,10 +51,12 @@
             </td>
             <td class="px-4 py-3 text-slate-500">{{ space.slug }}</td>
             <td class="px-4 py-3">
-              {% if space.status == 'ACTIVE' %}
+              {% if space.status == 'active' %}
                 <span class="status-badge status-active"><i class="fas fa-circle text-[8px]"></i> {% trans "Active" %}</span>
-              {% elif space.status == 'INACTIVE' %}
-                <span class="status-badge status-inactive"><i class="fas fa-circle text-[8px]"></i> {% trans "Inactive" %}</span>
+              {% elif space.status == 'suspended' %}
+                <span class="status-badge status-inactive"><i class="fas fa-circle text-[8px]"></i> {% trans "Suspended" %}</span>
+              {% elif space.status == 'archived' %}
+                <span class="status-badge status-inactive"><i class="fas fa-circle text-[8px]"></i> {% trans "Archived" %}</span>
               {% else %}
                 <span class="status-badge status-pending"><i class="fas fa-clock"></i> {{ space.get_status_display }}</span>
               {% endif %}
