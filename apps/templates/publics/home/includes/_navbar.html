@@ -55,7 +55,7 @@
         <!-- Admin Button -->
         {% if user.is_authenticated and user.is_staff %}
         <a
-          href="{% url 'users:admin_dashboard' %}"
+          href="{% url 'users:superadmin_dashboard' %}"
           class="flex items-center justify-center text-white bg-slate-800 hover:bg-slate-900 px-3 py-2 rounded-xl shadow-sm transition-all hover-lift"
         >
           <i class="fas fa-tools text-xs sm:text-sm md:hidden"></i>
