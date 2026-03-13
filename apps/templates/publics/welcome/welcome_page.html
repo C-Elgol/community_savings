@@ -478,13 +478,11 @@
                       {{ membership.community.name }}
                     </h3>
                     <span class="status-badge status-approved text-xs">
-                      <i class="fas fa-check-circle"></i> {{
-                      membership.get_status_display }}
+                      <i class="fas fa-check-circle"></i> {{ membership.get_status_display }}
                     </span>
                   </div>
                   <p class="text-xs text-slate-500">
-                    {% trans "Joined" %} {{ membership.joined_at }} · {{
-                    membership.get_role_display }}
+                    {% trans "Joined" %} {{ membership.joined_at }} · {{ membership.get_role_display }}
                   </p>
                 </div>
               </div>
