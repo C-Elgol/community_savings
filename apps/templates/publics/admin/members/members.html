@@ -1,72 +1,549 @@
-{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} 
-{% block content %} {% block page_header %}
-<h2 class="text-xl font-semibold text-slate-800">Members</h2>
-<p class="text-xs text-slate-500">Manage all community members</p>
-{% endblock %}
-<!-- ========== MEMBERS PAGE ========== -->
-<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-  <div class="flex justify-between items-center mb-6">
-    <h2 class="text-xl font-bold">Members</h2>
-    <button class="bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm">
-      <i class="fas fa-plus mr-2"></i>Add member
-    </button>
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block title %}{% trans "Manage Members" %} - {{ community.name }}{% endblock %}
+{% block content %}
+<div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div>
+      <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+        {% trans "Community Members" %}
+      </h1>
+      <p class="text-slate-500 font-medium mt-1">
+        {% trans "Manage participants in" %}
+        <span class="text-emerald-600 font-bold">{{ community.name }}</span>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="relative group">
+        <i
+          class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"
+        ></i>
+        <input
+          type="text"
+          id="memberSearch"
+          placeholder="{% trans 'Search members...' %}"
+          class="pl-11 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all w-64 shadow-sm"
+        />
+      </div>
+      <button
+        id="addMemberBtn"
+        class="gradient-bg text-white px-6 py-3 rounded-2xl font-black text-sm shadow-xl shadow-emerald-900/20 hover:opacity-95 active:scale-95 transition-all flex items-center gap-2"
+      >
+        <i class="fas fa-plus-circle"></i>
+        {% trans "Add Member" %}
+      </button>
+    </div>
   </div>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-50 text-slate-600">
-        <tr>
-          <th class="px-4 py-3 text-left">ID</th>
-          <th class="px-4 py-3 text-left">Name</th>
-          <th class="px-4 py-3 text-left">Group</th>
-          <th class="px-4 py-3 text-left">Status</th>
-          <th class="px-4 py-3 text-left">Joined</th>
-          <th class="px-4 py-3 text-left"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="border-b">
-          <td class="px-4 py-3">M-1024</td>
-          <td class="px-4 py-3 font-medium">Martha N.</td>
-          <td>Njangi A</td>
-          <td>
-            <span
-              class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"
-              >Active</span
+
+  <!-- Table Section -->
+  <div
+    class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden relative min-h-[400px]"
+  >
+    <!-- Table Loader -->
+    <div
+      id="tableLoader"
+      class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center transition-all duration-300"
+    >
+      <div class="flex flex-col items-center gap-4">
+        <div
+          class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-600 rounded-full animate-spin"
+        ></div>
+        <p class="text-slate-500 font-bold text-sm">
+          {% trans "Loading members..." %}
+        </p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse" id="membersTable">
+        <thead>
+          <tr class="bg-slate-50/50">
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
             >
-          </td>
-          <td>12 Jan 2024</td>
-          <td>
-            <button class="text-emerald-700"><i class="fas fa-eye"></i></button>
-          </td>
-        </tr>
-        <tr class="border-b">
-          <td>M-1025</td>
-          <td class="font-medium">John Doe</td>
-          <td>Youth fund</td>
-          <td>
-            <span
-              class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"
-              >Active</span
+              {% trans "Member" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
             >
-          </td>
-          <td>3 Feb 2024</td>
-          <td></td>
-        </tr>
-        <tr class="border-b">
-          <td>M-1026</td>
-          <td class="font-medium">Esther K.</td>
-          <td>Women's group</td>
-          <td>
-            <span
-              class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs"
-              >Pending</span
+              {% trans "Contact" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
             >
-          </td>
-          <td>19 Mar 2026</td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
+              {% trans "Role & Position" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Status" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Actions" %}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50" id="memberListBody">
+          <!-- Loaded via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden py-32 text-center">
+      <div
+        class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200"
+      >
+        <i class="fas fa-users-slash text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">
+        {% trans "No members found" %}
+      </h3>
+      <p class="text-slate-500 font-medium">
+        {% trans "Try adjusting your search or add a new member." %}
+      </p>
+    </div>
   </div>
 </div>
+
+<!-- Add/Edit Modal -->
+<div
+  id="memberModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto"
+>
+  <div
+    class="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full relative animate-in zoom-in-95 duration-300 my-8"
+  >
+    <div class="p-8 md:p-12">
+      <div class="flex items-center justify-between mb-10">
+        <div>
+          <h3
+            id="modalTitle"
+            class="text-3xl font-black text-slate-800 tracking-tight"
+          >
+            {% trans "Add New Member" %}
+          </h3>
+          <p class="text-slate-500 font-medium mt-1">
+            {% trans "Add a participant to this community." %}
+          </p>
+        </div>
+        <button
+          onclick="closeModal()"
+          class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <form id="memberForm" class="space-y-6">
+        <input type="hidden" id="memberId" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "First Name" %}</label
+            >
+            <input
+              type="text"
+              name="first_name"
+              id="f_first_name"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+              placeholder="{% trans 'Enter first name' %}"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "Last Name" %}</label
+            >
+            <input
+              type="text"
+              name="last_name"
+              id="f_last_name"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+              placeholder="{% trans 'Enter last name' %}"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-black text-slate-700 ml-1"
+            >{% trans "Email Address" %}</label
+          >
+          <input
+            type="email"
+            name="email"
+            id="f_email"
+            class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+            placeholder="{% trans 'email@example.com' %}"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "Phone Number" %}</label
+            >
+            <input
+              type="text"
+              name="phone_number"
+              id="f_phone_number"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+              placeholder="+237..."
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "Member Code" %}</label
+            >
+            <input
+              type="text"
+              name="member_code"
+              id="f_member_code"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+              placeholder="CODE-001"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "Role" %}</label
+            >
+            <select
+              name="role"
+              id="f_role"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium appearance-none"
+            >
+              <option value="member">{% trans "Member" %}</option>
+              <option value="president">{% trans "President" %}</option>
+              <option value="secretary">{% trans "Secretary" %}</option>
+              <option value="treasurer">{% trans "Treasurer" %}</option>
+              <option value="auditor">{% trans "Auditor" %}</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-black text-slate-700 ml-1"
+              >{% trans "Position/Rank" %}</label
+            >
+            <input
+              type="text"
+              name="position"
+              id="f_position"
+              class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+              placeholder="{% trans 'e.g. Senior Member' %}"
+            />
+          </div>
+        </div>
+
+        <div class="pt-6 flex gap-4">
+          <button
+            type="button"
+            onclick="closeModal()"
+            class="flex-1 py-4 px-6 border-2 border-slate-100 text-slate-500 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            id="submitBtn"
+            class="flex-[2] py-4 px-6 gradient-bg text-white rounded-2xl font-black text-sm shadow-xl shadow-emerald-900/20 hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-check-circle" id="submitIcon"></i>
+            <span id="submitLabel">{% trans "Save Member" %}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div
+  id="deleteModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden items-center justify-center p-4"
+>
+  <div
+    class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 text-center animate-in fade-in zoom-in duration-300"
+  >
+    <div
+      class="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 text-3xl mx-auto mb-6"
+    >
+      <i class="fas fa-user-minus"></i>
+    </div>
+    <h3 class="text-2xl font-black text-slate-800 mb-2">
+      {% trans "Remove Member?" %}
+    </h3>
+    <p class="text-slate-500 text-sm mb-8">
+      {% trans "Are you sure you want to remove" %}
+      <strong id="deleteMemberName"></strong>? {% trans "This action cannot be
+      undone." %}
+    </p>
+    <div class="flex gap-3">
+      <button
+        onclick="closeDeleteModal()"
+        class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
+      >
+        {% trans "Cancel" %}
+      </button>
+      <button
+        id="confirmDeleteBtn"
+        class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition shadow-lg shadow-rose-200"
+      >
+        {% trans "Yes, Remove" %}
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  (function () {
+    const COMMUNITY_ID = "{{ community.id }}";
+    const ENDPOINTS = {
+      list: "{% url 'communities:member_list_api' community.id %}",
+      create: "{% url 'communities:member_create_api' community.id %}",
+      detail: (id) =>
+        `{% url 'communities:member_detail_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
+          "00000000-0000-0000-0000-000000000000",
+          id,
+        ),
+      update: (id) =>
+        `{% url 'communities:member_update_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
+          "00000000-0000-0000-0000-000000000000",
+          id,
+        ),
+      delete: (id) =>
+        `{% url 'communities:member_delete_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
+          "00000000-0000-0000-0000-000000000000",
+          id,
+        ),
+    };
+
+    let membersData = [];
+    let editMode = false;
+    let currentDeleteId = null;
+
+    const ui = {
+      tableLoader: document.getElementById("tableLoader"),
+      memberListBody: document.getElementById("memberListBody"),
+      emptyState: document.getElementById("emptyState"),
+      memberSearch: document.getElementById("memberSearch"),
+      memberModal: document.getElementById("memberModal"),
+      memberForm: document.getElementById("memberForm"),
+      modalTitle: document.getElementById("modalTitle"),
+      submitBtn: document.getElementById("submitBtn"),
+      submitLabel: document.getElementById("submitLabel"),
+      submitIcon: document.getElementById("submitIcon"),
+      deleteModal: document.getElementById("deleteModal"),
+      deleteMemberName: document.getElementById("deleteMemberName"),
+      confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
+    };
+
+    /* --- API Calls --- */
+    async function fetchMembers() {
+      ui.tableLoader.classList.remove("hidden");
+      try {
+        const res = await fetch(ENDPOINTS.list);
+        const data = await res.json();
+        if (data.success) {
+          membersData = data.members;
+          renderTable(membersData);
+        }
+      } catch (err) {
+        toast("danger", "Error loading members");
+      } finally {
+        ui.tableLoader.classList.add("hidden");
+      }
+    }
+
+    function renderTable(members) {
+      if (members.length === 0) {
+        ui.memberListBody.innerHTML = "";
+        ui.emptyState.classList.remove("hidden");
+        return;
+      }
+
+      ui.emptyState.classList.add("hidden");
+      ui.memberListBody.innerHTML = members
+        .map(
+          (m) => `
+                <tr class="group hover:bg-slate-50/80 transition-all">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-xs uppercase">
+                                ${m.full_name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="text-sm font-black text-slate-800">${m.full_name}</p>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">${m.member_code || "---"}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-sm font-bold text-slate-600">${m.email}</p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-sm font-black text-emerald-700">${m.role_display}</p>
+                        <p class="text-xs text-slate-400 font-medium">${m.position || "---"}</p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${m.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}">
+                            ${m.status_display}
+                        </span>
+                    </td>
+                    <td class="px-8 py-6">
+                        <div class="flex items-center gap-2">
+                            <button onclick="openEditModal('${m.id}')" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all" title="Edit">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
+                            <button onclick="openDeleteModal('${m.id}', '${m.full_name}')" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all" title="Remove">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `,
+        )
+        .join("");
+    }
+
+    /* --- CRUD Operations --- */
+    ui.memberForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(ui.memberForm);
+      const id = document.getElementById("memberId").value;
+      const url = editMode ? ENDPOINTS.update(id) : ENDPOINTS.create;
+
+      setLoading(true);
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast("success", data.message);
+          closeModal();
+          fetchMembers();
+        } else {
+          toast("warning", data.message);
+        }
+      } catch (err) {
+        toast("danger", "Operation failed");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    async function deleteMember() {
+      if (!currentDeleteId) return;
+      try {
+        const res = await fetch(ENDPOINTS.delete(currentDeleteId), {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast("success", data.message);
+          closeDeleteModal();
+          fetchMembers();
+        }
+      } catch (err) {
+        toast("danger", "Delete failed");
+      }
+    }
+
+    /* --- UI Helpers --- */
+    window.openEditModal = async (id) => {
+      editMode = true;
+      ui.modalTitle.textContent = "{% trans 'Edit Member' %}";
+      ui.submitLabel.textContent = "{% trans 'Update Member' %}";
+      ui.memberModal.classList.replace("hidden", "flex");
+
+      // Should fetch detail or find in local data
+      const member = membersData.find((m) => m.id === id);
+      if (member) {
+        // Fetch full detail for better accuracy (API call)
+        try {
+          const res = await fetch(ENDPOINTS.detail(id));
+          const data = await res.json();
+          if (data.success) {
+            const m = data.member;
+            document.getElementById("memberId").value = m.id;
+            document.getElementById("f_first_name").value = m.first_name;
+            document.getElementById("f_last_name").value = m.last_name;
+            document.getElementById("f_email").value = m.email;
+            document.getElementById("f_email").disabled = true; // Email unique
+            document.getElementById("f_phone_number").value = m.phone_number;
+            document.getElementById("f_member_code").value = m.member_code;
+            document.getElementById("f_role").value = m.role;
+            document.getElementById("f_position").value = m.position;
+          }
+        } catch (err) {
+          toast("danger", "Error loading detail");
+        }
+      }
+    };
+
+    window.closeModal = () => {
+      ui.memberModal.classList.replace("flex", "hidden");
+      ui.memberForm.reset();
+      document.getElementById("f_email").disabled = false;
+      editMode = false;
+    };
+
+    window.openDeleteModal = (id, name) => {
+      currentDeleteId = id;
+      ui.deleteMemberName.textContent = name;
+      ui.deleteModal.classList.replace("hidden", "flex");
+    };
+
+    window.closeDeleteModal = () => {
+      ui.deleteModal.classList.replace("flex", "hidden");
+      currentDeleteId = null;
+    };
+
+    function setLoading(isLoading) {
+      ui.submitBtn.disabled = isLoading;
+      if (isLoading) {
+        ui.submitIcon.className = "fas fa-spinner fa-spin";
+        ui.submitLabel.textContent = "{% trans 'Processing...' %}";
+      } else {
+        ui.submitIcon.className = "fas fa-check-circle";
+        ui.submitLabel.textContent = editMode
+          ? "{% trans 'Update Member' %}"
+          : "{% trans 'Save Member' %}";
+      }
+    }
+
+    function toast(type, msg) {
+      window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    /* --- Search --- */
+    ui.memberSearch.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = membersData.filter(
+        (m) =>
+          m.full_name.toLowerCase().includes(query) ||
+          m.email.toLowerCase().includes(query) ||
+          (m.member_code && m.member_code.toLowerCase().includes(query)),
+      );
+      renderTable(filtered);
+    });
+
+    /* --- Initialization --- */
+    document.getElementById("addMemberBtn").addEventListener("click", () => {
+      editMode = false;
+      ui.modalTitle.textContent = "{% trans 'Add New Member' %}";
+      ui.submitLabel.textContent = "{% trans 'Save Member' %}";
+      ui.memberModal.classList.replace("hidden", "flex");
+    });
+    ui.confirmDeleteBtn.addEventListener("click", deleteMember);
+
+    fetchMembers();
+  })();
+</script>
 {% endblock %}

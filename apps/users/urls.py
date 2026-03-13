@@ -12,6 +12,7 @@ from apps.users.views.admin_member_view import AdminMemberView
 from apps.users.views.welcome_view import WelcomeView
 from apps.users.views.community_space_welcome_view import CommunitySpaceWelcomeView
 from apps.users.views.super_admin_dashboard_view import SuperAdminDashboardView
+from apps.users.views.membership_application_view import MembershipApplicationView
 
 app_name = "users"
     
@@ -33,4 +34,6 @@ urlpatterns = [
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
     path('admin-members/<uuid:community_id>/', AdminMemberView.as_view(), name='admin_members'),
     path('superadmin-dashboard/', SuperAdminDashboardView.as_view(), name='superadmin_dashboard'),
+
+    path('membership-application/<uuid:community_id>/', MembershipApplicationView.as_view(), name='membership_application'),
 ]

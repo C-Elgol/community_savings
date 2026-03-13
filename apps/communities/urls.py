@@ -17,6 +17,18 @@ from apps.communities.views.community_space_view import (
     CommunitySpaceUpdateView,
     CommunitySpaceDeleteView,
 )
+from apps.communities.views.member_api_view import (
+    MemberListAPI,
+    MemberCreateAPI,
+    MemberDetailAPI,
+    MemberUpdateAPI,
+    MemberDeleteAPI,
+)
+from apps.communities.views.application_api_view import (
+    ApplicationListAPI,
+    ApplicationDetailAPI,
+    ApplicationProcessAPI,
+)
 
 app_name = "communities"
 
@@ -37,4 +49,16 @@ urlpatterns = [
     path("communities-space/<uuid:pk>/", CommunitySpaceDetailView.as_view(), name="community_space_detail"),
     path("communities-space/<uuid:pk>/update/", CommunitySpaceUpdateView.as_view(), name="community_space_update"),
     path("communities-space/<uuid:pk>/delete/", CommunitySpaceDeleteView.as_view(), name="community_space_delete"),
+
+    # Member API
+    path("api/communities/<uuid:community_id>/members/", MemberListAPI.as_view(), name="member_list_api"),
+    path("api/communities/<uuid:community_id>/members/create/", MemberCreateAPI.as_view(), name="member_create_api"),
+    path("api/members/<uuid:member_id>/", MemberDetailAPI.as_view(), name="member_detail_api"),
+    path("api/members/<uuid:member_id>/update/", MemberUpdateAPI.as_view(), name="member_update_api"),
+    path("api/members/<uuid:member_id>/delete/", MemberDeleteAPI.as_view(), name="member_delete_api"),
+
+    # Application API
+    path("api/communities/<uuid:community_id>/applications/", ApplicationListAPI.as_view(), name="application_list_api"),
+    path("api/applications/<uuid:application_id>/", ApplicationDetailAPI.as_view(), name="application_detail_api"),
+    path("api/applications/<uuid:application_id>/process/", ApplicationProcessAPI.as_view(), name="application_process_api"),
 ]

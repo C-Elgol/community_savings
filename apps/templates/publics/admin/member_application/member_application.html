@@ -1,13 +1,454 @@
-{% extends 'publics/admin/base.html' %}
-{% load static %}
-{% load i18n %}
-{% block content %}
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block title %}{% trans "Membership Applications" %} - {{ community.name }}{% endblock %} {% block content %}
+<div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div>
+      <h1 class="text-3xl font-black text-slate-800 tracking-tight">
+        {% trans "Pending Applications" %}
+      </h1>
+      <p class="text-slate-500 font-medium mt-1">
+        {% trans "Review new join requests for" %}
+        <span class="text-emerald-600 font-bold">{{ community.name }}</span>
+      </p>
+    </div>
 
- <!-- ========== MEMBERSHIP APPLICATIONS PAGE ========== -->
-        <div id="applications" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">Pending Applications</h2>
-                <div class="space-y-3"><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Peter M.</p><p class="text-sm text-slate-500">Njangi A · applied 2d ago</p></div><div><span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs mr-3">Pending</span><button class="text-emerald-700 text-sm font-medium">Review</button></div></div><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Lydia T.</p><p class="text-sm text-slate-500">Women's group · applied 5d ago</p></div><div><span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs mr-3">Pending</span><button class="text-emerald-700 text-sm font-medium">Review</button></div></div></div>
-            </div>
+    <div class="flex items-center gap-3">
+      <div class="relative group">
+        <i
+          class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"
+        ></i>
+        <input
+          type="text"
+          id="appSearch"
+          placeholder="{% trans 'Search applications...' %}"
+          class="pl-11 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all w-64 shadow-sm"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div
+    class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden relative min-h-[400px]"
+  >
+    <!-- Table Loader -->
+    <div
+      id="tableLoader"
+      class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center transition-all duration-300"
+    >
+      <div class="flex flex-col items-center gap-4">
+        <div
+          class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-600 rounded-full animate-spin"
+        ></div>
+        <p class="text-slate-500 font-bold text-sm">
+          {% trans "Loading applications..." %}
+        </p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse" id="appsTable">
+        <thead>
+          <tr class="bg-slate-50/50">
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Applicant" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Applied For" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Requested On" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Fee Status" %}
+            </th>
+            <th
+              class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100"
+            >
+              {% trans "Actions" %}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50" id="appListBody">
+          <!-- Loaded via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden py-32 text-center">
+      <div
+        class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200"
+      >
+        <i class="fas fa-file-invoice text-4xl"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">
+        {% trans "No pending applications" %}
+      </h3>
+      <p class="text-slate-500 font-medium">
+        {% trans "New join requests will appear here for your review." %}
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div
+  id="reviewModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto"
+>
+  <div
+    class="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full relative animate-in zoom-in-95 duration-300 my-8"
+  >
+    <div class="p-8 md:p-12">
+      <div class="flex items-center justify-between mb-10">
+        <div>
+          <h3 class="text-3xl font-black text-slate-800 tracking-tight">
+            {% trans "Review Application" %}
+          </h3>
+          <p class="text-slate-500 font-medium mt-1">
+            {% trans "Verify details before approving membership." %}
+          </p>
         </div>
+        <button
+          onclick="closeReviewModal()"
+          class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div id="reviewContent" class="space-y-8">
+        <!-- Loaded via JS -->
+        <div class="flex flex-col items-center py-12 gap-4">
+          <div
+            class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"
+          ></div>
+          <p class="text-slate-400 font-bold">
+            {% trans "Loading details..." %}
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div
+        id="modalActions"
+        class="hidden pt-10 grid grid-cols-2 gap-4 border-t border-slate-100 mt-10"
+      >
+        <button
+          onclick="openRejectDialog()"
+          class="py-4 px-6 bg-rose-50 text-rose-600 rounded-2xl font-black text-sm hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-user-times"></i>
+          {% trans "Reject" %}
+        </button>
+        <button
+          onclick="processApplication('approve')"
+          id="approveBtn"
+          class="py-4 px-6 gradient-bg text-white rounded-2xl font-black text-sm shadow-xl shadow-emerald-900/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-user-check"></i>
+          <span id="approveLabel">{% trans "Approve & Join" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Reason Dialog -->
+<div
+  id="rejectModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden items-center justify-center p-4"
+>
+  <div
+    class="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 animate-in fade-in zoom-in duration-300"
+  >
+    <h3 class="text-2xl font-black text-slate-800 mb-4 text-center">
+      {% trans "Rejection Reason" %}
+    </h3>
+    <p class="text-slate-500 text-sm mb-6 text-center">
+      {% trans "Please provide a reason for rejecting this application. This
+      will be visible to the applicant." %}
+    </p>
+
+    <textarea
+      id="rejectionReason"
+      class="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-rose-500 transition-all text-sm font-medium mb-8"
+      rows="4"
+      placeholder="{% trans 'e.g. Incomplete profile or ineligible...' %}"
+    ></textarea>
+
+    <div class="flex gap-3">
+      <button
+        onclick="closeRejectDialog()"
+        class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition"
+      >
+        {% trans "Cancel" %}
+      </button>
+      <button
+        onclick="processApplication('reject')"
+        id="confirmRejectBtn"
+        class="flex-1 py-4 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition shadow-lg shadow-rose-200"
+      >
+        {% trans "Confirm Reject" %}
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  (function () {
+    const COMMUNITY_ID = "{{ community.id }}";
+    const ENDPOINTS = {
+      list: "{% url 'communities:application_list_api' community.id %}",
+      detail: (id) =>
+        `{% url 'communities:application_detail_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
+          "00000000-0000-0000-0000-000000000000",
+          id,
+        ),
+      process: (id) =>
+        `{% url 'communities:application_process_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
+          "00000000-0000-0000-0000-000000000000",
+          id,
+        ),
+    };
+
+    let appsData = [];
+    let currentAppId = null;
+
+    const ui = {
+      tableLoader: document.getElementById("tableLoader"),
+      appListBody: document.getElementById("appListBody"),
+      emptyState: document.getElementById("emptyState"),
+      appSearch: document.getElementById("appSearch"),
+      reviewModal: document.getElementById("reviewModal"),
+      reviewContent: document.getElementById("reviewContent"),
+      modalActions: document.getElementById("modalActions"),
+      rejectModal: document.getElementById("rejectModal"),
+      rejectionReason: document.getElementById("rejectionReason"),
+      approveBtn: document.getElementById("approveBtn"),
+      approveLabel: document.getElementById("approveLabel"),
+      confirmRejectBtn: document.getElementById("confirmRejectBtn"),
+    };
+
+    /* --- API Calls --- */
+    async function fetchApplications() {
+      ui.tableLoader.classList.remove("hidden");
+      try {
+        const res = await fetch(ENDPOINTS.list);
+        const data = await res.json();
+        if (data.success) {
+          appsData = data.applications;
+          renderTable(appsData);
+        }
+      } catch (err) {
+        toast("danger", "Error loading applications");
+      } finally {
+        ui.tableLoader.classList.add("hidden");
+      }
+    }
+
+    function renderTable(apps) {
+      if (apps.length === 0) {
+        ui.appListBody.innerHTML = "";
+        ui.emptyState.classList.remove("hidden");
+        return;
+      }
+
+      ui.emptyState.classList.add("hidden");
+      ui.appListBody.innerHTML = apps
+        .map(
+          (a) => `
+                <tr class="group hover:bg-slate-50/80 transition-all">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-700 font-black text-xs uppercase">
+                                ${a.full_name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="text-sm font-black text-slate-800">${a.full_name}</p>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">${a.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-sm font-black text-slate-700">${a.applied_role_display}</p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-sm font-bold text-slate-500">${a.created_at}</p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${a.registration_fee_required ? "bg-amber-50 text-amber-600" : "bg-slate-50 text-slate-500"}">
+                            ${a.registration_fee_required ? `{% trans "Fee Required" %}: ${a.registration_fee_amount}` : `{% trans "No Fee" %}`}
+                        </span>
+                    </td>
+                    <td class="px-8 py-6">
+                        <button onclick="openReviewModal('${a.id}')" class="gradient-bg text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-lg shadow-emerald-900/10 hover:opacity-95 transition-all">
+                            {% trans "Review" %}
+                        </button>
+                    </td>
+                </tr>
+            `,
+        )
+        .join("");
+    }
+
+    /* --- Actions --- */
+    async function processApplication(action) {
+      if (!currentAppId) return;
+
+      const reason = ui.rejectionReason.value;
+      if (action === "reject" && !reason) {
+        toast("warning", "Please provide a reason");
+        return;
+      }
+
+      setLoading(true, action);
+      try {
+        const res = await fetch(ENDPOINTS.process(currentAppId), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify({ action, reason }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast("success", data.message);
+          closeRejectDialog();
+          closeReviewModal();
+          fetchApplications();
+        } else {
+          toast("warning", data.message);
+        }
+      } catch (err) {
+        toast("danger", "Operation failed");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    /* --- UI Helpers --- */
+    window.openReviewModal = async (id) => {
+      currentAppId = id;
+      ui.reviewModal.classList.replace("hidden", "flex");
+      ui.reviewContent.innerHTML = `
+                <div class="flex flex-col items-center py-12 gap-4">
+                    <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                    <p class="text-slate-400 font-bold">{% trans "Loading details..." %}</p>
+                </div>
+            `;
+      ui.modalActions.classList.add("hidden");
+
+      try {
+        const res = await fetch(ENDPOINTS.detail(id));
+        const data = await res.json();
+        if (data.success) {
+          const app = data.application;
+          ui.reviewContent.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-6">
+                                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{% trans "Personal Info" %}</p>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-xs text-slate-400 font-medium">{% trans "Full Name" %}</p>
+                                            <p class="text-lg font-black text-slate-800">${app.first_name} ${app.last_name}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-slate-400 font-medium">{% trans "Email" %}</p>
+                                            <p class="text-sm font-bold text-slate-600">${app.email}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-slate-400 font-medium">{% trans "Phone" %}</p>
+                                            <p class="text-sm font-bold text-slate-600">${app.phone_number || "---"}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100">
+                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">{% trans "Application Details" %}</p>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Requested Role" %}</p>
+                                            <p class="text-lg font-black text-emerald-800">${app.applied_role_display}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Applied On" %}</p>
+                                            <p class="text-sm font-bold text-emerald-700">${app.created_at}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Registration Fee" %}</p>
+                                            <p class="text-sm font-black ${app.registration_fee_required ? "text-amber-600" : "text-slate-400"}">
+                                                ${app.registration_fee_required ? `${app.registration_fee_amount} (${app.registration_fee_paid ? "Paid" : "Unpaid"})` : "No Fee Required"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+          ui.modalActions.classList.remove("hidden");
+        }
+      } catch (err) {
+        toast("danger", "Error loading application");
+      }
+    };
+
+    window.closeReviewModal = () => {
+      ui.reviewModal.classList.replace("flex", "hidden");
+      currentAppId = null;
+    };
+
+    window.openRejectDialog = () => {
+      ui.rejectModal.classList.replace("hidden", "flex");
+    };
+
+    window.closeRejectDialog = () => {
+      ui.rejectModal.classList.replace("flex", "hidden");
+      ui.rejectionReason.value = "";
+    };
+
+    function setLoading(isLoading, action) {
+      if (action === "approve") {
+        ui.approveBtn.disabled = isLoading;
+        ui.approveLabel.textContent = isLoading
+          ? "{% trans 'Processing...' %}"
+          : "{% trans 'Approve & Join' %}";
+      } else if (action === "reject") {
+        ui.confirmRejectBtn.disabled = isLoading;
+        ui.confirmRejectBtn.textContent = isLoading
+          ? "{% trans 'Processing...' %}"
+          : "{% trans 'Confirm Reject' %}";
+      }
+    }
+
+    function toast(type, msg) {
+      window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    /* --- Search --- */
+    ui.appSearch.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = appsData.filter(
+        (a) =>
+          a.full_name.toLowerCase().includes(query) ||
+          a.email.toLowerCase().includes(query),
+      );
+      renderTable(filtered);
+    });
+
+    fetchApplications();
+  })();
+</script>
 {% endblock %}
