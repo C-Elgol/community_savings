@@ -22,7 +22,7 @@ urlpatterns = [
     path('dashboard/', HomeView.as_view(), name='dashboard'),
     path('profile/', MemberProfileView.as_view(), name='member_profile'),
     path('notification/', NotificationView.as_view(), name='notification'),
-    path('admin-dashboard/', AdminDashboardView.as_view(), name='admin_dashboard'),
+    path('admin-dashboard/<uuid:community_id>/', AdminDashboardView.as_view(), name='admin_dashboard'),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
@@ -31,6 +31,6 @@ urlpatterns = [
     path('password-reset-verify/<str:email>/', PasswordResetVerifyView.as_view(), name='password_reset_verify'),
     path('password-reset/<str:email>/', PasswordResetView.as_view(), name='password_reset'),
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
-    path('admin-members/', AdminMemberView.as_view(), name='admin_members'),
+    path('admin-members/<uuid:community_id>/', AdminMemberView.as_view(), name='admin_members'),
     path('superadmin-dashboard/', SuperAdminDashboardView.as_view(), name='superadmin_dashboard'),
 ]

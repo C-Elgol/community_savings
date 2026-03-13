@@ -343,7 +343,7 @@
                     </button>
                   </div>
                 </div>
-                <a href="{% url 'users:admin_dashboard' %}">
+                <a href="{% url 'users:admin_dashboard' community.id %}">
                   <button
                     class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
                   >
@@ -573,7 +573,7 @@
     <!-- ════════════════════════════════════════════
          POLICY PARTIALS
          ════════════════════════════════════════════ -->
-    {% include 'publics/admin/communities/includes/_policy_drawer.html' %} 
+    {% include 'publics/admin/communities/includes/_policy_drawer.html' %}
     {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
 
     <!-- ════════════════════════════════════════════

@@ -1,81 +1,153 @@
 {% load static %} {% load i18n %}
 
 <!-- ========== SIDEBAR (13 navigation items) ========== -->
-<aside class="sidebar fixed inset-y-0 left-0 z-40 w-80 bg-white border-r border-slate-200 shadow-lg lg:translate-x-0 flex flex-col overflow-y-auto">
-    <!-- logo area -->
-    <a href="{% url 'users:home' %}">
-        <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-800 to-teal-700 flex items-center justify-center text-white shadow-sm"><i class="fas fa-hand-holding-heart text-lg"></i></div>
-            <span class="text-xl font-bold tracking-tight text-slate-800">Njangi<span class="text-emerald-700">Admin</span></span>
-        </div>
-    </a>
-
-    <!-- navigation menu (all 13 pages) -->
-    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto text-sm">
-        <!-- Dashboard -->
-        <a href="{% url 'users:admin_dashboard' %}" data-page="dashboard" class="nav-link flex {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition">
-            <i class="fas fa-th-large w-5 text-emerald-700"></i><span>Dashboard</span>
-        </a>
-        <!-- Communities -->
-        {% comment %} <a href="{% url 'communities:communities' %}" data-page="communities" class="nav-link flex {% if request.resolver_match.url_name == 'communities' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition">
-            <i class="fas fa-users w-5 text-slate-400"></i><span>Communities</span>
-        </a> {% endcomment %}
-        <!-- Members -->
-        <a href="{% url 'users:admin_members' %}" data-page="members" class="nav-link flex {% if request.resolver_match.url_name == 'admin_members' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition">
-            <i class="fas fa-users w-5 text-slate-400"></i><span>Members</span>
-        </a>
-        <!-- Membership Applications -->
-        <a href="#" data-page="applications" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-user-plus w-5 text-slate-400"></i><span>Membership Applications</span>
-        </a>
-        <!-- Contributions -->
-        <a href="#" data-page="contributions" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-coins w-5 text-slate-400"></i><span>Contributions</span>
-        </a>
-        <!-- Loans -->
-        <a href="#" data-page="loans" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-file-invoice-dollar w-5 text-slate-400"></i><span>Loans</span>
-        </a>
-        <!-- Loan Applications -->
-        <a href="#" data-page="loan-apps" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-file-signature w-5 text-slate-400"></i><span>Loan Applications</span>
-        </a>
-        <!-- Fines -->
-        <a href="#" data-page="fines" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i><span>Fines</span>
-        </a>
-        <!-- Meetings -->
-        <a href="#" data-page="meetings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-handshake w-5 text-slate-400"></i><span>Meetings</span>
-        </a>
-        <!-- Meeting Minutes -->
-        <a href="#" data-page="minutes" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-file-alt w-5 text-slate-400"></i><span>Meeting Minutes</span>
-        </a>
-        <!-- Financial Reports -->
-        <a href="#" data-page="reports" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-chart-bar w-5 text-slate-400"></i><span>Financial Reports</span>
-        </a>
-        <!-- Credit Risk Analytics -->
-        <a href="#" data-page="risk" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-chart-pie w-5 text-slate-400"></i><span>Credit Risk Analytics</span>
-        </a>
-        <!-- System Logs -->
-        <a href="#" data-page="logs" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-scroll w-5 text-slate-400"></i><span>System Logs</span>
-        </a>
-        <!-- Settings -->
-        <a href="#" data-page="settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition">
-            <i class="fas fa-cog w-5 text-slate-400"></i><span>Settings</span>
-        </a>
-    </nav>
-
-    <!-- admin profile footer -->
-    <div class="p-5 border-t border-slate-100">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold shadow-sm border border-white">SA</div>
-            <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-slate-800 truncate">Samuel Admin</p><p class="text-xs text-slate-500 truncate">superadmin@njangi.org</p></div>
-            <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
-        </div>
+<aside
+  class="sidebar fixed inset-y-0 left-0 z-40 w-80 bg-white border-r border-slate-200 shadow-lg lg:translate-x-0 flex flex-col overflow-y-auto"
+>
+  <!-- logo area -->
+  <a href="{% url 'users:home' %}">
+    <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
+      <div
+        class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-800 to-teal-700 flex items-center justify-center text-white shadow-sm"
+      >
+        <i class="fas fa-hand-holding-heart text-lg"></i>
+      </div>
+      <span class="text-xl font-bold tracking-tight text-slate-800"
+        >Njangi<span class="text-emerald-700">Admin</span></span
+      >
     </div>
+  </a>
+
+  <!-- navigation menu (all 13 pages) -->
+  <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto text-sm">
+    <!-- Dashboard -->
+    <a
+      href="{% url 'users:admin_dashboard' community.id %}"
+      data-page="dashboard"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
+    >
+      <i class="fas fa-th-large w-5 text-emerald-700"></i><span>Dashboard</span>
+    </a>
+    <!-- Members -->
+    <a
+      href="{% url 'users:admin_members' community.id %}"
+      data-page="members"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_members' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
+    >
+      <i class="fas fa-users w-5 text-slate-400"></i><span>Members</span>
+    </a>
+    <!-- Membership Applications -->
+    <a
+      href="#"
+      data-page="applications"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-user-plus w-5 text-slate-400"></i
+      ><span>Membership Applications</span>
+    </a>
+    <!-- Contributions -->
+    <a
+      href="#"
+      data-page="contributions"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-coins w-5 text-slate-400"></i><span>Contributions</span>
+    </a>
+    <!-- Loans -->
+    <a
+      href="#"
+      data-page="loans"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-file-invoice-dollar w-5 text-slate-400"></i
+      ><span>Loans</span>
+    </a>
+    <!-- Loan Applications -->
+    <a
+      href="#"
+      data-page="loan-apps"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-file-signature w-5 text-slate-400"></i
+      ><span>Loan Applications</span>
+    </a>
+    <!-- Fines -->
+    <a
+      href="#"
+      data-page="fines"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i
+      ><span>Fines</span>
+    </a>
+    <!-- Meetings -->
+    <a
+      href="#"
+      data-page="meetings"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-handshake w-5 text-slate-400"></i><span>Meetings</span>
+    </a>
+    <!-- Meeting Minutes -->
+    <a
+      href="#"
+      data-page="minutes"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-file-alt w-5 text-slate-400"></i
+      ><span>Meeting Minutes</span>
+    </a>
+    <!-- Financial Reports -->
+    <a
+      href="#"
+      data-page="reports"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-chart-bar w-5 text-slate-400"></i
+      ><span>Financial Reports</span>
+    </a>
+    <!-- Credit Risk Analytics -->
+    <a
+      href="#"
+      data-page="risk"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-chart-pie w-5 text-slate-400"></i
+      ><span>Credit Risk Analytics</span>
+    </a>
+    <!-- System Logs -->
+    <a
+      href="#"
+      data-page="logs"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-scroll w-5 text-slate-400"></i><span>System Logs</span>
+    </a>
+    <!-- Settings -->
+    <a
+      href="#"
+      data-page="settings"
+      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+    >
+      <i class="fas fa-cog w-5 text-slate-400"></i><span>Settings</span>
+    </a>
+  </nav>
+
+  <!-- admin profile footer -->
+  <div class="p-5 border-t border-slate-100">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold shadow-sm border border-white"
+      >
+        SA
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-slate-800 truncate">
+          Samuel Admin
+        </p>
+        <p class="text-xs text-slate-500 truncate">superadmin@njangi.org</p>
+      </div>
+      <i class="fas fa-chevron-right text-slate-300 text-xs"></i>
+    </div>
+  </div>
 </aside>
