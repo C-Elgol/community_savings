@@ -5,24 +5,26 @@
   class="sidebar fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-slate-200 shadow-lg md:translate-x-0 flex flex-col overflow-y-auto"
 >
   <!-- logo -->
-  <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
-    <div
-      class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-600 flex items-center justify-center text-white shadow-sm"
-    >
-      <i class="fas fa-hand-holding-heart text-lg"></i>
+  <a href="{% url 'users:home' %}">
+    <div class="flex items-center gap-2 px-6 py-6 border-b border-slate-100">
+      <div
+        class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-600 flex items-center justify-center text-white shadow-sm"
+      >
+        <i class="fas fa-hand-holding-heart text-lg"></i>
+      </div>
+      <span class="text-xl font-bold tracking-tight text-slate-800"
+        >Njangi<span class="text-emerald-700">Hub</span></span
+      >
     </div>
-    <span class="text-xl font-bold tracking-tight text-slate-800"
-      >Njangi<span class="text-emerald-700">Hub</span></span
-    >
-  </div>
+  </a>
 
   <!-- navigation menu (all pages) -->
   <nav class="flex-1 px-4 py-6 space-y-1">
     <!-- Dashboard -->
     <a
-      href="{% url 'users:home' %}"
+      href="{% url 'users:dashboard' %}"
       data-page="dashboard"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'home' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'dashboard' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-th-large w-5 text-emerald-700"></i
       ><span class="text-sm font-medium">{% trans "Dashboard" %}</span>
