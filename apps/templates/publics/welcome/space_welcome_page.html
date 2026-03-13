@@ -300,10 +300,10 @@
                 <div
                   class="flex items-center justify-between text-xs text-slate-400 mb-6 font-medium"
                 >
-                  <span
-                    ><i class="fas fa-globe-africa mr-1"></i>{{
-                    community.country|default:"Cameroon" }}</span
-                  >
+                  <span>
+                    <i class="fas fa-globe-africa mr-1"></i>{{
+                    community.country|default:"Cameroon" }}
+                  </span>
                   <span
                     class="bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold uppercase"
                     >{{ community.currency }}</span
@@ -574,8 +574,8 @@
     <!-- ════════════════════════════════════════════
          POLICY PARTIALS
          ════════════════════════════════════════════ -->
-    {% include 'publics/admin/communities/includes/_policy_drawer.html' %} {%
-    include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
+    {% include 'publics/admin/communities/includes/_policy_drawer.html' %} 
+    {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
 
     <!-- ════════════════════════════════════════════
          DELETE MODAL
