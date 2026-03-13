@@ -343,11 +343,13 @@
                     </button>
                   </div>
                 </div>
-                <button
-                  class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
-                >
-                  {% trans "View Community" %}
-                </button>
+                <a href="{% url 'users:admin_dashboard' %}">
+                  <button
+                    class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
+                  >
+                    {% trans "View Community" %}
+                  </button>
+                </a>
               </div>
             </div>
             {% empty %}
