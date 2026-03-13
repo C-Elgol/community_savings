@@ -1,677 +1,884 @@
-{% load i18n %}
-{% load static %}
+{% load i18n %} {% load static %}
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NjangiHub · My Communities</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="{% url 'javascript_catalog' %}"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
-        * { font-family: 'Inter', sans-serif; }
-        
-        .gradient-bg {
-            background: linear-gradient(145deg, #0f3b3f 0%, #0b5e4b 70%, #0f766e 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-        }
-        
-        .tab-button {
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        
-        .tab-button.active {
-            color: #0f766e;
-            font-weight: 600;
-        }
-        
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: #0f766e;
-            border-radius: 3px 3px 0 0;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        
-        .status-available {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-pending {
-            background: #fed7aa;
-            color: #92400e;
-        }
-        
-        .status-approved {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .status-access {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-        
-        .section-title {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: #0f766e;
-            border-radius: 3px;
-        }
-        
-        .filter-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
-        }
-        
-        .filter-scroll::-webkit-scrollbar {
-            height: 6px;
-        }
-        
-        .filter-scroll::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        
-        .filter-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        
-        .filter-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+      * {
+        font-family: "Inter", sans-serif;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(
+          145deg,
+          #0f3b3f 0%,
+          #0b5e4b 70%,
+          #0f766e 100%
+        );
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .tab-button {
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .tab-button.active {
+        color: #0f766e;
+        font-weight: 600;
+      }
+
+      .tab-button.active::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #0f766e;
+        border-radius: 3px 3px 0 0;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .status-available {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-pending {
+        background: #fed7aa;
+        color: #92400e;
+      }
+
+      .status-approved {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .status-access {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+
+      .section-title {
+        position: relative;
+        display: inline-block;
+      }
+
+      .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: #0f766e;
+        border-radius: 3px;
+      }
+
+      .filter-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+      }
+
+      .filter-scroll::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .filter-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+      }
+
+      .filter-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+
+      .filter-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
     </style>
-</head>
-<body class="bg-slate-50 min-h-screen">
-    
+  </head>
+  <body class="bg-slate-50 min-h-screen">
     <!-- Top Navigation Bar -->
     <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white">
-                        <i class="fas fa-hand-holding-heart text-sm"></i>
-                    </div>
-                    <span class="text-lg font-bold text-slate-800">Njangi<span class="text-emerald-700">Hub</span></span>
-                </div>
-                
-                <!-- Search Bar -->
-                <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <div class="relative w-full">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" placeholder="Search communities..." 
-                               class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-slate-50">
-                    </div>
-                </div>
-                
-                <!-- User Menu -->
-                {% if user.is_authenticated %}
-                <div class="flex items-center gap-3">
-                    <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full">
-                        <i class="fas fa-bell"></i>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
-                    </button>
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold">
-                            {{ user.get_full_name|slice:":2"|upper }}
-                        </div>
-                        <div class="hidden sm:block">
-                            <p class="text-sm font-semibold text-slate-800">{{ user.get_full_name }}</p>
-                            <p class="text-xs text-slate-500">{{ user.role }}</p>
-                        </div>
-                    </div>
-                </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo -->
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white"
+            >
+              <i class="fas fa-hand-holding-heart text-sm"></i>
+            </div>
+            <span class="text-lg font-bold text-slate-800"
+              >Njangi<span class="text-emerald-700">Hub</span></span
+            >
+          </div>
 
-                <!-- Admin Button -->
-                {% if user.is_authenticated and user.is_staff %}
-                <a
-                href="{% url 'users:superadmin_dashboard' %}"
-                class="flex items-center justify-center text-white bg-slate-800 hover:bg-slate-900 px-3 py-2 rounded-xl shadow-sm transition-all hover-lift"
-                >
-                <i class="fas fa-tools text-xs sm:text-sm md:hidden"></i>
-                <span
-                    class="hidden md:inline-flex items-center text-xs font-semibold uppercase tracking-wider"
-                    >{% trans "SuperAdmin" %}</span
-                >
-                </a>
-                {% endif %}
+          <!-- Search Bar -->
+          <div class="hidden md:flex flex-1 max-w-md mx-8">
+            <div class="relative w-full">
+              <i
+                class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+              ></i>
+              <input
+                type="text"
+                placeholder="Search communities..."
+                class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 bg-slate-50"
+              />
+            </div>
+          </div>
 
-                <!-- Language Dropdown -->
-                <div class="relative">
+          <!-- User Menu -->
+          {% if user.is_authenticated %}
+          <div class="flex items-center gap-3">
+            <button
+              class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full"
+            >
+              <i class="fas fa-bell"></i>
+              <span
+                class="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"
+              ></span>
+            </button>
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold"
+              >
+                {{ user.get_full_name|slice:":2"|upper }}
+              </div>
+              <div class="hidden sm:block">
+                <p class="text-sm font-semibold text-slate-800">
+                  {{ user.get_full_name }}
+                </p>
+                <p class="text-xs text-slate-500">{{ user.role }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Button -->
+          {% if user.is_authenticated and user.is_staff %}
+          <a
+            href="{% url 'users:superadmin_dashboard' %}"
+            class="flex items-center justify-center text-white bg-slate-800 hover:bg-slate-900 px-3 py-2 rounded-xl shadow-sm transition-all hover-lift"
+          >
+            <i class="fas fa-tools text-xs sm:text-sm md:hidden"></i>
+            <span
+              class="hidden md:inline-flex items-center text-xs font-semibold uppercase tracking-wider"
+              >{% trans "SuperAdmin" %}</span
+            >
+          </a>
+          {% endif %}
+
+          <!-- Language Dropdown -->
+          <div class="relative">
+            <button
+              id="langDropdownBtn"
+              class="flex items-center gap-1.5 p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <i class="fas fa-globe text-base"></i>
+              <span
+                id="currentLangCode"
+                class="hidden sm:inline text-xs font-bold uppercase tracking-widest"
+              >
+                {{ request.LANGUAGE_CODE|default:"en" }}
+              </span>
+              <i class="fas fa-chevron-down text-[10px] opacity-50"></i>
+            </button>
+            <div
+              id="langDropdownMenu"
+              class="hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden ring-1 ring-black/5"
+            >
+              <form
+                action="{% url 'set_language' %}"
+                method="post"
+                class="p-2 space-y-1"
+              >
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.path }}" />
                 <button
-                    id="langDropdownBtn"
-                    class="flex items-center gap-1.5 p-2 text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors"
+                  type="submit"
+                  name="language"
+                  value="en"
+                  class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
                 >
-                    <i class="fas fa-globe text-base"></i>
-                    <span
-                    id="currentLangCode"
-                    class="hidden sm:inline text-xs font-bold uppercase tracking-widest"
-                    >
-                    {{ request.LANGUAGE_CODE|default:"en" }}
-                    </span>
-                    <i class="fas fa-chevron-down text-[10px] opacity-50"></i>
+                  <span
+                    class="w-2 h-2 rounded-full bg-blue-500 mr-3 ring-2 ring-blue-100 group-hover:ring-blue-200"
+                  ></span>
+                  <span class="font-medium">English</span>
                 </button>
-                <div
-                    id="langDropdownMenu"
-                    class="hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden ring-1 ring-black/5"
+                <button
+                  type="submit"
+                  name="language"
+                  value="fr"
+                  class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
                 >
-                    <form
-                    action="{% url 'set_language' %}"
-                    method="post"
-                    class="p-2 space-y-1"
-                    >
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.path }}" />
-                    <button
-                        type="submit"
-                        name="language"
-                        value="en"
-                        class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
-                    >
-                        <span
-                        class="w-2 h-2 rounded-full bg-blue-500 mr-3 ring-2 ring-blue-100 group-hover:ring-blue-200"
-                        ></span>
-                        <span class="font-medium">English</span>
-                    </button>
-                    <button
-                        type="submit"
-                        name="language"
-                        value="fr"
-                        class="flex items-center w-full px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors group"
-                    >
-                        <span
-                        class="w-2 h-2 rounded-full bg-red-500 mr-3 ring-2 ring-red-100 group-hover:ring-red-200"
-                        ></span>
-                        <span class="font-medium">Français</span>
-                    </button>
-                    </form>
-                </div>
-                </div>
-                {% endif %}
-                <!-- Auth Buttons -->
-                {% if user.is_authenticated %}
-                <a
-                href="{% url 'users:logout' %}"
-                class="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-all hover:bg-rose-50 p-2 md:px-3 md:py-2 rounded-xl group"
-                title="{% trans 'Logout' %}"
-                >
-                <i
-                    class="fas fa-sign-out-alt text-lg md:text-sm md:mr-2 group-hover:translate-x-0.5 transition-transform"
-                ></i>
-                <span class="hidden md:inline-flex items-center text-sm font-semibold"
-                    >{% trans "Logout" %}</span
-                >
-                </a>
-                {% else %}
-                <div class="flex items-center gap-2">
-                <a
-                    href="{% url 'users:login' %}"
-                    class="text-sm font-semibold text-slate-700 hover:text-emerald-700 px-4 py-2 rounded-xl hover:bg-slate-100 transition-all"
-                >
-                    {% trans "Login" %}
-                </a>
-                <a
-                    href="{% url 'users:register' %}"
-                    class="text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
-                >
-                    {% trans "Sign Up" %}
-                </a>
-                </div>
-                {% endif %}
+                  <span
+                    class="w-2 h-2 rounded-full bg-red-500 mr-3 ring-2 ring-red-100 group-hover:ring-red-200"
+                  ></span>
+                  <span class="font-medium">Français</span>
+                </button>
+              </form>
             </div>
-            
-            <!-- Mobile Search (visible on small screens) -->
-            <div class="md:hidden py-3">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="Search communities..." 
-                           class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-slate-50">
-                </div>
-            </div>
+          </div>
+          {% endif %}
+          <!-- Auth Buttons -->
+          {% if user.is_authenticated %}
+          <a
+            href="{% url 'users:logout' %}"
+            class="flex items-center justify-center text-slate-500 hover:text-rose-600 transition-all hover:bg-rose-50 p-2 md:px-3 md:py-2 rounded-xl group"
+            title="{% trans 'Logout' %}"
+          >
+            <i
+              class="fas fa-sign-out-alt text-lg md:text-sm md:mr-2 group-hover:translate-x-0.5 transition-transform"
+            ></i>
+            <span
+              class="hidden md:inline-flex items-center text-sm font-semibold"
+              >{% trans "Logout" %}</span
+            >
+          </a>
+          {% else %}
+          <div class="flex items-center gap-2">
+            <a
+              href="{% url 'users:login' %}"
+              class="text-sm font-semibold text-slate-700 hover:text-emerald-700 px-4 py-2 rounded-xl hover:bg-slate-100 transition-all"
+            >
+              {% trans "Login" %}
+            </a>
+            <a
+              href="{% url 'users:register' %}"
+              class="text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+            >
+              {% trans "Sign Up" %}
+            </a>
+          </div>
+          {% endif %}
         </div>
+
+        <!-- Mobile Search (visible on small screens) -->
+        <div class="md:hidden py-3">
+          <div class="relative">
+            <i
+              class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+            ></i>
+            <input
+              type="text"
+              placeholder="Search communities..."
+              class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-slate-50"
+            />
+          </div>
+        </div>
+      </div>
     </nav>
-    
+
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Welcome Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-slate-800">Welcome back, John!</h1>
-            <p class="text-slate-500">Manage your communities and applications</p>
-        </div>
-        
-        <!-- Navigation Tabs (to switch between views) -->
-        <div class="border-b border-slate-200 mb-8">
-            <nav class="flex space-x-8 overflow-x-auto filter-scroll pb-1">
-                <button class="tab-button active px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap" data-tab="all">
-                    <i class="fas fa-th-large mr-2"></i>All Communities
+      <!-- Welcome Header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-800">
+          {% if user.is_authenticated %} {% blocktrans with name=user.get_full_name %}Welcome back, {{ name }}!{% endblocktrans %}
+          {% else %} {% trans "Welcome to NjangiHub" %} {% endif %}
+        </h1>
+        <p class="text-slate-500">
+          {% trans "Manage your communities and applications" %}
+        </p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="border-b border-slate-200 mb-8">
+        <nav class="flex space-x-8 overflow-x-auto filter-scroll pb-1">
+          <button
+            class="tab-button active px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap"
+            data-tab="all"
+          >
+            <i class="fas fa-th-large mr-2"></i>{% trans "All" %}
+          </button>
+          <button
+            class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap"
+            data-tab="available"
+          >
+            <i class="fas fa-compass mr-2"></i>{% trans "Discover" %}
+          </button>
+          {% if user.is_authenticated %}
+          <button
+            class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap"
+            data-tab="approved"
+          >
+            <i class="fas fa-check-circle mr-2"></i>{% trans "My Communities" %}
+          </button>
+          <button
+            class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap"
+            data-tab="spaces"
+          >
+            <i class="fas fa-globe mr-2"></i>{% trans "Community Spaces" %}
+          </button>
+          <button
+            class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap"
+            data-tab="pending"
+          >
+            <i class="fas fa-clock mr-2"></i>{% trans "Pending" %}
+          </button>
+          {% endif %}
+        </nav>
+      </div>
+
+      <!-- ALL TAB -->
+      <div id="tab-all" class="tab-content active">
+        <!-- Discover Section -->
+        <section class="mb-10">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">
+              {% trans "Available to Join" %}
+            </h2>
+          </div>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            id="available-list"
+          >
+            {% for community in available_communities %}
+            <div
+              class="bg-white rounded-xl border border-slate-200 p-5 card-hover cursor-pointer group"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 text-xl"
+                  >
+                    {% if community.logo %}
+                    <img
+                      src="{{ community.logo.url }}"
+                      class="w-full h-full object-cover rounded-xl"
+                    />
+                    {% else %}
+                    <i class="fas fa-users"></i>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <h3
+                      class="font-semibold text-slate-800 group-hover:text-emerald-700"
+                    >
+                      {{ community.name }}
+                    </h3>
+                    <p class="text-xs text-slate-500">
+                      {{ community.country }} · {{ community.memberships.count
+                      }} {% trans "members" %}
+                    </p>
+                  </div>
+                </div>
+                <span class="status-badge status-available text-xs">
+                  <i class="fas fa-circle text-[6px]"></i> {% trans "Open" %}
+                </span>
+              </div>
+              <p class="text-sm text-slate-600 mb-3 line-clamp-2">
+                {{ community.description }}
+              </p>
+              <div class="flex items-center justify-between">
+                <div class="flex -space-x-2">
+                  <div
+                    class="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-slate-600 italic"
+                  >
+                    NH
+                  </div>
+                </div>
+                <button
+                  class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition"
+                >
+                  {% trans "Request" %}
                 </button>
-                <button class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap" data-tab="available">
-                    <i class="fas fa-compass mr-2"></i>Discover
+              </div>
+            </div>
+            {% empty %}
+            <div
+              class="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-slate-300"
+            >
+              <div
+                class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <i class="fas fa-search text-slate-300 text-2xl"></i>
+              </div>
+              <p class="text-slate-500 italic">
+                {% trans "No communities available right now." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        {% if user.is_authenticated %}
+        <!-- My Communities Section -->
+        <section class="mb-10">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">
+              {% trans "My Communities" %}
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for membership in my_memberships %}
+            <div
+              class="bg-white rounded-xl border border-slate-200 p-5 card-hover relative overflow-hidden"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full"
+              ></div>
+              <div class="flex items-start gap-3 mb-3 relative">
+                <div
+                  class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-200 to-teal-200 flex items-center justify-center text-emerald-800 text-xl"
+                >
+                  {% if membership.community.logo %}
+                  <img
+                    src="{{ membership.community.logo.url }}"
+                    class="w-full h-full object-cover rounded-xl"
+                  />
+                  {% else %}
+                  <i class="fas fa-hand-holding-heart"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-800">
+                      {{ membership.community.name }}
+                    </h3>
+                    <span class="status-badge status-approved text-xs">
+                      <i class="fas fa-check-circle"></i> {{
+                      membership.get_status_display }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500">
+                    {% trans "Joined" %} {{ membership.joined_at }} · {{
+                    membership.get_role_display }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex justify-between items-center text-sm mt-2">
+                <div class="flex items-center gap-2 text-slate-600">
+                  <i class="fas fa-coins text-emerald-600 text-xs"></i>
+                  <span>{{ membership.community.currency }} 0 saved</span>
+                </div>
+                <a
+                  href="#"
+                  class="text-emerald-700 hover:underline text-xs font-medium"
+                  >{% trans "View" %} →</a
+                >
+              </div>
+            </div>
+            {% empty %}
+            <div
+              class="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-slate-300"
+            >
+              <p class="text-slate-500 italic">
+                {% trans "You haven't joined any communities yet." %}
+              </p>
+              <button
+                onclick="document.querySelector('[data-tab=available]').click()"
+                class="mt-4 text-emerald-700 font-medium hover:underline"
+              >
+                {% trans "Discover communities to join" %}
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <!-- Community Spaces Section -->
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">
+              {% trans "My Community Spaces" %}
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for space in my_spaces %}
+            <div
+              class="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5 card-hover"
+            >
+              <div class="flex items-center gap-3 mb-3">
+                <div
+                  class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white text-xl"
+                >
+                  {% if space.logo %}
+                  <img
+                    src="{{ space.logo.url }}"
+                    class="w-full h-full object-cover rounded-xl"
+                  />
+                  {% else %}
+                  <i class="fas fa-globe-africa"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <h3 class="font-semibold text-slate-800">{{ space.name }}</h3>
+                  <p class="text-xs text-slate-500">
+                    {{ space.communities.count }} {% trans "communities" %}
+                  </p>
+                </div>
+              </div>
+              <p class="text-sm text-slate-600 mb-3">
+                {{ space.description|truncatechars:100 }}
+              </p>
+              <div class="flex items-center justify-between">
+                <span class="status-badge status-access">
+                  <i class="fas fa-key"></i> {% trans "Access granted" %}
+                </span>
+                <a
+                  href="{% url 'users:community_space_welcome' space.pk %}"
+                  class="text-sm text-emerald-700 font-medium hover:underline"
+                  >{% trans "Enter" %} →</a
+                >
+              </div>
+            </div>
+            {% empty %}
+            <div
+              class="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-slate-300"
+            >
+              <p class="text-slate-500 italic">
+                {% trans "No community spaces accessible yet." %}
+              </p>
+              <p class="text-xs text-slate-400 mt-1">
+                {% trans "Contact an administrator to get access or request
+                one." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+      </div>
+
+      <!-- DISCOVER TAB -->
+      <div id="tab-available" class="tab-content">
+        <section>
+          <h2
+            class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2"
+          >
+            {% trans "Discover Communities" %}
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for community in available_communities %}
+            <div
+              class="bg-white rounded-xl border border-slate-200 p-5 card-hover"
+            >
+              <div class="flex items-start gap-3 mb-3">
+                <div
+                  class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-bold"
+                >
+                  {% if community.logo %}
+                  <img
+                    src="{{ community.logo.url }}"
+                    class="w-full h-full object-cover rounded-xl"
+                  />
+                  {% else %} {{ community.name|slice:":1"|upper }} {% endif %}
+                </div>
+                <div>
+                  <h3 class="font-semibold text-slate-800">
+                    {{ community.name }}
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    {{ community.memberships.count }} {% trans "members" %}
+                  </p>
+                </div>
+              </div>
+              <p class="text-sm text-slate-600 mb-4 line-clamp-3">
+                {{ community.description }}
+              </p>
+              <button
+                class="w-full bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-semibold hover:bg-emerald-100 transition"
+              >
+                {% trans "Request to Join" %}
+              </button>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-20 text-center">
+              <p class="text-slate-500 italic">
+                {% trans "No new communities found to discover." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      {% if user.is_authenticated %}
+      <!-- MY COMMUNITIES TAB -->
+      <div id="tab-approved" class="tab-content">
+        <section>
+          <h2
+            class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2"
+          >
+            {% trans "My Communities" %}
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for membership in my_memberships %}
+            <div
+              class="bg-white rounded-xl border border-slate-200 p-5 card-hover"
+            >
+              <div class="flex items-center gap-4 mb-4">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold"
+                >
+                  {% if membership.community.logo %}
+                  <img
+                    src="{{ membership.community.logo.url }}"
+                    class="w-full h-full object-cover rounded-2xl"
+                  />
+                  {% else %}
+                  <i class="fas fa-hand-holding-heart"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-800">
+                    {{ membership.community.name }}
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    {{ membership.get_role_display }}
+                  </p>
+                </div>
+              </div>
+              <div class="space-y-3 mb-4">
+                <div class="flex justify-between text-sm">
+                  <span class="text-slate-500">{% trans "Savings" %}</span>
+                  <span class="font-semibold text-emerald-700"
+                    >{{ membership.community.currency }} 0</span
+                  >
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-slate-500">{% trans "Status" %}</span>
+                  <span
+                    class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-md text-[10px] uppercase font-bold"
+                    >{{ membership.get_status_display }}</span
+                  >
+                </div>
+              </div>
+              <a
+                href="#"
+                class="block w-full text-center bg-slate-50 text-slate-700 py-2 rounded-xl font-semibold hover:bg-slate-100 transition"
+              >
+                {% trans "Open Dashboard" %}
+              </a>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-20 text-center">
+              <p class="text-slate-500 italic">
+                {% trans "You are not a member of any community yet." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      <!-- COMMUNITY SPACES TAB -->
+      <div id="tab-spaces" class="tab-content">
+        <section>
+          <h2
+            class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2"
+          >
+            {% trans "My Community Spaces" %}
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for space in my_spaces %}
+            <div
+              class="bg-white rounded-xl border border-slate-200 p-6 card-hover group"
+            >
+              <div
+                class="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center text-white text-3xl mb-4 group-hover:scale-110 transition-transform"
+              >
+                {% if space.logo %}
+                <img
+                  src="{{ space.logo.url }}"
+                  class="w-full h-full object-cover rounded-2xl"
+                />
+                {% else %}
+                <i class="fas fa-layer-group"></i>
+                {% endif %}
+              </div>
+              <h3 class="text-xl font-bold text-slate-800 mb-2">
+                {{ space.name }}
+              </h3>
+              <p class="text-sm text-slate-500 mb-4 line-clamp-2">
+                {{ space.description }}
+              </p>
+              <div
+                class="flex items-center justify-between pt-4 border-t border-slate-100"
+              >
+                <div class="flex items-center gap-2">
+                  <div class="flex -space-x-1">
+                    <div
+                      class="w-5 h-5 rounded-full bg-slate-200 border border-white"
+                    ></div>
+                    <div
+                      class="w-5 h-5 rounded-full bg-slate-300 border border-white"
+                    ></div>
+                  </div>
+                  <span class="text-xs text-slate-500"
+                    >{{ space.communities.count }} {% trans "groups" %}</span
+                  >
+                </div>
+                <a
+                  href="{% url 'users:community_space_welcome' space.pk %}"
+                  class="flex items-center gap-1 text-emerald-700 font-bold text-sm hover:translate-x-1 transition-transform"
+                >
+                  {% trans "Enter Space" %}
+                  <i class="fas fa-chevron-right text-xs"></i>
+                </a>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-20 text-center">
+              <p class="text-slate-500 italic">
+                {% trans "No community spaces found." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      <!-- PENDING APPLICATIONS TAB -->
+      <div id="tab-pending" class="tab-content">
+        <section>
+          <h2
+            class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2"
+          >
+            {% trans "Pending Applications" %}
+          </h2>
+          <div class="space-y-4 max-w-2xl mx-auto">
+            {% for app in pending_applications %}
+            <div
+              class="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between card-hover"
+            >
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 text-xl"
+                >
+                  <i class="fas fa-file-signature"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-800">
+                    {{ app.community.name }}
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    {% trans "Applied" %} {{ app.created_at|timesince }} {%
+                    trans "ago" %} · {{ app.get_applied_role_display }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                  class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider"
+                >
+                  {{ app.get_status_display }}
+                </span>
+                <button
+                  class="text-slate-400 hover:text-rose-500 transition-colors"
+                >
+                  <i class="fas fa-times-circle"></i>
                 </button>
-                <button class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap" data-tab="approved">
-                    <i class="fas fa-check-circle mr-2"></i>My Communities
-                </button>
-                <button class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap" data-tab="spaces">
-                    <i class="fas fa-globe mr-2"></i>Community Spaces
-                </button>
-                <button class="tab-button px-1 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 whitespace-nowrap" data-tab="pending">
-                    <i class="fas fa-clock mr-2"></i>Pending Applications
-                </button>
-            </nav>
-        </div>
-        
-        <!-- ALL COMMUNITIES TAB (combined view with three sections) -->
-        <div id="tab-all" class="tab-content active">
-            <!-- Section 1: Available Communities to Join (Cards) -->
-            <section class="mb-10">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">Available to Join</h2>
-                    <a href="#" class="text-sm text-emerald-700 hover:underline flex items-center gap-1">
-                        View all <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Card 1 - Njangi A -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover cursor-pointer group">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 text-xl">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-slate-800 group-hover:text-emerald-700">Njangi A</h3>
-                                    <p class="text-xs text-slate-500">Yaoundé · 124 members</p>
-                                </div>
-                            </div>
-                            <span class="status-badge status-available text-xs">
-                                <i class="fas fa-circle text-[6px]"></i> Open
-                            </span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3 line-clamp-2">Traditional rotating savings group meeting weekly.</p>
-                        <div class="flex items-center justify-between">
-                            <div class="flex -space-x-2">
-                                <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <img src="https://randomuser.me/api/portraits/men/46.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-slate-600">+12</span>
-                            </div>
-                            <button class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition">
-                                Request
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Card 2 - Women's Group -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover cursor-pointer group">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-amber-700 text-xl">
-                                    <i class="fas fa-female"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-slate-800 group-hover:text-emerald-700">Women's Group</h3>
-                                    <p class="text-xs text-slate-500">Douala · 87 members</p>
-                                </div>
-                            </div>
-                            <span class="status-badge status-available text-xs">
-                                <i class="fas fa-circle text-[6px]"></i> Open
-                            </span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3 line-clamp-2">Empowering women through savings and small business loans.</p>
-                        <div class="flex items-center justify-between">
-                            <div class="flex -space-x-2">
-                                <img src="https://randomuser.me/api/portraits/women/65.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <img src="https://randomuser.me/api/portraits/women/33.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-slate-600">+8</span>
-                            </div>
-                            <button class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition">
-                                Request
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Card 3 - Business Circle -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover cursor-pointer group">
-                        <div class="flex items-start justify-between mb-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 text-xl">
-                                    <i class="fas fa-briefcase"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-slate-800 group-hover:text-emerald-700">Business Circle</h3>
-                                    <p class="text-xs text-slate-500">Buea · 56 members</p>
-                                </div>
-                            </div>
-                            <span class="status-badge status-available text-xs">
-                                <i class="fas fa-circle text-[6px]"></i> Open
-                            </span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3 line-clamp-2">For entrepreneurs and small business owners.</p>
-                        <div class="flex items-center justify-between">
-                            <div class="flex -space-x-2">
-                                <img src="https://randomuser.me/api/portraits/men/22.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <img src="https://randomuser.me/api/portraits/men/35.jpg" class="w-6 h-6 rounded-full border-2 border-white">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-medium text-slate-600">+5</span>
-                            </div>
-                            <button class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition">
-                                Request
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Section 2: Approved Communities (User has access) -->
-            <section class="mb-10">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">My Communities</h2>
-                    <a href="#" class="text-sm text-emerald-700 hover:underline flex items-center gap-1">
-                        Manage <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Approved Community 1 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full"></div>
-                        <div class="flex items-start gap-3 mb-3 relative">
-                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-200 to-teal-200 flex items-center justify-center text-emerald-800 text-xl">
-                                <i class="fas fa-hand-holding-heart"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="font-semibold text-slate-800">Njangi Central</h3>
-                                    <span class="status-badge status-approved text-xs">
-                                        <i class="fas fa-check-circle"></i> Active
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-500">Joined Jan 2024 · Admin</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center text-sm mt-2">
-                            <div class="flex items-center gap-2 text-slate-600">
-                                <i class="fas fa-coins text-emerald-600 text-xs"></i>
-                                <span>XAF 45,000 saved</span>
-                            </div>
-                            <button class="text-emerald-700 hover:underline text-xs font-medium">View →</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Approved Community 2 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full"></div>
-                        <div class="flex items-start gap-3 mb-3 relative">
-                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-200 to-orange-200 flex items-center justify-center text-amber-800 text-xl">
-                                <i class="fas fa-female"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="font-semibold text-slate-800">Women's Empowerment</h3>
-                                    <span class="status-badge status-approved text-xs">
-                                        <i class="fas fa-check-circle"></i> Active
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-500">Joined Mar 2024 · Member</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center text-sm mt-2">
-                            <div class="flex items-center gap-2 text-slate-600">
-                                <i class="fas fa-coins text-emerald-600 text-xs"></i>
-                                <span>XAF 23,500 saved</span>
-                            </div>
-                            <button class="text-emerald-700 hover:underline text-xs font-medium">View →</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Approved Community 3 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full"></div>
-                        <div class="flex items-start gap-3 mb-3 relative">
-                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-200 to-indigo-200 flex items-center justify-center text-blue-800 text-xl">
-                                <i class="fas fa-briefcase"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="font-semibold text-slate-800">Business Circle</h3>
-                                    <span class="status-badge status-approved text-xs">
-                                        <i class="fas fa-check-circle"></i> Active
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-500">Joined Feb 2024 · Member</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center text-sm mt-2">
-                            <div class="flex items-center gap-2 text-slate-600">
-                                <i class="fas fa-coins text-emerald-600 text-xs"></i>
-                                <span>XAF 67,000 saved</span>
-                            </div>
-                            <button class="text-emerald-700 hover:underline text-xs font-medium">View →</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Section 3: Community Spaces (User has access to spaces) -->
-            <section>
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="section-title text-lg font-semibold text-slate-800 pb-2">My Community Spaces</h2>
-                    <a href="#" class="text-sm text-emerald-700 hover:underline flex items-center gap-1">
-                        Explore spaces <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Space 1 -->
-                    <div class="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5 card-hover">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white text-xl">
-                                <i class="fas fa-globe-africa"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800">Yaoundé Hub</h3>
-                                <p class="text-xs text-slate-500">8 communities · 342 members</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3">Main community space for Yaoundé region</p>
-                        <div class="flex items-center justify-between">
-                            <span class="status-badge status-access">
-                                <i class="fas fa-key"></i> Access granted
-                            </span>
-                            <button class="text-sm text-emerald-700 font-medium hover:underline">Enter →</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Space 2 -->
-                    <div class="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5 card-hover">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white text-xl">
-                                <i class="fas fa-globe-africa"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800">Douala Business</h3>
-                                <p class="text-xs text-slate-500">5 communities · 215 members</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3">Commercial and business-focused space</p>
-                        <div class="flex items-center justify-between">
-                            <span class="status-badge status-access">
-                                <i class="fas fa-key"></i> Access granted
-                            </span>
-                            <button class="text-sm text-emerald-700 font-medium hover:underline">Enter →</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Space 3 -->
-                    <div class="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5 card-hover">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center text-white text-xl">
-                                <i class="fas fa-globe-africa"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800">Buea Tech</h3>
-                                <p class="text-xs text-slate-500">3 communities · 98 members</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-3">Tech entrepreneurs and innovators</p>
-                        <div class="flex items-center justify-between">
-                            <span class="status-badge status-access">
-                                <i class="fas fa-key"></i> Access granted
-                            </span>
-                            <button class="text-sm text-emerald-700 font-medium hover:underline">Enter →</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-        
-        <!-- DISCOVER TAB (Available Communities only) -->
-        <div id="tab-available" class="tab-content">
-            <section>
-                <h2 class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2">Discover Communities</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Same cards as available section but more -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 card-hover">
-                        <div class="flex items-start gap-3 mb-3">
-                            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">A</div>
-                            <div><h3 class="font-semibold">Njangi A</h3><p class="text-xs text-slate-500">124 members</p></div>
-                        </div>
-                        <button class="w-full mt-2 bg-emerald-50 text-emerald-700 py-2 rounded-lg">Request to Join</button>
-                    </div>
-                    <!-- More cards... -->
-                </div>
-            </section>
-        </div>
-        
-        <!-- MY COMMUNITIES TAB -->
-        <div id="tab-approved" class="tab-content">
-            <section>
-                <h2 class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2">My Communities</h2>
-                <div class="grid grid-cols-1 sm:scols-2 lg:grid-cols-3 gap-4">
-                    <!-- Same as approved section -->
-                </div>
-            </section>
-        </div>
-        
-        <!-- COMMUNITY SPACES TAB -->
-        <div id="tab-spaces" class="tab-content">
-            <section>
-                <h2 class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2">My Community Spaces</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Same as spaces section -->
-                </div>
-            </section>
-        </div>
-        
-        <!-- PENDING APPLICATIONS TAB -->
-        <div id="tab-pending" class="tab-content">
-            <section>
-                <h2 class="section-title text-lg font-semibold text-slate-800 mb-6 pb-2">Pending Applications</h2>
-                <div class="space-y-3">
-                    <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">W</div>
-                            <div><p class="font-medium">Women's Group</p><p class="text-xs text-slate-500">Applied 3 days ago</p></div>
-                        </div>
-                        <span class="status-badge status-pending">Pending Review</span>
-                    </div>
-                </div>
-            </section>
-        </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="py-20 text-center">
+              <div
+                class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <i class="fas fa-inbox text-slate-200 text-3xl"></i>
+              </div>
+              <p class="text-slate-500 italic">
+                {% trans "No pending applications at the moment." %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+      {% endif %}
     </main>
 
     {% include 'publics/home/includes/_js.html' %}
-    
+
     <script>
-        // Tab switching functionality
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-        
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class from all buttons
-                tabButtons.forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Add active class to clicked button
-                button.classList.add('active');
-                
-                // Hide all tab contents
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                });
-                
-                // Show selected tab content
-                const tabId = button.dataset.tab;
-                document.getElementById(`tab-${tabId}`).classList.add('active');
-            });
+      // Tab switching functionality
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const tabContents = document.querySelectorAll(".tab-content");
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          // Remove active class from all buttons
+          tabButtons.forEach((btn) => {
+            btn.classList.remove("active");
+          });
+
+          // Add active class to clicked button
+          button.classList.add("active");
+
+          // Hide all tab contents
+          tabContents.forEach((content) => {
+            content.classList.remove("active");
+          });
+
+          // Show selected tab content
+          const tabId = button.dataset.tab;
+          document.getElementById(`tab-${tabId}`).classList.add("active");
         });
+      });
 
-        // Language dropdown toggle
-        const langBtn = document.getElementById("langDropdownBtn");
-        const langMenu = document.getElementById("langDropdownMenu");
+      // Language dropdown toggle
+      const langBtn = document.getElementById("langDropdownBtn");
+      const langMenu = document.getElementById("langDropdownMenu");
 
-        langBtn.addEventListener("click", (e) => {
+      langBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         langMenu.classList.toggle("hidden");
-        });
+      });
 
-        // Close dropdown when clicking outside
-        document.addEventListener("click", () => {
+      // Close dropdown when clicking outside
+      document.addEventListener("click", () => {
         langMenu.classList.add("hidden");
-        });
+      });
 
-        // Prevent dropdown menu from closing when clicking inside it
-        langMenu.addEventListener("click", (e) => {
+      // Prevent dropdown menu from closing when clicking inside it
+      langMenu.addEventListener("click", (e) => {
         e.stopPropagation();
-        });
+      });
     </script>
-</body>
+  </body>
 </html>

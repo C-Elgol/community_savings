@@ -137,6 +137,17 @@ class CommunityCreateView(LoginRequiredMixin, View):
         if not community_type or community_type not in dict(CommunityType.choices):
             errors["community_type"] = [str(_("A valid community type is required."))]
 
+        # Space association
+        space_id = data.get("community_space_pk") or data.get("community_space")
+        if not space_id:
+            errors["community_space"] = [str(_("Community space is required."))]
+        else:
+            try:
+                from apps.communities.models import CommunitySpace
+                space = CommunitySpace.objects.get(pk=space_id)
+            except (CommunitySpace.DoesNotExist, ValueError):
+                errors["community_space"] = [str(_("Invalid community space."))]
+
         if logo:
             logo_error = _validate_logo(logo)
             if logo_error:
@@ -147,6 +158,7 @@ class CommunityCreateView(LoginRequiredMixin, View):
 
         try:
             community = Community.objects.create(
+                community_space=space,
                 name=name,
                 code=code,
                 community_type=community_type,

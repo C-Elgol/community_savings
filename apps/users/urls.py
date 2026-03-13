@@ -10,12 +10,15 @@ from apps.users.views.password_reset_view import PasswordResetRequestView, Passw
 from apps.users.views.resend_verification_view import ResendVerificationView
 from apps.users.views.admin_member_view import AdminMemberView
 from apps.users.views.welcome_view import WelcomeView
+from apps.users.views.community_space_welcome_view import CommunitySpaceWelcomeView
 from apps.users.views.super_admin_dashboard_view import SuperAdminDashboardView
 
 app_name = "users"
     
 urlpatterns = [
-    path('', WelcomeView.as_view(), name='home'),
+    path('', WelcomeView.as_view(), name='welcome'),
+    path('home/', WelcomeView.as_view(), name='home'),
+    path('space/<uuid:pk>/welcome/', CommunitySpaceWelcomeView.as_view(), name='community_space_welcome'),
     path('dashboard/', HomeView.as_view(), name='dashboard'),
     path('profile/', MemberProfileView.as_view(), name='member_profile'),
     path('notification/', NotificationView.as_view(), name='notification'),

@@ -1,0 +1,517 @@
+{% load i18n static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ space.name }} - {% trans "Welcome" %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{% url 'javascript_catalog' %}"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+      * {
+        font-family: "Inter", sans-serif;
+      }
+      .gradient-bg {
+        background: linear-gradient(
+          145deg,
+          #0f3b3f 0%,
+          #0b5e4b 70%,
+          #0f766e 100%
+        );
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 min-h-screen">
+    <!-- Top Navigation Bar -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo -->
+          <a href="{% url 'users:welcome' %}" class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white"
+            >
+              <i class="fas fa-hand-holding-heart text-sm"></i>
+            </div>
+            <span class="text-lg font-bold text-slate-800"
+              >Njangi<span class="text-emerald-700">Hub</span></span
+            >
+          </a>
+
+          <!-- User Menu -->
+          <div class="flex items-center gap-4">
+            {% if user.is_authenticated %}
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-bold"
+              >
+                {{ user.get_full_name|slice:":2"|upper }}
+              </div>
+              <span class="hidden sm:block text-sm font-semibold text-slate-800"
+                >{{ user.get_full_name }}</span
+              >
+            </div>
+            {% else %}
+            <a
+              href="{% url 'users:login' %}"
+              class="text-sm font-semibold text-slate-600 hover:text-emerald-700"
+              >{% trans "Login" %}</a
+            >
+            <a
+              href="{% url 'users:register' %}"
+              class="bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-800 transition"
+              >{% trans "Join Now" %}</a
+            >
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Space Hero -->
+    <div
+      class="gradient-bg text-white pt-16 pb-32 px-6 relative overflow-hidden"
+    >
+      <div class="absolute inset-0 bg-black/10"></div>
+      <div
+        class="absolute -right-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"
+      ></div>
+
+      <div class="max-w-7xl mx-auto relative">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-8 text-sm text-white/70" aria-label="Breadcrumb">
+          <ol class="flex items-center space-x-2">
+            <li>
+              <a
+                href="{% url 'users:welcome' %}"
+                class="hover:text-white transition-colors"
+                >{% trans "Welcome" %}</a
+              >
+            </li>
+            <li><i class="fas fa-chevron-right text-[10px]"></i></li>
+            <li class="text-white font-medium">{{ space.name }}</li>
+          </ol>
+        </nav>
+
+        <div
+          class="flex flex-col md:flex-row md:items-center justify-between gap-8"
+        >
+          <div class="flex items-center gap-6">
+            <div
+              class="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-5xl shadow-2xl"
+            >
+              {% if space.logo %}
+              <img
+                src="{{ space.logo.url }}"
+                class="w-full h-full object-cover rounded-[2.5rem]"
+              />
+              {% else %}
+              <i class="fas fa-layer-group"></i>
+              {% endif %}
+            </div>
+            <div>
+              <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-3">
+                {{ space.name }}
+              </h1>
+              <p class="text-white/80 max-w-xl mb-4 text-sm md:text-base">
+                {{ space.description }}
+              </p>
+              <div class="flex flex-wrap items-center gap-4">
+                <span
+                  class="flex items-center gap-1.5 bg-white/10 px-4 py-1.5 rounded-full text-xs font-bold backdrop-blur-md"
+                >
+                  <i class="fas fa-users-cog"></i> {{ space.communities.count }}
+                  {% trans "Communities" %}
+                </span>
+                <span
+                  class="flex items-center gap-1.5 bg-white/10 px-4 py-1.5 rounded-full text-xs font-bold backdrop-blur-md"
+                >
+                  <i class="fas fa-map-marker-alt"></i> {{
+                  space.country|default:"Cameroon" }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {% if user.is_authenticated %}
+          <div class="flex flex-col gap-3">
+            <button
+              id="createCommunityBtn"
+              class="bg-white text-emerald-800 px-8 py-4 rounded-2xl font-black shadow-2xl shadow-emerald-950/40 hover:scale-105 active:scale-95 transition-all text-lg"
+            >
+              <i class="fas fa-plus-circle mr-2"></i>{% trans "New Community" %}
+            </button>
+            <p class="text-xs text-center text-white/60">
+              {% trans "Grow your own group in this space" %}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 -mt-16 relative z-10 pb-20">
+      <div
+        class="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 min-h-[500px]"
+      >
+        <!-- List Header -->
+        <div
+          class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
+        >
+          <div>
+            <h2 class="text-3xl font-black text-slate-800">
+              {% trans "Browse Communities" %}
+            </h2>
+            <p class="text-slate-500 font-medium">
+              {% trans "Find the right financial group for your needs" %}
+            </p>
+          </div>
+
+          <form method="get" class="flex items-center gap-3 w-full md:w-auto">
+            <div class="relative flex-1 md:w-80">
+              <i
+                class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              ></i>
+              <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="{% trans 'Search by name or code...' %}"
+                class="w-full pl-11 pr-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              class="bg-emerald-700 text-white p-4 rounded-2xl hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20"
+            >
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- Grid -->
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          id="communities-grid"
+        >
+          {% for community in communities %}
+          <div
+            class="group bg-white rounded-3xl border border-slate-100 p-8 card-hover relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"
+            ></div>
+
+            <div class="relative">
+              <div
+                class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700 text-3xl font-bold mb-6"
+              >
+                {% if community.logo %}
+                <img
+                  src="{{ community.logo.url }}"
+                  class="w-full h-full object-cover rounded-2xl"
+                />
+                {% else %} {{ community.name|slice:":1"|upper }} {% endif %}
+              </div>
+
+              <h3
+                class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-emerald-700 transition-colors"
+              >
+                {{ community.name }}
+              </h3>
+              <p
+                class="text-sm text-slate-500 mb-8 leading-relaxed line-clamp-3"
+              >
+                {{ community.description }}
+              </p>
+
+              <div
+                class="flex items-center justify-between pt-8 border-t border-slate-50"
+              >
+                <span
+                  class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest"
+                >
+                  {{ community.get_community_type_display }}
+                </span>
+                <button
+                  class="flex items-center gap-2 text-emerald-700 font-black text-sm hover:gap-3 transition-all"
+                >
+                  {% trans "Request to Join" %}
+                  <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-span-full py-32 text-center" id="empty-state">
+            <div
+              class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8"
+            >
+              <i class="fas fa-users-slash text-slate-200 text-5xl"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">
+              {% trans "No communities found" %}
+            </h3>
+            <p class="text-slate-500 font-medium">
+              {% trans "Be the first to build a legacy in this space!" %}
+            </p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </main>
+
+    {% if user.is_authenticated %}
+    <!-- Creation Modal -->
+    <div
+      id="createModal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-95 opacity-0 duration-300"
+        id="modalContent"
+      >
+        <div
+          class="p-8 border-b border-slate-100 flex items-center justify-between"
+        >
+          <div>
+            <h3 class="text-2xl font-black text-slate-800">
+              {% trans "Create New Community" %}
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              {% trans "Start your financial journey in this space" %}
+            </p>
+          </div>
+          <button
+            id="closeModal"
+            class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <form id="communityForm" class="p-8 space-y-6">
+          {% csrf_token %}
+          <input
+            type="hidden"
+            name="community_space_pk"
+            value="{{ space.pk }}"
+          />
+
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label
+                class="text-xs font-black text-slate-400 uppercase tracking-widest"
+                >{% trans "Community Name" %}</label
+              >
+              <input
+                type="text"
+                name="name"
+                required
+                class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold"
+              />
+              <p
+                class="text-[10px] text-rose-500 hidden font-bold"
+                id="error-name"
+              ></p>
+            </div>
+            <div class="space-y-2">
+              <label
+                class="text-xs font-black text-slate-400 uppercase tracking-widest"
+                >{% trans "Unique Code" %}</label
+              >
+              <input
+                type="text"
+                name="code"
+                required
+                placeholder="e.g. YDE-01"
+                class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold uppercase"
+              />
+              <p
+                class="text-[10px] text-rose-500 hidden font-bold"
+                id="error-code"
+              ></p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label
+              class="text-xs font-black text-slate-400 uppercase tracking-widest"
+              >{% trans "Community Type" %}</label
+            >
+            <select
+              name="community_type"
+              required
+              class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold"
+            >
+              <option value="">{% trans "Select Type" %}</option>
+              {% for value, label in community_types %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label
+              class="text-xs font-black text-slate-400 uppercase tracking-widest"
+              >{% trans "Small Description" %}</label
+            >
+            <textarea
+              name="description"
+              rows="3"
+              class="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold resize-none"
+            ></textarea>
+          </div>
+
+          <div class="flex gap-4 pt-4">
+            <button
+              type="button"
+              id="cancelBtn"
+              class="flex-1 px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
+            >
+              {% trans "Dismiss" %}
+            </button>
+            <button
+              type="submit"
+              id="submitBtn"
+              class="flex-1 px-8 py-4 gradient-bg text-white rounded-2xl font-black hover:opacity-95 transition-all shadow-xl shadow-emerald-900/40"
+            >
+              {% trans "Launch Now" %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-12 mt-auto">
+      <div class="max-w-7xl mx-auto px-6 text-center">
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <div
+            class="w-6 h-6 rounded-md gradient-bg flex items-center justify-center text-white"
+          >
+            <i class="fas fa-hand-holding-heart text-[8px]"></i>
+          </div>
+          <span class="text-sm font-bold text-slate-400"
+            >NjangiHub · {% trans "Secure Community Finance" %}</span
+          >
+        </div>
+        <p class="text-xs text-slate-400 italic">
+          {{ space.name }} — {% trans "Empowering local economies" %}
+        </p>
+      </div>
+    </footer>
+
+    {% include 'publics/home/includes/_js.html' %}
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const createBtn = document.getElementById("createCommunityBtn");
+        const modal = document.getElementById("createModal");
+        const modalContent = document.getElementById("modalContent");
+        const closeModal = document.getElementById("closeModal");
+        const cancelBtn = document.getElementById("cancelBtn");
+        const form = document.getElementById("communityForm");
+
+        const toggleModal = (show) => {
+          if (!modal) return;
+          if (show) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => {
+              modalContent.classList.remove("scale-95", "opacity-0");
+              modalContent.classList.add("scale-100", "opacity-100");
+            }, 10);
+          } else {
+            modalContent.classList.remove("scale-100", "opacity-100");
+            modalContent.classList.add("scale-95", "opacity-0");
+            setTimeout(() => {
+              modal.classList.remove("flex");
+              modal.classList.add("hidden");
+              form.reset();
+              document
+                .querySelectorAll('[id^="error-"]')
+                .forEach((el) => el.classList.add("hidden"));
+            }, 300);
+          }
+        };
+
+        if (createBtn)
+          createBtn.addEventListener("click", () => toggleModal(true));
+        if (closeModal)
+          closeModal.addEventListener("click", () => toggleModal(false));
+        if (cancelBtn)
+          cancelBtn.addEventListener("click", () => toggleModal(false));
+
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById("submitBtn");
+            const originalText = submitBtn.innerText;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+            try {
+              const formData = new FormData(form);
+              const response = await fetch(
+                '{% url "communities:community_create" %}',
+                {
+                  method: "POST",
+                  headers: {
+                    "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+                    "X-Requested-With": "XMLHttpRequest",
+                  },
+                  body: formData,
+                },
+              );
+
+              const data = await response.json();
+
+              if (data.success) {
+                if (window.toastManager) {
+                  toastManager.showToast({
+                    message: data.message,
+                    type: "success",
+                  });
+                }
+                toggleModal(false);
+                setTimeout(() => window.location.reload(), 1000);
+              } else {
+                if (data.errors) {
+                  Object.keys(data.errors).forEach((key) => {
+                    const errorEl = document.getElementById(`error-${key}`);
+                    if (errorEl) {
+                      errorEl.innerText = data.errors[key][0];
+                      errorEl.classList.remove("hidden");
+                    }
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Error:", error);
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.innerText = originalText;
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
