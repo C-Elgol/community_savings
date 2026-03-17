@@ -418,11 +418,19 @@
                     NH
                   </div>
                 </div>
-                <button
-                  class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition"
-                >
-                  {% trans "Request" %}
-                </button>
+                <div class="flex items-center gap-3">
+                  <button
+                    class="view-policy-btn text-xs text-slate-500 font-medium hover:text-emerald-700 transition"
+                    data-comp-id="{{ community.id }}"
+                  >
+                    {% trans "View Policy" %}
+                  </button>
+                  <button
+                    class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition"
+                  >
+                    {% trans "Request" %}
+                  </button>
+                </div>
               </div>
             </div>
             {% empty %}
@@ -478,11 +486,13 @@
                       {{ membership.community.name }}
                     </h3>
                     <span class="status-badge status-approved text-xs">
-                      <i class="fas fa-check-circle"></i> {{ membership.get_status_display }}
+                      <i class="fas fa-check-circle"></i> {{
+                      membership.get_status_display }}
                     </span>
                   </div>
                   <p class="text-xs text-slate-500">
-                    {% trans "Joined" %} {{ membership.joined_at }} · {{ membership.get_role_display }}
+                    {% trans "Joined" %} {{ membership.joined_at }} · {{
+                    membership.get_role_display }}
                   </p>
                 </div>
               </div>
@@ -617,11 +627,19 @@
               <p class="text-sm text-slate-600 mb-4 line-clamp-3">
                 {{ community.description }}
               </p>
-              <button
-                class="w-full bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-semibold hover:bg-emerald-100 transition"
-              >
-                {% trans "Request to Join" %}
-              </button>
+              <div class="flex flex-col gap-2">
+                <button
+                  class="view-policy-btn text-sm text-slate-500 font-medium hover:text-emerald-700 transition py-1"
+                  data-comp-id="{{ community.id }}"
+                >
+                  {% trans "View Policy" %}
+                </button>
+                <button
+                  class="w-full bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-semibold hover:bg-emerald-100 transition"
+                >
+                  {% trans "Request to Join" %}
+                </button>
+              </div>
             </div>
             {% empty %}
             <div class="col-span-full py-20 text-center">
@@ -830,6 +848,7 @@
       {% endif %}
     </main>
 
+    {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
     {% include 'publics/home/includes/_js.html' %}
 
     <script>
@@ -875,6 +894,107 @@
       // Prevent dropdown menu from closing when clicking inside it
       langMenu.addEventListener("click", (e) => {
         e.stopPropagation();
+      });
+
+      /* ═══════════════════════
+         POLICY MODAL LOGIC
+      ═══════════════════════ */
+      const POLICY_DETAIL_URL = (compId) =>
+        `/communities/communities/${compId}/policy/`;
+
+      function openPolicyModal() {
+        const modal = document.getElementById("policyModal");
+        const content = document.getElementById("policyModalContent");
+        modal.classList.replace("hidden", "flex");
+        requestAnimationFrame(() => {
+          content.classList.replace("scale-95", "scale-100");
+          content.classList.replace("opacity-0", "opacity-100");
+        });
+        document.body.style.overflow = "hidden";
+      }
+
+      function closePolicyModal() {
+        const modal = document.getElementById("policyModal");
+        const content = document.getElementById("policyModalContent");
+        if (!modal || !content) return;
+        content.classList.replace("scale-100", "scale-95");
+        content.classList.replace("opacity-100", "opacity-0");
+        setTimeout(() => {
+          modal.classList.replace("flex", "hidden");
+          document.body.style.overflow = "";
+        }, 300);
+      }
+
+      async function loadPolicyToModal(compId) {
+        const display = document.getElementById("policyDisplay");
+        const loader = document.getElementById("policyModalLoader");
+
+        display.classList.add("hidden");
+        loader.classList.remove("hidden");
+        openPolicyModal();
+
+        try {
+          const res = await fetch(POLICY_DETAIL_URL(compId), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          });
+          const data = await res.json();
+          if (data.success) {
+            const p = data.policy;
+            document.getElementById("modalCommunityName").textContent =
+              `${data.community_name} Policy`;
+
+            const curr = data.community_currency;
+            document.getElementById("view_registration_mode").textContent =
+              p.registration_fee_mode_display;
+            document.getElementById("view_registration_amount").textContent =
+              `${p.registration_fee_amount} ${curr}`;
+            document.getElementById("view_contribution_frequency").textContent =
+              p.contribution_frequency_display;
+            document.getElementById("view_contribution_amount").textContent =
+              `${p.default_contribution_amount} ${curr}`;
+            document.getElementById("view_late_fine").textContent =
+              `${p.late_contribution_fine_amount} ${curr}`;
+            document.getElementById("view_absence_fine").textContent =
+              `${p.absence_fine_amount} ${curr}`;
+            document.getElementById("view_interest_rate").textContent =
+              `${p.default_interest_rate}%`;
+            document.getElementById("view_max_loans").textContent =
+              p.max_active_loans_per_member;
+            document.getElementById("view_wait_time").textContent =
+              `${p.minimum_membership_days_before_loan} Days`;
+            document.getElementById("view_guarantor_req").textContent =
+              p.requires_guarantor ? "Yes" : "No";
+          }
+        } catch (err) {
+          console.error("Failed to fetch policy:", err);
+        } finally {
+          loader.classList.add("hidden");
+          display.classList.remove("hidden");
+        }
+      }
+
+      // Event delegation for View Policy buttons
+      document.addEventListener("click", (e) => {
+        const viewPolicyBtn = e.target.closest(".view-policy-btn");
+        if (viewPolicyBtn) {
+          e.preventDefault();
+          const id = viewPolicyBtn.dataset.compId;
+          loadPolicyToModal(id);
+        }
+      });
+
+      // Modal close events
+      document
+        .getElementById("closePolicyModalBtn")
+        ?.addEventListener("click", closePolicyModal);
+      document
+        .getElementById("closePolicyModalBtn2")
+        ?.addEventListener("click", closePolicyModal);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closePolicyModal();
+        }
       });
     </script>
   </body>
