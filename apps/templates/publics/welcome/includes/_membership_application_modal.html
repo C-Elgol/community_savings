@@ -5,11 +5,13 @@
   class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 font-sans"
 >
   <div
-    class="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
+    class="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
     id="applyModalContent"
   >
-    <!-- Modal Header -->
-    <div class="p-8 pb-4 flex justify-between items-start">
+    <!-- Modal Header (Sticky) -->
+    <div
+      class="p-8 pb-4 flex justify-between items-start border-b border-slate-50 bg-white z-10 shrink-0"
+    >
       <div>
         <h3 class="text-2xl font-black text-slate-800 leading-tight">
           {% trans "Join Community" %}
@@ -28,129 +30,166 @@
       </button>
     </div>
 
-    <!-- Modal Body -->
-    <form id="applyMembershipForm" class="p-8 pt-4 space-y-6">
-      <div
-        id="applyModalLoader"
-        class="flex flex-col items-center py-10 hidden"
-      >
+    <!-- Modal Body (Scrollable) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar bg-white">
+      <form id="applyMembershipForm" class="p-8 pt-6 space-y-8">
         <div
-          class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"
-        ></div>
-      </div>
+          id="applyModalLoader"
+          class="flex flex-col items-center py-10 hidden"
+        >
+          <div
+            class="w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin"
+          ></div>
+        </div>
 
-      <div id="applyModalFormContent" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-2">
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Community Name" %}</label
-            >
-            <input
-              type="text"
-              id="applyCommunityName"
-              disabled
-              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
-            />
-          </div>
-          <div class="col-span-2">
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Community Code" %}</label
-            >
-            <input
-              type="text"
-              id="applyCommunityCode"
-              placeholder="{% trans 'Enter community code' %}"
-              class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
-            />
-          </div>
-          <div>
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "First Name" %}</label
-            >
-            <input
-              type="text"
-              id="applyFirstName"
-              placeholder="{% trans 'First Name' %}"
-              class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
-            />
-          </div>
-          <div>
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Last Name" %}</label
-            >
-            <input
-              type="text"
-              id="applyLastName"
-              placeholder="{% trans 'Last Name' %}"
-              class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
-            />
-          </div>
-          <div class="col-span-2">
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Phone Number" %}</label
-            >
-            <input
-              type="text"
-              id="applyPhoneNumber"
-              placeholder="{% trans 'Phone Number' %}"
-              class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
-            />
-          </div>
-          <div class="col-span-1">
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Registration Fee" %}</label
-            >
-            <input
-              type="text"
-              id="applyRegFee"
-              disabled
-              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-emerald-600 cursor-not-allowed"
-            />
-          </div>
-          <div class="col-span-1">
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "Applied Role" %}</label
-            >
-            <input
-              type="text"
-              id="applyRole"
-              disabled
-              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
-            />
+        <div id="applyModalFormContent" class="space-y-8">
+          <!-- Community Info Section -->
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-2">
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >{% trans "Community Name" %}</label
+                >
+                <input
+                  type="text"
+                  id="applyCommunityName"
+                  disabled
+                  class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
+                />
+              </div>
+              <div class="col-span-2">
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >{% trans "Community Code" %}</label
+                >
+                <input
+                  type="text"
+                  id="applyCommunityCode"
+                  placeholder="{% trans 'Enter community code' %}"
+                  class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
+                />
+              </div>
+            </div>
           </div>
 
-          <!-- Document Verification Section -->
-          <div class="col-span-2 pt-4 border-t border-slate-100">
-            <p
-              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1"
-            >
-              {% trans "Identity Verification" %}
-            </p>
+          <!-- Personal Info Section -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-px flex-1 bg-slate-100"></div>
+              <p
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2"
+              >
+                {% trans "Personal Information" %}
+              </p>
+              <div class="h-px flex-1 bg-slate-100"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >{% trans "First Name" %}</label
+                >
+                <input
+                  type="text"
+                  id="applyFirstName"
+                  placeholder="{% trans 'First Name' %}"
+                  class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >{% trans "Last Name" %}</label
+                >
+                <input
+                  type="text"
+                  id="applyLastName"
+                  placeholder="{% trans 'Last Name' %}"
+                  class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
+                />
+              </div>
+              <div class="col-span-2">
+                <label
+                  class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                  >{% trans "Phone Number" %}</label
+                >
+                <input
+                  type="text"
+                  id="applyPhoneNumber"
+                  placeholder="{% trans 'Phone Number' %}"
+                  class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
 
-            <div class="grid grid-cols-1 gap-4">
+          <!-- Policy & Role -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-1">
+              <label
+                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                >{% trans "Registration Fee" %}</label
+              >
+              <input
+                type="text"
+                id="applyRegFee"
+                disabled
+                class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-emerald-600 cursor-not-allowed"
+              />
+            </div>
+            <div class="col-span-1">
+              <label
+                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+                >{% trans "Applied Role" %}</label
+              >
+              <input
+                type="text"
+                id="applyRole"
+                disabled
+                class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          <!-- Identity Verification Section -->
+          <div class="space-y-4 pt-2">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="h-px flex-1 bg-slate-100"></div>
+              <p
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2"
+              >
+                {% trans "Identity Verification" %}
+              </p>
+              <div class="h-px flex-1 bg-slate-100"></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
               <div>
                 <label
                   class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
                   >{% trans "Document Type" %}</label
                 >
-                <select
-                  id="applyDocType"
-                  name="document_type"
-                  class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none transition-all"
-                >
-                  <option value="id_card">{% trans "National ID" %}</option>
-                  <option value="passport">{% trans "Passport" %}</option>
-                  <option value="driver_license">
-                    {% trans "Driver License" %}
-                  </option>
-                </select>
+                <div class="relative">
+                  <select
+                    id="applyDocType"
+                    name="document_type"
+                    class="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-emerald-500/20 rounded-2xl text-sm font-bold outline-none appearance-none transition-all cursor-pointer"
+                    required
+                  >
+                    <option value="">{% trans "Select Document Type" %}</option>
+                    <option value="id_card">{% trans "National ID" %}</option>
+                    <option value="passport">{% trans "Passport" %}</option>
+                    <option value="driver_license">
+                      {% trans "Driver License" %}
+                    </option>
+                  </select>
+                  <div
+                    class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"
+                  >
+                    <i class="fas fa-chevron-down text-xs"></i>
+                  </div>
+                </div>
               </div>
 
               <div class="grid grid-cols-2 gap-4">
@@ -166,17 +205,18 @@
                       accept="image/*"
                       class="hidden"
                       onchange="updateFileName(this, 'docFrontLabel')"
+                      required
                     />
                     <label
                       for="applyDocFront"
-                      class="flex flex-col items-center justify-center py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
+                      class="flex flex-col items-center justify-center py-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
                     >
                       <i
-                        class="fas fa-camera text-slate-400 group-hover:text-emerald-500 mb-1"
+                        class="fas fa-camera text-slate-400 group-hover:text-emerald-500 mb-2 text-xl"
                       ></i>
                       <span
                         id="docFrontLabel"
-                        class="text-xs font-bold text-slate-400 group-hover:text-emerald-600"
+                        class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600 text-center px-4 line-clamp-1"
                         >{% trans "Choose Photo" %}</span
                       >
                     </label>
@@ -195,17 +235,18 @@
                       accept="image/*"
                       class="hidden"
                       onchange="updateFileName(this, 'docBackLabel')"
+                      required
                     />
                     <label
                       for="applyDocBack"
-                      class="flex flex-col items-center justify-center py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
+                      class="flex flex-col items-center justify-center py-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
                     >
                       <i
-                        class="fas fa-camera text-slate-400 group-hover:text-emerald-500 mb-1"
+                        class="fas fa-camera text-slate-400 group-hover:text-emerald-500 mb-2 text-xl"
                       ></i>
                       <span
                         id="docBackLabel"
-                        class="text-xs font-bold text-slate-400 group-hover:text-emerald-600"
+                        class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600 text-center px-4 line-clamp-1"
                         >{% trans "Choose Photo" %}</span
                       >
                     </label>
@@ -228,15 +269,15 @@
                   />
                   <label
                     for="applySelfie"
-                    class="flex flex-col items-center justify-center py-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
+                    class="flex flex-col items-center justify-center py-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-50/30 transition-all"
                   >
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-col items-center">
                       <i
-                        class="fas fa-user-circle text-slate-400 group-hover:text-emerald-500"
+                        class="fas fa-user-circle text-slate-400 group-hover:text-emerald-500 text-2xl mb-2"
                       ></i>
                       <span
                         id="selfieLabel"
-                        class="text-xs font-bold text-slate-400 group-hover:text-emerald-600"
+                        class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600"
                         >{% trans "Choose Selfie" %}</span
                       >
                     </div>
@@ -246,24 +287,44 @@
             </div>
           </div>
         </div>
+      </form>
+    </div>
 
-        <div class="pt-4 flex gap-3">
-          <button
-            type="button"
-            id="cancelApplyBtn"
-            class="flex-1 py-3.5 border border-slate-100 text-slate-400 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
-          >
-            {% trans "Cancel" %}
-          </button>
-          <button
-            type="submit"
-            class="flex-1 py-3.5 gradient-bg text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-900/20 active:scale-95 transition-all"
-          >
-            {% trans "Submit Application" %}
-          </button>
-        </div>
-      </div>
-    </form>
+    <!-- Modal Footer (Sticky) -->
+    <div
+      class="p-8 pt-6 pb-8 bg-white border-t border-slate-50 flex gap-4 shrink-0 z-10"
+    >
+      <button
+        type="button"
+        id="cancelApplyBtn"
+        class="flex-1 py-4 border border-slate-200 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+      >
+        {% trans "Cancel" %}
+      </button>
+      <button
+        type="submit"
+        form="applyMembershipForm"
+        class="flex-1 py-4 gradient-bg text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-900/20 active:scale-95 transition-all"
+      >
+        {% trans "Submit Application" %}
+      </button>
+    </div>
+
+    <style>
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+      }
+    </style>
 
     <script>
       function updateFileName(input, labelId) {
