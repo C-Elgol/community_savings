@@ -28,6 +28,7 @@ from apps.communities.views.application_api_view import (
     ApplicationListAPI,
     ApplicationDetailAPI,
     ApplicationProcessAPI,
+    ApplicationCreateAPI,
 )
 
 app_name = "communities"
@@ -61,4 +62,5 @@ urlpatterns = [
     path("api/communities/<uuid:community_id>/applications/", ApplicationListAPI.as_view(), name="application_list_api"),
     path("api/applications/<uuid:application_id>/", ApplicationDetailAPI.as_view(), name="application_detail_api"),
     path("api/applications/<uuid:application_id>/process/", ApplicationProcessAPI.as_view(), name="application_process_api"),
+    path("api/communities/<uuid:community_id>/apply/", ApplicationCreateAPI.as_view(), name="application_create_api"),
 ]
