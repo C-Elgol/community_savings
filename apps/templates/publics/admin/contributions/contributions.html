@@ -365,6 +365,95 @@
   </div>
 </div>
 
+<!-- 4. Record Contribution Modal (With Signature Pad) -->
+<div
+  id="recordContributionModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <h3
+        class="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"
+      >
+        <i class="fas fa-hand-holding-usd text-emerald-500"></i>
+        <span id="modalMemberName">{% trans "Record Contribution" %}</span>
+      </h3>
+
+      <form id="formRecordContribution" class="space-y-6">
+        <input type="hidden" name="membership_id" id="modalMembershipId" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "AMOUNT PAID" %}</label
+            >
+            <input
+              type="number"
+              step="0.01"
+              name="amount_paid"
+              id="modalAmountPaid"
+              required
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "COMMENT" %}</label
+            >
+            <textarea
+              name="comment"
+              id="modalComment"
+              rows="1"
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none"
+            ></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1 flex justify-between"
+            >
+              <span>{% trans "MEMBER SIGNATURE" %}</span>
+              <button
+                type="button"
+                id="clear-signature"
+                class="text-emerald-600 hover:text-emerald-700"
+              >
+                {% trans "Clear" %}
+              </button>
+            </label>
+            <div
+              class="relative bg-slate-50 rounded-2xl border border-dashed border-slate-200 overflow-hidden"
+            >
+              <canvas
+                id="signature-pad"
+                class="w-full h-40 cursor-crosshair"
+              ></canvas>
+              <input type="hidden" name="signature" id="signature-input" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            class="close-modal flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3.5 bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all active:scale-95"
+          >
+            {% trans "Save Recording" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <style>
   .active-modal {
     transform: scale(1) !important;
@@ -382,6 +471,7 @@
   }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
   class SectionLoaderManager {
     constructor(
@@ -538,7 +628,12 @@
       }
     }
 
-    async function saveContribution(membershipId, amount) {
+    async function saveContribution(
+      membershipId,
+      amount,
+      comment = "",
+      signature = "",
+    ) {
       if (!state.currentCycle) return;
       try {
         const res = await fetch(API_URLS.record(state.currentCycle), {
@@ -550,16 +645,26 @@
           body: JSON.stringify({
             membership_id: membershipId,
             amount_paid: amount,
+            comment: comment,
+            signature: signature,
           }),
         });
         const data = await res.json();
         if (data.success) {
-          toast("success", `Saved for member`);
+          toast(
+            "success",
+            `Recorded successfully. Ref: ${data.payment_reference}`,
+          );
           // Update local state and stats
           const m = state.members.find((x) => x.membership_id === membershipId);
           m.amount_paid = amount;
+          m.status =
+            parseFloat(amount) >= parseFloat(m.expected_amount)
+              ? "paid"
+              : parseFloat(amount)
+                ? "partial"
+                : "pending";
           updateStats();
-          // Optionally re-render status badge
           renderMembers(document.getElementById("memberSearch").value);
         }
       } catch (err) {
@@ -626,7 +731,7 @@
                 <td class="px-6 py-4 font-mono font-bold text-slate-400 text-xs">${m.expected_amount}</td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                        <input type="number" step="0.01" value="${m.amount_paid}" class="w-28 px-3 py-1.5 bg-slate-50 border border-transparent rounded-lg text-sm font-bold text-slate-700 focus:bg-white focus:border-emerald-500 outline-none transition-all recording-input" data-mid="${m.membership_id}">
+                        <span class="text-sm font-bold text-slate-700">${m.amount_paid}</span>
                         <button class="btn-pay-full p-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" data-mid="${m.membership_id}" data-full="${m.expected_amount}" title="Pay Full">
                             <i class="fas fa-bolt"></i>
                         </button>
@@ -636,8 +741,12 @@
                     <span class="status-badge px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${m.status}</span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button class="btn-save-row px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2 mx-auto" data-mid="${m.membership_id}">
-                        <i class="fas fa-save"></i> Record
+                    <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2 mx-auto" 
+                        data-mid="${m.membership_id}" 
+                        data-name="${m.member_name}" 
+                        data-amount="${m.amount_paid}" 
+                        data-expected="${m.expected_amount}">
+                        <i class="fas fa-signature"></i> {% trans "Record" %}
                     </button>
                 </td>
             `;
@@ -777,28 +886,73 @@
       }
     });
 
+    // Signature Pad Setup
+    const canvas = document.getElementById("signature-pad");
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: "rgba(255, 255, 255, 0)",
+      penColor: "rgb(5, 150, 105)",
+    });
+
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    document
+      .getElementById("clear-signature")
+      .addEventListener("click", () => signaturePad.clear());
+
     el.memberListBody.addEventListener("click", (e) => {
       const fullBtn = e.target.closest(".btn-pay-full");
       if (fullBtn) {
         const mid = fullBtn.dataset.mid;
         const fullAmount = fullBtn.dataset.full;
-        const input = document.querySelector(
-          `.recording-input[data-mid="${mid}"]`,
-        );
-        input.value = fullAmount;
         saveContribution(mid, fullAmount);
         return;
       }
 
-      const btn = e.target.closest(".btn-save-row");
-      if (btn) {
-        const mid = btn.dataset.mid;
-        const input = document.querySelector(
-          `.recording-input[data-mid="${mid}"]`,
-        );
-        saveContribution(mid, input.value);
+      const recordBtn = e.target.closest(".btn-open-record");
+      if (recordBtn) {
+        const mid = recordBtn.dataset.mid;
+        const name = recordBtn.dataset.name;
+        const amount = recordBtn.dataset.amount;
+        const expected = recordBtn.dataset.expected;
+
+        document.getElementById("modalMembershipId").value = mid;
+        document.getElementById("modalMemberName").innerHTML =
+          `Record Contribution for <span class="text-emerald-600">${name}</span>`;
+        document.getElementById("modalAmountPaid").value =
+          amount === "0.00" ? expected : amount;
+        document.getElementById("modalComment").value = "";
+        signaturePad.clear();
+
+        document
+          .getElementById("recordContributionModal")
+          .classList.remove("hidden");
+        resizeCanvas();
       }
     });
+
+    document.getElementById("formRecordContribution").onsubmit = async (e) => {
+      e.preventDefault();
+      if (signaturePad.isEmpty()) {
+        toast("warning", "Please provide a signature");
+        return;
+      }
+
+      const mid = document.getElementById("modalMembershipId").value;
+      const amount = document.getElementById("modalAmountPaid").value;
+      const comment = document.getElementById("modalComment").value;
+      const signature = signaturePad.toDataURL(); // base64
+
+      await saveContribution(mid, amount, comment, signature);
+      closeAllModals();
+    };
 
     function toast(type, msg) {
       window.toastManager?.buildToast().setMessage(msg).setType(type).show();

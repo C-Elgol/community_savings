@@ -73,6 +73,8 @@ class ContributionAPI(View):
             data = json.loads(request.body)
             membership_id = data.get('membership_id')
             amount_paid = float(data.get('amount_paid', 0))
+            comment = data.get('comment', '')
+            signature = data.get('signature', '')
             
             cycle = get_object_or_404(ContributionCycle, id=cycle_id)
             membership = get_object_or_404(Membership, id=membership_id)
@@ -84,8 +86,30 @@ class ContributionAPI(View):
             )
             
             contribution.amount_paid = amount_paid
-            expected = float(contribution.expected_amount)
+            contribution.comment = comment
+            contribution.signature = signature
             
+            # Auto-generate payment reference if not already set or if newly paid
+            if not contribution.payment_reference and amount_paid > 0:
+                from django.db.models import Max
+                import re
+                
+                last_ref = Contribution.objects.filter(
+                    cycle__community=cycle.community,
+                    payment_reference__startswith='PAY'
+                ).aggregate(Max('payment_reference'))['payment_reference__max']
+                
+                if last_ref:
+                    match = re.search(r'PAY(\d+)', last_ref)
+                    if match:
+                        num = int(match.group(1))
+                        contribution.payment_reference = f"PAY{(num + 1):03d}"
+                    else:
+                        contribution.payment_reference = "PAY001"
+                else:
+                    contribution.payment_reference = "PAY001"
+            
+            expected = float(contribution.expected_amount)
             if amount_paid >= expected:
                 contribution.status = ContributionStatus.PAID
             elif amount_paid > 0:
@@ -94,8 +118,13 @@ class ContributionAPI(View):
                 contribution.status = ContributionStatus.PENDING
             
             contribution.paid_at = timezone.now() if amount_paid > 0 else None
+            contribution.received_by = request.user if amount_paid > 0 else None
             contribution.save()
             
-            return JsonResponse({'success': True, 'message': 'Contribution recorded successfully'})
+            return JsonResponse({
+                'success': True, 
+                'message': 'Contribution recorded successfully',
+                'payment_reference': contribution.payment_reference
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
