@@ -197,6 +197,10 @@ class CommunityPolicy(SavingsBaseModel):
     def __str__(self):
         return f"Policy - {self.community.name}"
 
+def validate_file_size(file):
+    max_size = 5 * 1024 * 1024  # 5MB
+    if file.size > max_size:
+        raise ValidationError("File size must be under 5MB.")
 
 class MembershipApplication(SavingsBaseModel):
     community = models.ForeignKey(
@@ -212,6 +216,60 @@ class MembershipApplication(SavingsBaseModel):
 
     applied_role = models.CharField(max_length=30, choices=MembershipRole.choices, default=MembershipRole.MEMBER)
     status = models.CharField(max_length=20, choices=MembershipStatus.choices, default=MembershipStatus.PENDING)
+
+    # =========================
+    # DOCUMENT TYPE SELECTION
+    # =========================
+    document_type = models.CharField(
+        max_length=20,
+        choices=[
+            ("id_card", "National ID"),
+            ("passport", "Passport"),
+            ("driver_license", "Driver License"),
+        ],
+        default="id_card"
+    )
+
+    # =========================
+    # DOCUMENT UPLOADS
+    # =========================
+
+    document_front = models.ImageField(
+        upload_to="membership_applications/documents/front/",
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(["jpg", "jpeg", "png", "webp"]),
+            validate_file_size
+        ],
+        help_text="Upload front side of the selected document"
+    )
+
+    document_back = models.ImageField(
+        upload_to="membership_applications/documents/back/",
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(["jpg", "jpeg", "png", "webp"]),
+            validate_file_size
+        ],
+        help_text="Upload back side (required for ID card & driver license)"
+    )
+
+    selfie_photo = models.ImageField(
+        upload_to="membership_applications/selfies/",
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(["jpg", "jpeg", "png", "webp"]),
+            validate_file_size
+        ],
+        help_text="Optional selfie for identity verification"
+    )
+
+    # =========================
+    # REGISTRATION FEES
+    # =========================
 
     registration_fee_required = models.BooleanField(default=False)
     registration_fee_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
