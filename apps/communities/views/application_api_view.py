@@ -54,6 +54,13 @@ class ApplicationDetailAPI(View):
             'registration_fee_amount': str(app.registration_fee_amount),
             'registration_fee_paid': app.registration_fee_paid,
             'created_at': app.created.strftime('%Y-%m-%d %H:%M'),
+            'verification': {
+                'document_type': app.document_type,
+                'document_type_display': app.get_document_type_display(),
+                'document_front': app.document_front.url if app.document_front else None,
+                'document_back': app.document_back.url if app.document_back else None,
+                'selfie_photo': app.selfie_photo.url if app.selfie_photo else None,
+            }
         }
         return JsonResponse({'success': True, 'application': data})
 

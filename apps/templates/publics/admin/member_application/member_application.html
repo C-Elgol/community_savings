@@ -354,45 +354,122 @@
         const data = await res.json();
         if (data.success) {
           const app = data.application;
+          const v = app.verification;
+
           ui.reviewContent.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-6">
-                                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{% trans "Personal Info" %}</p>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Full Name" %}</p>
-                                            <p class="text-lg font-black text-slate-800">${app.first_name} ${app.last_name}</p>
+                        <div class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{% trans "Personal Info" %}</p>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Full Name" %}</p>
+                                                <p class="text-lg font-black text-slate-800">${app.first_name} ${app.last_name}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Email" %}</p>
+                                                <p class="text-sm font-bold text-slate-600">${app.email}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Phone" %}</p>
+                                                <p class="text-sm font-bold text-slate-600">${app.phone_number || "---"}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Email" %}</p>
-                                            <p class="text-sm font-bold text-slate-600">${app.email}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Phone" %}</p>
-                                            <p class="text-sm font-bold text-slate-600">${app.phone_number || "---"}</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div class="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100">
+                                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">{% trans "Application Details" %}</p>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Requested Role" %}</p>
+                                                <p class="text-lg font-black text-emerald-800">${app.applied_role_display}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Applied On" %}</p>
+                                                <p class="text-sm font-bold text-emerald-700">${app.created_at}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Registration Fee" %}</p>
+                                                <p class="text-sm font-black ${app.registration_fee_required ? "text-amber-600" : "text-slate-400"}">
+                                                    ${app.registration_fee_required ? `${app.registration_fee_amount} (${app.registration_fee_paid ? "Paid" : "Unpaid"})` : "No Fee Required"}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="space-y-6">
-                                <div class="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100">
-                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">{% trans "Application Details" %}</p>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Requested Role" %}</p>
-                                            <p class="text-lg font-black text-emerald-800">${app.applied_role_display}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Applied On" %}</p>
-                                            <p class="text-sm font-bold text-emerald-700">${app.created_at}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Registration Fee" %}</p>
-                                            <p class="text-sm font-black ${app.registration_fee_required ? "text-amber-600" : "text-slate-400"}">
-                                                ${app.registration_fee_required ? `${app.registration_fee_amount} (${app.registration_fee_paid ? "Paid" : "Unpaid"})` : "No Fee Required"}
-                                            </p>
-                                        </div>
+
+                            <!-- Identity Verification Section -->
+                            <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                                <div class="flex items-center justify-between mb-6">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Identity Verification" %}</p>
+                                    <span class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-wider">${v.document_type_display}</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Front Side -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Front Photo" %}</p>
+                                        ${
+                                          v.document_front
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.document_front}" class="w-full h-full object-cover">
+                                                <a href="${v.document_front}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
+                                    </div>
+
+                                    <!-- Back Side -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Back Photo" %}</p>
+                                        ${
+                                          v.document_back
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.document_back}" class="w-full h-full object-cover">
+                                                <a href="${v.document_back}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
+                                    </div>
+
+                                    <!-- Selfie -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Selfie Photo" %}</p>
+                                        ${
+                                          v.selfie_photo
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.selfie_photo}" class="w-full h-full object-cover">
+                                                <a href="${v.selfie_photo}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
                                     </div>
                                 </div>
                             </div>
