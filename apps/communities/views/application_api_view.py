@@ -145,7 +145,9 @@ class ApplicationCreateAPI(View):
             return JsonResponse({'success': False, 'message': _("You already have a pending application for this community.")}, status=400)
             
         try:
-            data = json.loads(request.body)
+            # Handle FormData (MultiPartParser)
+            data = request.POST
+            files = request.FILES
             
             # Community Code Validation
             submitted_code = data.get('community_code')
@@ -169,13 +171,18 @@ class ApplicationCreateAPI(View):
             reg_fee_required = policy.registration_fee_mode != 'none' if policy else False
             reg_fee_amount = policy.registration_fee_amount if policy else 0
             
+            # Application Creation with Documents
             application = MembershipApplication.objects.create(
                 community=community,
                 user=user,
                 applied_role=applied_role,
                 status=MembershipStatus.PENDING,
                 registration_fee_required=reg_fee_required,
-                registration_fee_amount=reg_fee_amount
+                registration_fee_amount=reg_fee_amount,
+                document_type=data.get('document_type', 'id_card'),
+                document_front=files.get('document_front'),
+                document_back=files.get('document_back'),
+                selfie_photo=files.get('selfie_photo')
             )
             
             return JsonResponse({

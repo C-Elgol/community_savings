@@ -1044,14 +1044,39 @@
       async function handleApplySubmit(e, compId) {
         e.preventDefault();
 
-        const data = {
-          community_code: document.getElementById("applyCommunityCode").value,
-          first_name: document.getElementById("applyFirstName").value,
-          last_name: document.getElementById("applyLastName").value,
-          phone_number: document.getElementById("applyPhoneNumber").value,
-        };
+        const formData = new FormData();
+        formData.append(
+          "community_code",
+          document.getElementById("applyCommunityCode").value,
+        );
+        formData.append(
+          "first_name",
+          document.getElementById("applyFirstName").value,
+        );
+        formData.append(
+          "last_name",
+          document.getElementById("applyLastName").value,
+        );
+        formData.append(
+          "phone_number",
+          document.getElementById("applyPhoneNumber").value,
+        );
+        formData.append(
+          "document_type",
+          document.getElementById("applyDocType").value,
+        );
 
-        if (!data.community_code) {
+        const docFront = document.getElementById("applyDocFront");
+        const docBack = document.getElementById("applyDocBack");
+        const selfie = document.getElementById("applySelfie");
+
+        if (docFront.files[0])
+          formData.append("document_front", docFront.files[0]);
+        if (docBack.files[0])
+          formData.append("document_back", docBack.files[0]);
+        if (selfie.files[0]) formData.append("selfie_photo", selfie.files[0]);
+
+        if (!document.getElementById("applyCommunityCode").value) {
           window.toastManager
             .buildToast()
             .setMessage("{% trans 'Please enter the community code.' %}")
@@ -1066,10 +1091,9 @@
             {
               method: "POST",
               headers: {
-                "Content-Type": "application/json",
                 "X-CSRFToken": "{{ csrf_token }}",
               },
-              body: JSON.stringify(data),
+              body: formData,
             },
           );
           const result = await res.json();
@@ -1096,6 +1120,17 @@
             .show();
         }
       }
+
+      document
+        .getElementById("applyDocType")
+        ?.addEventListener("change", (e) => {
+          const backGroup = document.getElementById("docBackGroup");
+          if (e.target.value === "passport") {
+            backGroup.classList.add("hidden");
+          } else {
+            backGroup.classList.remove("hidden");
+          }
+        });
 
       function closeApplyModal() {
         const modal = document.getElementById("applyMembershipModal");
