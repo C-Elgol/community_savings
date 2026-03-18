@@ -163,6 +163,7 @@
           >
             <tr>
               <th class="px-6 py-4 text-left">{% trans "Member" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Ref" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Expected" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Amount Paid" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
@@ -453,6 +454,98 @@
     </div>
   </div>
 </div>
+<!-- 5. View Contribution Detail Modal -->
+<div
+  id="viewContributionModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h3 class="text-xl font-black text-slate-800" id="viewMemberName">
+            Member Name
+          </h3>
+          <p
+            class="text-xs font-bold text-emerald-600 uppercase tracking-widest"
+            id="viewPaymentRef"
+          >
+            PAY000
+          </p>
+        </div>
+        <button
+          class="close-modal w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
+        >
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-50 rounded-2xl">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+              {% trans "Amount Paid" %}
+            </p>
+            <p class="text-lg font-black text-slate-800" id="viewAmountPaid">
+              XAF 0
+            </p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+              {% trans "Date" %}
+            </p>
+            <p class="text-sm font-bold text-slate-700" id="viewPaymentDate">
+              ---
+            </p>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl">
+          <p
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+          >
+            {% trans "Comment" %}
+          </p>
+          <p class="text-sm text-slate-600 italic" id="viewComment">
+            No comment provided
+          </p>
+        </div>
+
+        <div>
+          <p
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1"
+          >
+            {% trans "Signature" %}
+          </p>
+          <div
+            class="bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4 flex items-center justify-center min-h-[120px]"
+          >
+            <img
+              id="viewSignatureImg"
+              src=""
+              alt="Signature"
+              class="max-h-24 opacity-80"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <button
+          class="close-modal w-full py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm hover:bg-slate-900 transition-all"
+        >
+          {% trans "Close Details" %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
   .active-modal {
@@ -728,6 +821,9 @@
                         <span class="font-bold text-slate-700 text-sm">${m.member_name}</span>
                     </div>
                 </td>
+                <td class="px-6 py-4">
+                    <span class="text-[10px] font-black font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">${m.payment_reference || "---"}</span>
+                </td>
                 <td class="px-6 py-4 font-mono font-bold text-slate-400 text-xs">${m.expected_amount}</td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
@@ -741,13 +837,20 @@
                     <span class="status-badge px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${m.status}</span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2 mx-auto" 
-                        data-mid="${m.membership_id}" 
-                        data-name="${m.member_name}" 
-                        data-amount="${m.amount_paid}" 
-                        data-expected="${m.expected_amount}">
-                        <i class="fas fa-signature"></i> {% trans "Record" %}
-                    </button>
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="btn-view-detail p-2 text-slate-400 hover:text-emerald-600 transition-all" 
+                            data-mid="${m.membership_id}" 
+                            title="{% trans 'View Details' %}">
+                            <i class="fas fa-eye text-lg"></i>
+                        </button>
+                        <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2" 
+                            data-mid="${m.membership_id}" 
+                            data-name="${m.member_name}" 
+                            data-amount="${m.amount_paid}" 
+                            data-expected="${m.expected_amount}">
+                            <i class="fas fa-signature"></i> {% trans "Record" %}
+                        </button>
+                    </div>
                 </td>
             `;
         el.memberListBody.appendChild(tr);
@@ -914,6 +1017,32 @@
         const fullAmount = fullBtn.dataset.full;
         saveContribution(mid, fullAmount);
         return;
+      }
+
+      const viewBtn = e.target.closest(".btn-view-detail");
+      if (viewBtn) {
+        const mid = viewBtn.dataset.mid;
+        const m = state.members.find((x) => x.membership_id === mid);
+        if (!m || !m.payment_reference) {
+          toast("info", "No detailed record found for this member");
+          return;
+        }
+
+        document.getElementById("viewMemberName").textContent = m.member_name;
+        document.getElementById("viewPaymentRef").textContent =
+          m.payment_reference;
+        document.getElementById("viewAmountPaid").textContent =
+          `XAF ${parseFloat(m.amount_paid).toLocaleString()}`;
+        document.getElementById("viewPaymentDate").textContent = m.paid_at
+          ? new Date(m.paid_at).toLocaleDateString()
+          : "---";
+        document.getElementById("viewComment").textContent =
+          m.comment || "No comment provided";
+        document.getElementById("viewSignatureImg").src = m.signature || "";
+
+        document
+          .getElementById("viewContributionModal")
+          .classList.remove("hidden");
       }
 
       const recordBtn = e.target.closest(".btn-open-record");

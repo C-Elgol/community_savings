@@ -64,6 +64,9 @@ class ContributionAPI(View):
                 'amount_paid': str(c.amount_paid) if c else '0.00',
                 'status': c.status if c else ContributionStatus.PENDING,
                 'paid_at': c.paid_at.isoformat() if c and c.paid_at else None,
+                'payment_reference': c.payment_reference if c else None,
+                'comment': c.comment if c else '',
+                'signature': c.signature if c else '',
             })
         
         return JsonResponse({'success': True, 'contributions': data})
