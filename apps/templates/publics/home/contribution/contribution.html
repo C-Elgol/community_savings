@@ -1,19 +1,112 @@
- {% extends 'publics/home/base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends 'publics/home/base.html' %} {% load static %} {% load i18n %} {% load humanize %} {% block content %}
 
-{% block content %}
- 
- <!-- ========== CONTRIBUTIONS PAGE ========== -->
-        <div id="contributions" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Contributions</h2><button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-sm font-medium"><i class="fas fa-plus mr-2"></i>New contribution</button></div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-emerald-50 p-4 rounded-xl"><p class="text-sm text-emerald-700 font-medium">Total contributed</p><p class="text-2xl font-bold text-slate-800">XAF 540,000</p></div>
-                    <div class="bg-indigo-50 p-4 rounded-xl"><p class="text-sm text-indigo-700 font-medium">This season</p><p class="text-2xl font-bold text-slate-800">XAF 127,500</p></div>
-                    <div class="bg-amber-50 p-4 rounded-xl"><p class="text-sm text-amber-700 font-medium">Pending cycles</p><p class="text-2xl font-bold text-slate-800">1</p></div>
-                </div>
-                <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="px-4 py-3 text-left">Cycle</th><th class="px-4 py-3 text-left">Due date</th><th class="px-4 py-3 text-left">Expected</th><th class="px-4 py-3 text-left">Paid</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3 text-left"></th></tr></thead><tbody><tr class="border-b"><td class="px-4 py-3 font-medium">March 2026</td><td class="px-4 py-3">20 Mar</td><td>XAF 15,000</td><td>XAF 15,000</td><td><span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs">Paid</span></td><td><button class="text-emerald-700"><i class="fas fa-receipt"></i></button></td></tr><tr class="border-b"><td class="px-4 py-3 font-medium">February 2026</td><td>20 Feb</td><td>XAF 15,000</td><td>XAF 15,000</td><td><span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs">Paid</span></td><td></td></tr><tr class="border-b"><td class="px-4 py-3 font-medium">January 2026</td><td>20 Jan</td><td>XAF 15,000</td><td>XAF 12,000</td><td><span class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">Partial</span></td><td></td></tr></tbody></table></div>
-            </div>
-        </div>
+<!-- ========== CONTRIBUTIONS PAGE ========== -->
+<div id="contributions" class="page">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-slate-800">
+        {% trans "Your Njangi Contributions" %}
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-emerald-50 p-4 rounded-xl">
+        <p class="text-sm text-emerald-700 font-medium">
+          {% trans "Total contributed" %}
+        </p>
+        <p class="text-2xl font-bold text-slate-800">
+          XAF {{ total_contributed|floatformat:0|intcomma }}
+        </p>
+      </div>
+      <div class="bg-indigo-50 p-4 rounded-xl">
+        <p class="text-sm text-indigo-700 font-medium">
+          {% trans "This season" %}
+        </p>
+        <p class="text-2xl font-bold text-slate-800">
+          XAF {{ this_season_contributed|floatformat:0|intcomma }}
+        </p>
+      </div>
+      <div class="bg-amber-50 p-4 rounded-xl">
+        <p class="text-sm text-amber-700 font-medium">
+          {% trans "Pending cycles" %}
+        </p>
+        <p class="text-2xl font-bold text-slate-800">
+          {{ pending_cycles_count }}
+        </p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-500">
+          <tr>
+            <th class="px-4 py-3 text-left">{% trans "Community" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Cycle" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Due date" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Expected" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Paid" %}</th>
+            <th class="px-4 py-3 text-left">{% trans "Status" %}</th>
+            <th class="px-4 py-3 text-left"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for contrib in contributions %}
+          <tr class="border-b">
+            <td class="px-4 py-3 font-medium">
+              {{ contrib.membership.community.name }}
+            </td>
+            <td class="px-4 py-3">{{ contrib.cycle.title }}</td>
+            <td class="px-4 py-3">{{ contrib.cycle.due_date|date:"d M" }}</td>
+            <td class="px-4 py-3">
+              XAF {{ contrib.expected_amount|floatformat:0|intcomma }}
+            </td>
+            <td class="px-4 py-3">
+              XAF {{ contrib.amount_paid|floatformat:0|intcomma }}
+            </td>
+            <td class="px-4 py-3">
+              {% if contrib.status == 'paid' %}
+              <span
+                class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs"
+                >{% trans "Paid" %}</span
+              >
+              {% elif contrib.status == 'partial' %}
+              <span
+                class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs"
+                >{% trans "Partial" %}</span
+              >
+              {% elif contrib.status == 'overdue' %}
+              <span
+                class="bg-rose-100 text-rose-800 px-2 py-1 rounded-full text-xs"
+                >{% trans "Overdue" %}</span
+              >
+              {% else %}
+              <span
+                class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full text-xs"
+                >{% trans "Pending" %}</span
+              >
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              {% if contrib.payment_reference %}
+              <button
+                class="text-emerald-700"
+                title="{{ contrib.payment_reference }}"
+              >
+                <i class="fas fa-receipt"></i>
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+              {% trans "No contributions found." %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 {% endblock %}
