@@ -9,6 +9,10 @@ import logging
 
 from apps.communities.models import Community, Membership, MembershipApplication
 from apps.global_data.enum import MembershipStatus, MembershipRole
+from apps.communities.tasks.membership_tasks import (
+    send_application_submitted_emails_task,
+    send_application_review_result_email_task
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +99,9 @@ class ApplicationProcessAPI(View):
                     application=app
                 )
                 
+                # Trigger Celery task for review result email
+                send_application_review_result_email_task.delay(str(app.id))
+                
                 return JsonResponse({'success': True, 'message': _("Application approved and member active.")})
 
             elif action == 'reject':
@@ -105,6 +112,9 @@ class ApplicationProcessAPI(View):
                 app.status = MembershipStatus.REJECTED
                 app.rejection_reason = reason
                 app.save()
+                
+                # Trigger Celery task for review result email
+                send_application_review_result_email_task.delay(str(app.id))
                 
                 return JsonResponse({'success': True, 'message': _("Application rejected.")})
             
@@ -191,6 +201,9 @@ class ApplicationCreateAPI(View):
                 document_back=files.get('document_back'),
                 selfie_photo=files.get('selfie_photo')
             )
+            
+            # Trigger Celery task for submission emails
+            send_application_submitted_emails_task.delay(str(application.id))
             
             return JsonResponse({
                 'success': True, 

@@ -15,9 +15,9 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Explicitly discover tasks in the tasks subpackage
 app.autodiscover_tasks([
-    'apps.core.tasks',
     'apps.users.tasks',
     'apps.log.tasks',
+    'apps.communities.tasks',
 ])
 
 @app.task(bind=True, ignore_result=True)

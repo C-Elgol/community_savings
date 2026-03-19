@@ -1,0 +1,65 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% block title %} {% trans "New Membership Application" %} - {{ community_name }} {% endblock %} {% block content %}
+<div
+  style="
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: auto;
+  "
+>
+  <h2 style="color: #1a73e8">{% trans "New Membership Application" %}</h2>
+
+  <p>{% trans "Hello Admin," %}</p>
+
+  <p>
+    {% blocktranslate with name=applicant_name community=community_name %}A new
+    membership application has been submitted by <strong>{{ name }}</strong> for
+    <strong>{{ community }}</strong>.{% endblocktranslate %}
+  </p>
+
+  <div
+    style="
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    "
+  >
+    <h4 style="margin-top: 0; color: #555">
+      {% trans "Application Details:" %}
+    </h4>
+    <ul style="list-style: none; padding-left: 0">
+      <li><strong>{% trans "Applicant:" %}</strong> {{ applicant_name }}</li>
+      <li><strong>{% trans "Email:" %}</strong> {{ applicant_email }}</li>
+      <li><strong>{% trans "Role Applied:" %}</strong> {{ applied_role }}</li>
+      <li><strong>{% trans "Submitted At:" %}</strong> {{ created_at }}</li>
+    </ul>
+  </div>
+
+  <p>
+    {% trans "Please log in to the admin dashboard to review this application."
+    %}
+  </p>
+
+  <div style="margin-top: 30px">
+    <a
+      href="{{ admin_url }}"
+      style="
+        background-color: #1a73e8;
+        color: white;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      "
+    >
+      {% trans "Review Application" %}
+    </a>
+  </div>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px">
+    {% trans "Thank you," %}<br /><strong>{{ site_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}
