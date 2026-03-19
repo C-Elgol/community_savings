@@ -33,8 +33,7 @@
     <ul style="list-style: none; padding-left: 0">
       <li><strong>{% trans "Cycle:" %}</strong> {{ cycle_title }}</li>
       <li>
-        <strong>{% trans "Paid Amount:" %}</strong> XAF {{
-        amount_paid|floatformat:0|intcomma }}
+        <strong>{% trans "Paid Amount:" %}</strong> XAF {{ amount_paid|floatformat:0|intcomma }}
       </li>
       <li><strong>{% trans "Status:" %}</strong> {{ status_display }}</li>
       <li><strong>{% trans "Date Paid:" %}</strong> {{ paid_at }}</li>
