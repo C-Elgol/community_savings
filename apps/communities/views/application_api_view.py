@@ -99,8 +99,8 @@ class ApplicationProcessAPI(View):
                     application=app
                 )
                 
-                # Trigger Celery task for review result email
-                send_application_review_result_email_task.delay(str(app.id))
+                # Trigger Celery task for review result email after transaction commit
+                transaction.on_commit(lambda: send_application_review_result_email_task.delay(str(app.id)))
                 
                 return JsonResponse({'success': True, 'message': _("Application approved and member active.")})
 
@@ -113,8 +113,8 @@ class ApplicationProcessAPI(View):
                 app.rejection_reason = reason
                 app.save()
                 
-                # Trigger Celery task for review result email
-                send_application_review_result_email_task.delay(str(app.id))
+                # Trigger Celery task for review result email after transaction commit
+                transaction.on_commit(lambda: send_application_review_result_email_task.delay(str(app.id)))
                 
                 return JsonResponse({'success': True, 'message': _("Application rejected.")})
             
@@ -157,9 +157,12 @@ class ApplicationCreateAPI(View):
         if Membership.objects.filter(community=community, user=request.user, is_deleted=False).exists():
             return JsonResponse({'success': False, 'message': _("You are already a member of this community.")}, status=400)
             
-        # Check if already applied
+        # Check if already applied (Pending)
         if MembershipApplication.objects.filter(community=community, user=request.user, status=MembershipStatus.PENDING).exists():
             return JsonResponse({'success': False, 'message': _("You already have a pending application for this community.")}, status=400)
+            
+        # Check if rejected application exists (to allow re-apply via update)
+        existing_app = MembershipApplication.objects.filter(community=community, user=request.user, status=MembershipStatus.REJECTED).first()
             
         try:
             # Handle FormData (MultiPartParser)
@@ -188,22 +191,35 @@ class ApplicationCreateAPI(View):
             reg_fee_required = policy.registration_fee_mode != 'none' if policy else False
             reg_fee_amount = policy.registration_fee_amount if policy else 0
             
-            # Application Creation with Documents
-            application = MembershipApplication.objects.create(
-                community=community,
-                user=user,
-                applied_role=applied_role,
-                status=MembershipStatus.PENDING,
-                registration_fee_required=reg_fee_required,
-                registration_fee_amount=reg_fee_amount,
-                document_type=data.get('document_type', 'id_card'),
-                document_front=files.get('document_front'),
-                document_back=files.get('document_back'),
-                selfie_photo=files.get('selfie_photo')
-            )
+            # Application Creation or Update with Documents
+            if existing_app:
+                application = existing_app
+                application.applied_role = applied_role
+                application.status = MembershipStatus.PENDING
+                application.registration_fee_required = reg_fee_required
+                application.registration_fee_amount = reg_fee_amount
+                application.document_type = data.get('document_type', 'id_card')
+                application.document_front = files.get('document_front') or application.document_front
+                application.document_back = files.get('document_back') or application.document_back
+                application.selfie_photo = files.get('selfie_photo') or application.selfie_photo
+                application.rejection_reason = "" # Clear previous rejection reason
+                application.save()
+            else:
+                application = MembershipApplication.objects.create(
+                    community=community,
+                    user=user,
+                    applied_role=applied_role,
+                    status=MembershipStatus.PENDING,
+                    registration_fee_required=reg_fee_required,
+                    registration_fee_amount=reg_fee_amount,
+                    document_type=data.get('document_type', 'id_card'),
+                    document_front=files.get('document_front'),
+                    document_back=files.get('document_back'),
+                    selfie_photo=files.get('selfie_photo')
+                )
             
-            # Trigger Celery task for submission emails
-            send_application_submitted_emails_task.delay(str(application.id))
+            # Trigger Celery task for submission emails after transaction commit
+            transaction.on_commit(lambda: send_application_submitted_emails_task.delay(str(application.id)))
             
             return JsonResponse({
                 'success': True, 
