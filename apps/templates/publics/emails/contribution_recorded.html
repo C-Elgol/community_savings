@@ -1,0 +1,55 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% load humanize %} {% block title %} {% trans "Contribution Recorded" %} - {{ community_name }} {% endblock %} {% block content %}
+<div
+  style="
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: auto;
+  "
+>
+  <h2 style="color: #28a745">
+    {% trans "Contribution Successfully Recorded" %}
+  </h2>
+
+  <p>{% trans "Hello" %} {{ first_name }},</p>
+
+  <p>
+    {% blocktranslate with community=community_name %}Your contribution for
+    <strong>{{ community }}</strong> has been successfully recorded.{% endblocktranslate %}
+  </p>
+
+  <div
+    style="
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    "
+  >
+    <h4 style="margin-top: 0; color: #555">
+      {% trans "Contribution Details:" %}
+    </h4>
+    <ul style="list-style: none; padding-left: 0">
+      <li><strong>{% trans "Cycle:" %}</strong> {{ cycle_title }}</li>
+      <li>
+        <strong>{% trans "Paid Amount:" %}</strong> XAF {{
+        amount_paid|floatformat:0|intcomma }}
+      </li>
+      <li><strong>{% trans "Status:" %}</strong> {{ status_display }}</li>
+      <li><strong>{% trans "Date Paid:" %}</strong> {{ paid_at }}</li>
+      {% if payment_reference %}
+      <li><strong>{% trans "Reference:" %}</strong> {{ payment_reference }}</li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <p>
+    {% trans "Thank you for your consistent participation and contribution to our community!" %}
+  </p>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px">
+    {% trans "Best regards," %}<br /><strong>{{ community_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}

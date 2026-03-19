@@ -36,7 +36,12 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = [
     'localhost',
-    '127.0.0.1',  
+    '127.0.0.1',
+    '8ed7-102-244-197-208.ngrok-free.app',  
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://8ed7-102-244-197-208.ngrok-free.app',
 ]
 
 # Application definition
@@ -48,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'django_extensions',
     'rest_framework',
     'apps.users',

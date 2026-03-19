@@ -5,7 +5,9 @@ from apps.finance.models import FinancialSeason, ContributionCycle, Contribution
 from apps.communities.models import Community, Membership
 from apps.global_data.enum import ContributionStatus
 from django.utils import timezone
+from django.db import transaction
 import json
+from apps.finance.tasks.contribution_tasks import send_contribution_recorded_email_task
 
 class SeasonAPI(View):
     def get(self, request, community_id):
@@ -123,6 +125,10 @@ class ContributionAPI(View):
             contribution.paid_at = timezone.now() if amount_paid > 0 else None
             contribution.received_by = request.user if amount_paid > 0 else None
             contribution.save()
+            
+            # Send notification email if amount is paid
+            if amount_paid > 0:
+                transaction.on_commit(lambda: send_contribution_recorded_email_task.delay(str(contribution.id)))
             
             return JsonResponse({
                 'success': True, 
