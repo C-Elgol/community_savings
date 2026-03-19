@@ -1,0 +1,45 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% block title %} {% trans "Update on Your Application" %} - {{ community_name }} {% endblock %} {% block content %}
+<div
+  style="
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: auto;
+  "
+>
+  <h2 style="color: #dc3545">{% trans "Application Update" %}Text</h2>
+
+  <p>{% trans "Hello" %} {{ first_name }},</p>
+
+  <p>
+    {% blocktranslate with community=community_name %}Thank you for your
+    interest in joining <strong>{{ community }}</strong>. After careful review,
+    we regret to inform you that your application has been
+    <strong>rejected</strong> at this time.{% endblocktranslate %}
+  </p>
+
+  <div
+    style="
+      background-color: #fff5f5;
+      border-left: 4px solid #dc3545;
+      padding: 15px;
+      margin: 20px 0;
+    "
+  >
+    <h4 style="margin-top: 0; color: #dc3545">
+      {% trans "Reason for Rejection:" %}
+    </h4>
+    <p style="margin-bottom: 0">{{ rejection_reason }}</p>
+  </div>
+
+  <p>
+    {% trans "If you have any questions or would like to provide more
+    information, please contact our support team." %}
+  </p>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px">
+    {% trans "Best regards," %}<br /><strong>{{ community_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}

@@ -103,29 +103,34 @@
 <!-- Review Modal -->
 <div
   id="reviewModal"
-  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 font-sans"
 >
   <div
-    class="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full relative animate-in zoom-in-95 duration-300 my-8"
+    class="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
+    id="reviewModalContent"
   >
-    <div class="p-8 md:p-12">
-      <div class="flex items-center justify-between mb-10">
-        <div>
-          <h3 class="text-3xl font-black text-slate-800 tracking-tight">
-            {% trans "Review Application" %}
-          </h3>
-          <p class="text-slate-500 font-medium mt-1">
-            {% trans "Verify details before approving membership." %}
-          </p>
-        </div>
-        <button
-          onclick="closeReviewModal()"
-          class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
-        >
-          <i class="fas fa-times text-xl"></i>
-        </button>
+    <!-- Modal Header (Sticky) -->
+    <div
+      class="p-8 pb-6 flex justify-between items-start border-b border-slate-50 bg-white z-10 shrink-0"
+    >
+      <div>
+        <h3 class="text-2xl font-black text-slate-800 leading-tight">
+          {% trans "Review Application" %}
+        </h3>
+        <p class="text-slate-500 font-medium mt-1">
+          {% trans "Verify details before approving membership." %}
+        </p>
       </div>
+      <button
+        onclick="closeReviewModal()"
+        class="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
 
+    <!-- Modal Body (Scrollable) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar bg-white p-8 pt-6">
       <div id="reviewContent" class="space-y-8">
         <!-- Loaded via JS -->
         <div class="flex flex-col items-center py-12 gap-4">
@@ -137,31 +142,47 @@
           </p>
         </div>
       </div>
+    </div>
 
-      <!-- Action Buttons -->
-      <div
-        id="modalActions"
-        class="hidden pt-10 grid grid-cols-2 gap-4 border-t border-slate-100 mt-10"
+    <!-- Modal Footer (Sticky Actions) -->
+    <div
+      id="modalActions"
+      class="hidden p-8 pt-6 pb-8 border-t border-slate-100 bg-white z-10 grid grid-cols-2 gap-4 shrink-0"
+    >
+      <button
+        onclick="openRejectDialog()"
+        class="py-4 px-6 bg-rose-50 text-rose-600 rounded-2xl font-black text-sm hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
       >
-        <button
-          onclick="openRejectDialog()"
-          class="py-4 px-6 bg-rose-50 text-rose-600 rounded-2xl font-black text-sm hover:bg-rose-100 transition-all flex items-center justify-center gap-2"
-        >
-          <i class="fas fa-user-times"></i>
-          {% trans "Reject" %}
-        </button>
-        <button
-          onclick="processApplication('approve')"
-          id="approveBtn"
-          class="py-4 px-6 gradient-bg text-white rounded-2xl font-black text-sm shadow-xl shadow-emerald-900/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
-        >
-          <i class="fas fa-user-check"></i>
-          <span id="approveLabel">{% trans "Approve & Join" %}</span>
-        </button>
-      </div>
+        <i class="fas fa-user-times"></i>
+        {% trans "Reject" %}
+      </button>
+      <button
+        onclick="processApplication('approve')"
+        id="approveBtn"
+        class="py-4 px-6 gradient-bg text-white rounded-2xl font-black text-sm shadow-xl shadow-emerald-900/20 hover:opacity-95 transition-all flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-user-check"></i>
+        <span id="approveLabel">{% trans "Approve & Join" %}</span>
+      </button>
     </div>
   </div>
 </div>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+</style>
 
 <!-- Rejection Reason Dialog -->
 <div
@@ -237,6 +258,7 @@
       approveBtn: document.getElementById("approveBtn"),
       approveLabel: document.getElementById("approveLabel"),
       confirmRejectBtn: document.getElementById("confirmRejectBtn"),
+      modalContent: document.getElementById("reviewModalContent"),
     };
 
     /* --- API Calls --- */
@@ -302,7 +324,7 @@
     }
 
     /* --- Actions --- */
-    async function processApplication(action) {
+    window.processApplication = async function (action) {
       if (!currentAppId) return;
 
       const reason = ui.rejectionReason.value;
@@ -326,7 +348,7 @@
           toast("success", data.message);
           closeRejectDialog();
           closeReviewModal();
-          fetchApplications();
+          await fetchApplications();
         } else {
           toast("warning", data.message);
         }
@@ -335,12 +357,17 @@
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     /* --- UI Helpers --- */
     window.openReviewModal = async (id) => {
       currentAppId = id;
       ui.reviewModal.classList.replace("hidden", "flex");
+      setTimeout(() => {
+        ui.modalContent.classList.replace("scale-95", "scale-100");
+        ui.modalContent.classList.replace("opacity-0", "opacity-100");
+      }, 10);
+
       ui.reviewContent.innerHTML = `
                 <div class="flex flex-col items-center py-12 gap-4">
                     <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
@@ -354,45 +381,122 @@
         const data = await res.json();
         if (data.success) {
           const app = data.application;
+          const v = app.verification;
+
           ui.reviewContent.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-6">
-                                <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{% trans "Personal Info" %}</p>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Full Name" %}</p>
-                                            <p class="text-lg font-black text-slate-800">${app.first_name} ${app.last_name}</p>
+                        <div class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{% trans "Personal Info" %}</p>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Full Name" %}</p>
+                                                <p class="text-lg font-black text-slate-800">${app.first_name} ${app.last_name}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Email" %}</p>
+                                                <p class="text-sm font-bold text-slate-600">${app.email}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-400 font-medium">{% trans "Phone" %}</p>
+                                                <p class="text-sm font-bold text-slate-600">${app.phone_number || "---"}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Email" %}</p>
-                                            <p class="text-sm font-bold text-slate-600">${app.email}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-slate-400 font-medium">{% trans "Phone" %}</p>
-                                            <p class="text-sm font-bold text-slate-600">${app.phone_number || "---"}</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div class="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100">
+                                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">{% trans "Application Details" %}</p>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Requested Role" %}</p>
+                                                <p class="text-lg font-black text-emerald-800">${app.applied_role_display}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Applied On" %}</p>
+                                                <p class="text-sm font-bold text-emerald-700">${app.created_at}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-emerald-600/60 font-medium">{% trans "Registration Fee" %}</p>
+                                                <p class="text-sm font-black ${app.registration_fee_required ? "text-amber-600" : "text-slate-400"}">
+                                                    ${app.registration_fee_required ? `${app.registration_fee_amount} (${app.registration_fee_paid ? "Paid" : "Unpaid"})` : "No Fee Required"}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="space-y-6">
-                                <div class="bg-emerald-50/50 p-6 rounded-[2rem] border border-emerald-100">
-                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">{% trans "Application Details" %}</p>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Requested Role" %}</p>
-                                            <p class="text-lg font-black text-emerald-800">${app.applied_role_display}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Applied On" %}</p>
-                                            <p class="text-sm font-bold text-emerald-700">${app.created_at}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-emerald-600/60 font-medium">{% trans "Registration Fee" %}</p>
-                                            <p class="text-sm font-black ${app.registration_fee_required ? "text-amber-600" : "text-slate-400"}">
-                                                ${app.registration_fee_required ? `${app.registration_fee_amount} (${app.registration_fee_paid ? "Paid" : "Unpaid"})` : "No Fee Required"}
-                                            </p>
-                                        </div>
+
+                            <!-- Identity Verification Section -->
+                            <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                                <div class="flex items-center justify-between mb-6">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Identity Verification" %}</p>
+                                    <span class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-wider">${v.document_type_display}</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Front Side -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Front Photo" %}</p>
+                                        ${
+                                          v.document_front
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.document_front}" class="w-full h-full object-cover">
+                                                <a href="${v.document_front}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
+                                    </div>
+
+                                    <!-- Back Side -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Back Photo" %}</p>
+                                        ${
+                                          v.document_back
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.document_back}" class="w-full h-full object-cover">
+                                                <a href="${v.document_back}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
+                                    </div>
+
+                                    <!-- Selfie -->
+                                    <div class="space-y-2">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "Selfie Photo" %}</p>
+                                        ${
+                                          v.selfie_photo
+                                            ? `
+                                            <div class="relative group aspect-[4/3] rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                                                <img src="${v.selfie_photo}" class="w-full h-full object-cover">
+                                                <a href="${v.selfie_photo}" target="_blank" class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                                                    <i class="fas fa-expand-alt text-white text-xl"></i>
+                                                </a>
+                                            </div>
+                                        `
+                                            : `
+                                            <div class="aspect-[4/3] rounded-2xl bg-slate-100 flex items-center justify-center text-slate-300">
+                                                <i class="fas fa-image text-2xl"></i>
+                                            </div>
+                                        `
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -406,8 +510,12 @@
     };
 
     window.closeReviewModal = () => {
-      ui.reviewModal.classList.replace("flex", "hidden");
-      currentAppId = null;
+      ui.modalContent.classList.replace("scale-100", "scale-95");
+      ui.modalContent.classList.replace("opacity-100", "opacity-0");
+      setTimeout(() => {
+        ui.reviewModal.classList.replace("flex", "hidden");
+        currentAppId = null;
+      }, 300);
     };
 
     window.openRejectDialog = () => {

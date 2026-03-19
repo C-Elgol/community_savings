@@ -1,0 +1,49 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% block title %} {% trans "Application Approved" %} - {{ community_name }} {% endblock %} {% block content %}
+<div
+  style="
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: auto;
+  "
+>
+  <h2 style="color: #28a745">{% trans "Welcome to the Community!" %}</h2>
+
+  <p>{% trans "Hello" %} {{ first_name }},</p>
+
+  <p>
+    {% blocktranslate with community=community_name %}We are pleased to inform you that your membership application for
+    <strong>{{ community }}</strong> has been <strong>approved</strong>.{% endblocktranslate %}
+  </p>
+
+  <p>
+    {% trans "You can now access the community features and start participating
+    in activities." %}
+  </p>
+
+  <div style="margin-top: 30px">
+    <a
+      href="{{ community_url }}"
+      style="
+        background-color: #28a745;
+        color: white;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      "
+    >
+      {% trans "Go to Community" %}
+    </a>
+  </div>
+
+  <p style="margin-top: 30px">
+    {% trans "We look forward to your contributions!" %}
+  </p>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px">
+    {% trans "Best regards," %}<br /><strong>{{ community_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}

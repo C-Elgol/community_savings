@@ -8,7 +8,11 @@ import json
 import logging
 
 from apps.communities.models import Community, Membership, MembershipApplication
-from apps.global_data.enum import MembershipStatus
+from apps.global_data.enum import MembershipStatus, MembershipRole
+from apps.communities.tasks.membership_tasks import (
+    send_application_submitted_emails_task,
+    send_application_review_result_email_task
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +58,13 @@ class ApplicationDetailAPI(View):
             'registration_fee_amount': str(app.registration_fee_amount),
             'registration_fee_paid': app.registration_fee_paid,
             'created_at': app.created.strftime('%Y-%m-%d %H:%M'),
+            'verification': {
+                'document_type': app.document_type,
+                'document_type_display': app.get_document_type_display(),
+                'document_front': app.document_front.url if app.document_front else None,
+                'document_back': app.document_back.url if app.document_back else None,
+                'selfie_photo': app.selfie_photo.url if app.selfie_photo else None,
+            }
         }
         return JsonResponse({'success': True, 'application': data})
 
@@ -88,6 +99,9 @@ class ApplicationProcessAPI(View):
                     application=app
                 )
                 
+                # Trigger Celery task for review result email after transaction commit
+                transaction.on_commit(lambda: send_application_review_result_email_task.delay(str(app.id)))
+                
                 return JsonResponse({'success': True, 'message': _("Application approved and member active.")})
 
             elif action == 'reject':
@@ -99,6 +113,9 @@ class ApplicationProcessAPI(View):
                 app.rejection_reason = reason
                 app.save()
                 
+                # Trigger Celery task for review result email after transaction commit
+                transaction.on_commit(lambda: send_application_review_result_email_task.delay(str(app.id)))
+                
                 return JsonResponse({'success': True, 'message': _("Application rejected.")})
             
             else:
@@ -107,3 +124,108 @@ class ApplicationProcessAPI(View):
         except Exception as e:
             logger.error(f"Error processing application: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+class ApplicationCreateAPI(View):
+    def get(self, request, community_id):
+        community = get_object_or_404(Community, id=community_id)
+        policy = getattr(community, 'policy', None)
+        user = request.user
+        
+        data = {
+            'community_name': community.name,
+            'community_code': '', # Do not pre-fill to force user input
+            'registration_fee_mode': policy.registration_fee_mode if policy else 'none',
+            'registration_fee_amount': str(policy.registration_fee_amount) if policy else '0.00',
+            'role': MembershipRole.MEMBER,
+            'role_display': MembershipRole.MEMBER.label,
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'phone_number': str(user.phone_number) if user.phone_number else ''
+            }
+        }
+        return JsonResponse({'success': True, 'data': data})
+
+    @transaction.atomic
+    def post(self, request, community_id):
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': _("Authentication required.")}, status=401)
+            
+        community = get_object_or_404(Community, id=community_id)
+        
+        # Check if already a member
+        if Membership.objects.filter(community=community, user=request.user, is_deleted=False).exists():
+            return JsonResponse({'success': False, 'message': _("You are already a member of this community.")}, status=400)
+            
+        # Check if already applied (Pending)
+        if MembershipApplication.objects.filter(community=community, user=request.user, status=MembershipStatus.PENDING).exists():
+            return JsonResponse({'success': False, 'message': _("You already have a pending application for this community.")}, status=400)
+            
+        # Check if rejected application exists (to allow re-apply via update)
+        existing_app = MembershipApplication.objects.filter(community=community, user=request.user, status=MembershipStatus.REJECTED).first()
+            
+        try:
+            # Handle FormData (MultiPartParser)
+            data = request.POST
+            files = request.FILES
+            
+            # Community Code Validation
+            submitted_code = data.get('community_code')
+            if submitted_code != community.code:
+                return JsonResponse({'success': False, 'message': _("Invalid community code. Please check and try again.")}, status=400)
+            
+            # Profile Updates
+            user = request.user
+            first_name = data.get('first_name')
+            last_name = data.get('last_name')
+            phone_number = data.get('phone_number')
+            
+            if first_name: user.first_name = first_name
+            if last_name: user.last_name = last_name
+            if phone_number: user.phone_number = phone_number
+            user.save()
+
+            applied_role = MembershipRole.MEMBER
+            
+            policy = getattr(community, 'policy', None)
+            reg_fee_required = policy.registration_fee_mode != 'none' if policy else False
+            reg_fee_amount = policy.registration_fee_amount if policy else 0
+            
+            # Application Creation or Update with Documents
+            if existing_app:
+                application = existing_app
+                application.applied_role = applied_role
+                application.status = MembershipStatus.PENDING
+                application.registration_fee_required = reg_fee_required
+                application.registration_fee_amount = reg_fee_amount
+                application.document_type = data.get('document_type', 'id_card')
+                application.document_front = files.get('document_front') or application.document_front
+                application.document_back = files.get('document_back') or application.document_back
+                application.selfie_photo = files.get('selfie_photo') or application.selfie_photo
+                application.rejection_reason = "" # Clear previous rejection reason
+                application.save()
+            else:
+                application = MembershipApplication.objects.create(
+                    community=community,
+                    user=user,
+                    applied_role=applied_role,
+                    status=MembershipStatus.PENDING,
+                    registration_fee_required=reg_fee_required,
+                    registration_fee_amount=reg_fee_amount,
+                    document_type=data.get('document_type', 'id_card'),
+                    document_front=files.get('document_front'),
+                    document_back=files.get('document_back'),
+                    selfie_photo=files.get('selfie_photo')
+                )
+            
+            # Trigger Celery task for submission emails after transaction commit
+            transaction.on_commit(lambda: send_application_submitted_emails_task.delay(str(application.id)))
+            
+            return JsonResponse({
+                'success': True, 
+                'message': _("Application submitted successfully. It is now pending review."),
+                'application_id': str(application.id)
+            })
+        except Exception as e:
+            logger.error(f"Error creating application: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)

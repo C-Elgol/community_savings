@@ -426,7 +426,8 @@
                     {% trans "View Policy" %}
                   </button>
                   <button
-                    class="text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition"
+                    class="join-btn text-sm bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-medium hover:bg-emerald-100 transition"
+                    data-comp-id="{{ community.id }}"
                   >
                     {% trans "Request" %}
                   </button>
@@ -847,6 +848,7 @@
     </main>
 
     {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
+    {% include 'publics/welcome/includes/_membership_application_modal.html' %}
     {% include 'publics/home/includes/_js.html' %}
 
     <script>
@@ -978,8 +980,176 @@
           e.preventDefault();
           const id = viewPolicyBtn.dataset.compId;
           loadPolicyToModal(id);
+          return;
+        }
+
+        const joinBtn = e.target.closest(".join-btn");
+        if (joinBtn) {
+          e.preventDefault();
+          const id = joinBtn.dataset.compId;
+          openApplyModal(id);
         }
       });
+
+      async function openApplyModal(compId) {
+        const modal = document.getElementById("applyMembershipModal");
+        const content = document.getElementById("applyModalContent");
+        const loader = document.getElementById("applyModalLoader");
+        const formDiv = document.getElementById("applyModalFormContent");
+
+        if (!modal || !content) return;
+
+        // Reset and show modal
+        modal.classList.replace("hidden", "flex");
+        setTimeout(() => {
+          content.classList.replace("scale-95", "scale-100");
+          content.classList.replace("opacity-0", "opacity-100");
+        }, 10);
+
+        loader.classList.remove("hidden");
+        formDiv.classList.add("hidden");
+
+        try {
+          const res = await fetch(
+            `/communities/api/communities/${compId}/apply/`,
+          );
+          const result = await res.json();
+          if (result.success) {
+            const d = result.data;
+            document.getElementById("applyCommunityName").value =
+              d.community_name;
+            document.getElementById("applyCommunityCode").value = ""; // Force manual entry
+            document.getElementById("applyFirstName").value = d.user.first_name;
+            document.getElementById("applyLastName").value = d.user.last_name;
+            document.getElementById("applyPhoneNumber").value =
+              d.user.phone_number;
+            document.getElementById("applyRegFee").value =
+              `${d.registration_fee_amount} (${d.registration_fee_mode.toUpperCase()})`;
+
+            document.getElementById("applyRole").value = d.role_display;
+
+            loader.classList.add("hidden");
+            formDiv.classList.remove("hidden");
+
+            // Attach submit handler
+            document.getElementById("applyMembershipForm").onsubmit = (e) =>
+              handleApplySubmit(e, compId);
+          }
+        } catch (err) {
+          console.error("Join Modal Error:", err);
+          closeApplyModal();
+        }
+      }
+
+      async function handleApplySubmit(e, compId) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append(
+          "community_code",
+          document.getElementById("applyCommunityCode").value,
+        );
+        formData.append(
+          "first_name",
+          document.getElementById("applyFirstName").value,
+        );
+        formData.append(
+          "last_name",
+          document.getElementById("applyLastName").value,
+        );
+        formData.append(
+          "phone_number",
+          document.getElementById("applyPhoneNumber").value,
+        );
+        formData.append(
+          "document_type",
+          document.getElementById("applyDocType").value,
+        );
+
+        const docFront = document.getElementById("applyDocFront");
+        const docBack = document.getElementById("applyDocBack");
+        const selfie = document.getElementById("applySelfie");
+
+        if (docFront.files[0])
+          formData.append("document_front", docFront.files[0]);
+        if (docBack.files[0])
+          formData.append("document_back", docBack.files[0]);
+        if (selfie.files[0]) formData.append("selfie_photo", selfie.files[0]);
+
+        if (!document.getElementById("applyCommunityCode").value) {
+          window.toastManager
+            .buildToast()
+            .setMessage("{% trans 'Please enter the community code.' %}")
+            .setType("warning")
+            .show();
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            `/communities/api/communities/${compId}/apply/`,
+            {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+              },
+              body: formData,
+            },
+          );
+          const result = await res.json();
+          if (result.success) {
+            window.toastManager
+              .buildToast()
+              .setMessage(result.message)
+              .setType("success")
+              .show();
+            closeApplyModal();
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            window.toastManager
+              .buildToast()
+              .setMessage(result.message || "{% trans 'Submission failed' %}")
+              .setType("danger")
+              .show();
+          }
+        } catch (err) {
+          window.toastManager
+            .buildToast()
+            .setMessage("{% trans 'Error submitting application' %}")
+            .setType("danger")
+            .show();
+        }
+      }
+
+      document
+        .getElementById("applyDocType")
+        ?.addEventListener("change", (e) => {
+          const backGroup = document.getElementById("docBackGroup");
+          if (e.target.value === "passport") {
+            backGroup.classList.add("hidden");
+          } else {
+            backGroup.classList.remove("hidden");
+          }
+        });
+
+      function closeApplyModal() {
+        const modal = document.getElementById("applyMembershipModal");
+        const content = document.getElementById("applyModalContent");
+        if (!modal || !content) return;
+        content.classList.replace("scale-100", "scale-95");
+        content.classList.replace("opacity-100", "opacity-0");
+        setTimeout(() => {
+          modal.classList.replace("flex", "hidden");
+          document.body.style.overflow = "";
+        }, 300);
+      }
+
+      document
+        .getElementById("closeApplyModalBtn")
+        ?.addEventListener("click", closeApplyModal);
+      document
+        .getElementById("cancelApplyBtn")
+        ?.addEventListener("click", closeApplyModal);
 
       // Modal close events
       document
