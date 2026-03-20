@@ -119,3 +119,9 @@ class LogSystemStatus(models.TextChoices):
     SUCCESS = "SUCCESS", _("Success")
     FAILED = "FAILED", _("Failed")
     WARNING = "WARNING", _("Warning")
+
+class CommunityFeatureType(models.TextChoices):
+    NJANGI = "njangi", _("Njangi")
+    SAVINGS = "savings", _("Savings")
+    LOANS = "loans", _("Loans")
+    FINES = "fines", _("Fines")

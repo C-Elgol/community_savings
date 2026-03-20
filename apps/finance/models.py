@@ -1,6 +1,8 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
+from apps.global_data.enum import CommunityFeatureType
 
 from apps.users.models import SavingsBaseModel
 from apps.global_data.enum import (
@@ -89,6 +91,10 @@ class Contribution(SavingsBaseModel):
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.cycle.title}"
 
+    def clean(self):
+        if not self.membership.has_feature(CommunityFeatureType.NJANGI):
+            raise ValidationError("This member is not part of the Njangi system.")
+
 class MemberFinanceSnapshot(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="finance_snapshots")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="member_finance_snapshots")
@@ -113,6 +119,9 @@ class MemberFinanceSnapshot(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.season.season_date}"
+    def clean(self):
+        if not self.membership.has_feature(CommunityFeatureType.SAVINGS):
+            raise ValidationError("Member is not part of savings.")
 
 class NjangiBenefit(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_benefits")
@@ -128,6 +137,10 @@ class NjangiBenefit(SavingsBaseModel):
 
     def __str__(self):
         return f"Njangi Benefit - {self.membership.user.full_name}"
+    def clean(self):
+        if not self.membership.has_feature(CommunityFeatureType.NJANGI):
+            raise ValidationError("Member is not eligible for Njangi benefits.")
+
 class LoanProduct(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="loan_products")
     name = models.CharField(max_length=255)
@@ -174,6 +187,9 @@ class LoanApplication(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.amount_requested}"
+    def clean(self):
+        if not self.membership.has_feature(CommunityFeatureType.LOANS):
+            raise ValidationError("Member is not eligible for loans.")
 class LoanGuarantor(SavingsBaseModel):
     loan_application = models.ForeignKey(
         LoanApplication,
@@ -301,3 +317,29 @@ class FinePayment(SavingsBaseModel):
 
     def __str__(self):
         return f"Fine Payment - {self.fine_id}"
+
+class Wallet(SavingsBaseModel):
+    membership = models.OneToOneField(
+        "communities.Membership",
+        on_delete=models.CASCADE,
+        related_name="wallet"
+    )
+
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.membership.user.get_full_name} Wallet"
+
+class Transaction(SavingsBaseModel):
+    membership = models.ForeignKey("communities.Membership", on_delete=models.CASCADE)
+
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    transaction_type = models.CharField(max_length=50)  # deposit, withdrawal, loan, njangi
+
+    reference = models.CharField(max_length=100, blank=True)
+
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.membership.user.get_full_name} - {self.amount}"
