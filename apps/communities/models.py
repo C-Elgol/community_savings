@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
 
 from apps.users.models import SavingsBaseModel
 from apps.global_data.enum import (
@@ -13,6 +14,7 @@ from apps.global_data.enum import (
     ContributionFrequency,
     CommunitySpaceRole,
     CommunitySpaceStatus,
+    CommunityFeatureType,
 )
 
 
@@ -162,6 +164,76 @@ class Community(SavingsBaseModel):
     def __str__(self):
         return self.name
 
+
+class CommunityFeature(SavingsBaseModel):
+    """
+    Defines which financial features are enabled in a community.
+    Example: Njangi, Savings, Loans
+    """
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name="features"
+    )
+
+    feature_type = models.CharField(
+        max_length=30,
+        choices=CommunityFeatureType.choices
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = [("community", "feature_type")]
+        indexes = [
+            models.Index(fields=["community", "feature_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.community.name} - {self.feature_type} ({'ON' if self.is_active else 'OFF'})"
+
+
+class MemberFeatureParticipation(SavingsBaseModel):
+    """
+    Defines which member participates in which feature.
+    """
+    membership = models.ForeignKey(
+        "Membership",
+        on_delete=models.CASCADE,
+        related_name="feature_participations"
+    )
+
+    feature = models.ForeignKey(
+        CommunityFeature,
+        on_delete=models.CASCADE,
+        related_name="participants"
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    # 🔥 Flexible config per feature (VERY IMPORTANT)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    joined_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("membership", "feature")]
+        indexes = [
+            models.Index(fields=["membership", "feature"]),
+            models.Index(fields=["feature", "is_active"]),
+        ]
+
+    def clean(self):
+        # 🚨 Feature must be enabled
+        if not self.feature.is_active:
+            raise ValidationError(f"{self.feature.feature_type} is not enabled in this community.")
+
+        # 🚨 Must belong to same community
+        if self.membership.community_id != self.feature.community_id:
+            raise ValidationError("Membership and Feature must belong to same community.")
+
+    def __str__(self):
+        return f"{self.membership.user.get_full_name} - {self.feature.feature_type}"
 
 class CommunityPolicy(SavingsBaseModel):
     community = models.OneToOneField(
@@ -337,3 +409,49 @@ class Membership(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.user.full_name} - {self.community.name}"
+
+
+    def has_feature(self, feature_type: str) -> bool:
+        return self.feature_participations.filter(
+            feature__feature_type=feature_type,
+            is_active=True,
+            feature__is_active=True
+        ).exists()
+
+
+    def get_features(self):
+        return self.feature_participations.filter(
+            is_active=True,
+            feature__is_active=True
+        ).select_related("feature")
+
+
+    def add_to_feature(self, feature_type: str, metadata=None):
+        metadata = metadata or {}
+
+        feature = self.community.features.filter(
+            feature_type=feature_type,
+            is_active=True
+        ).first()
+
+        if not feature:
+            raise ValueError(f"{feature_type} is not enabled in this community.")
+
+        obj, created = MemberFeatureParticipation.objects.get_or_create(
+            membership=self,
+            feature=feature,
+            defaults={"metadata": metadata}
+        )
+
+        if not created:
+            obj.is_active = True
+            obj.metadata = metadata
+            obj.save()
+
+        return obj
+
+
+    def remove_from_feature(self, feature_type: str):
+        self.feature_participations.filter(
+            feature__feature_type=feature_type
+        ).update(is_active=False)
