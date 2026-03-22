@@ -26,6 +26,19 @@
       </div>
     </div>
   </div>
+  
+  <!-- Tabs Section -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-100/50 rounded-2xl w-fit border border-slate-200/60 mb-2">
+    <button id="tabAll" class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm bg-white text-emerald-600 ring-1 ring-slate-200">
+      {% trans "All Applications" %}
+    </button>
+    <button id="tabNjangi" class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-200/50">
+      {% trans "Njangi Applicants" %}
+    </button>
+    <button id="tabSavings" class="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-200/50">
+      {% trans "Saving Applicants" %}
+    </button>
+  </div>
 
   <!-- Table Section -->
   <div
@@ -244,6 +257,7 @@
 
     let appsData = [];
     let currentAppId = null;
+    let activeTab = 'all';
 
     const ui = {
       tableLoader: document.getElementById("tableLoader"),
@@ -259,6 +273,11 @@
       approveLabel: document.getElementById("approveLabel"),
       confirmRejectBtn: document.getElementById("confirmRejectBtn"),
       modalContent: document.getElementById("reviewModalContent"),
+      tabs: {
+        all: document.getElementById('tabAll'),
+        njangi: document.getElementById('tabNjangi'),
+        savings: document.getElementById('tabSavings')
+      }
     };
 
     /* --- API Calls --- */
@@ -278,15 +297,34 @@
       }
     }
 
-    function renderTable(apps) {
-      if (apps.length === 0) {
+    function renderTable() {
+      const query = ui.appSearch.value.toLowerCase();
+      
+      let filtered = appsData;
+      
+      // 1. Tab Filtering
+      if (activeTab === 'njangi') {
+          filtered = filtered.filter(a => a.features && a.features.includes('njangi'));
+      } else if (activeTab === 'savings') {
+          filtered = filtered.filter(a => a.features && a.features.includes('savings'));
+      }
+
+      // 2. Search Filtering
+      if (query) {
+          filtered = filtered.filter(a => 
+              a.full_name.toLowerCase().includes(query) || 
+              a.email.toLowerCase().includes(query)
+          );
+      }
+
+      if (filtered.length === 0) {
         ui.appListBody.innerHTML = "";
         ui.emptyState.classList.remove("hidden");
         return;
       }
 
       ui.emptyState.classList.add("hidden");
-      ui.appListBody.innerHTML = apps
+      ui.appListBody.innerHTML = filtered
         .map(
           (a) => `
                 <tr class="group hover:bg-slate-50/80 transition-all">
@@ -545,15 +583,25 @@
       window.toastManager?.buildToast().setMessage(msg).setType(type).show();
     }
 
-    /* --- Search --- */
-    ui.appSearch.addEventListener("input", (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = appsData.filter(
-        (a) =>
-          a.full_name.toLowerCase().includes(query) ||
-          a.email.toLowerCase().includes(query),
-      );
-      renderTable(filtered);
+    /* --- Search & Tabs --- */
+    ui.appSearch.addEventListener("input", () => {
+      renderTable();
+    });
+
+    Object.keys(ui.tabs).forEach(tabKey => {
+        ui.tabs[tabKey].addEventListener('click', () => {
+            activeTab = tabKey;
+            
+            // UI Update
+            Object.values(ui.tabs).forEach(btn => {
+                btn.classList.remove('bg-white', 'text-emerald-600', 'ring-1', 'ring-slate-200', 'shadow-sm');
+                btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:bg-slate-200/50');
+            });
+            ui.tabs[tabKey].classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:bg-slate-200/50');
+            ui.tabs[tabKey].classList.add('bg-white', 'text-emerald-600', 'ring-1', 'ring-slate-200', 'shadow-sm');
+            
+            renderTable();
+        });
     });
 
     fetchApplications();

@@ -23,7 +23,7 @@ class ApplicationListAPI(View):
             community=community, 
             status=MembershipStatus.PENDING,
             is_deleted=False
-        ).select_related('user').order_by('-created')
+        ).select_related('user').prefetch_related('applied_features').order_by('-created')
         
         data = []
         for app in applications:
@@ -37,6 +37,7 @@ class ApplicationListAPI(View):
                 'registration_fee_required': app.registration_fee_required,
                 'registration_fee_amount': str(app.registration_fee_amount),
                 'created_at': app.created.strftime('%Y-%m-%d %H:%M'),
+                'features': list(app.applied_features.values_list('feature_type', flat=True))
             })
             
         return JsonResponse({'success': True, 'applications': data})
@@ -90,7 +91,7 @@ class ApplicationProcessAPI(View):
 
                 # Create Membership
                 # We need to decide on a member_code and position or leave blank
-                Membership.objects.create(
+                membership = Membership.objects.create(
                     community=app.community,
                     user=app.user,
                     role=app.applied_role,
@@ -98,6 +99,11 @@ class ApplicationProcessAPI(View):
                     joined_at=timezone.now().date(),
                     application=app
                 )
+
+                # Auto-enroll in requested features
+                features_to_add = app.applied_features.filter(is_active=True)
+                for f in features_to_add:
+                    membership.add_to_feature(f.feature_type)
                 
                 # Trigger Celery task for review result email after transaction commit
                 transaction.on_commit(lambda: send_application_review_result_email_task.delay(str(app.id)))

@@ -346,6 +346,13 @@ class MembershipApplication(SavingsBaseModel):
     registration_fee_required = models.BooleanField(default=False)
     registration_fee_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     registration_fee_paid = models.BooleanField(default=False)
+    
+    # Track features requested in this application
+    applied_features = models.ManyToManyField(
+        "CommunityFeature",
+        blank=True,
+        related_name="membership_applications"
+    )
 
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
