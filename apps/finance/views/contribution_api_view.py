@@ -51,7 +51,12 @@ class CycleAPI(View):
 class ContributionAPI(View):
     def get(self, request, cycle_id):
         cycle = get_object_or_404(ContributionCycle, id=cycle_id)
-        memberships = Membership.objects.filter(community=cycle.community, status='active')
+        memberships = Membership.objects.filter(
+            community=cycle.community, 
+            status='active',
+            feature_participations__feature__feature_type='njangi',
+            feature_participations__is_active=True
+        ).distinct()
         
         contributions = Contribution.objects.filter(cycle=cycle)
         contrib_map = {str(c.membership_id): c for c in contributions}

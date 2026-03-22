@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class MemberListAPI(View):
     def get(self, request, community_id):
         community = get_object_or_404(Community, id=community_id)
-        memberships = Membership.objects.filter(community=community, is_deleted=False).select_related('user').order_by('-created')
+        memberships = Membership.objects.filter(community=community, is_deleted=False).select_related('user').prefetch_related('feature_participations__feature').order_by('-created')
         
         data = []
         for m in memberships:
@@ -31,6 +31,7 @@ class MemberListAPI(View):
                 'status': m.status,
                 'status_display': dict(MembershipStatus.choices).get(m.status, m.status),
                 'joined_at': m.joined_at.strftime('%Y-%m-%d') if m.joined_at else '',
+                'features': list(m.feature_participations.filter(is_active=True).values_list('feature__feature_type', flat=True))
             })
             
         return JsonResponse({'success': True, 'members': data})

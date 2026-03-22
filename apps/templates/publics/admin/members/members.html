@@ -35,6 +35,28 @@
     </div>
   </div>
 
+  <!-- Tabs Section -->
+  <div class="flex items-center gap-2 p-1.5 bg-slate-100/50 rounded-[2rem] w-fit border border-slate-100">
+    <button 
+      data-tab="all"
+      class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all bg-white text-emerald-600 shadow-sm"
+    >
+      {% trans "All Members" %}
+    </button>
+    <button 
+      data-tab="njangi"
+      class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+    >
+      {% trans "Njangi Members" %}
+    </button>
+    <button 
+      data-tab="savings"
+      class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+    >
+      {% trans "Saving Members" %}
+    </button>
+  </div>
+
   <!-- Table Section -->
   <div
     class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden relative min-h-[400px]"
@@ -323,6 +345,7 @@
     let membersData = [];
     let editMode = false;
     let currentDeleteId = null;
+    let activeTab = "all";
 
     const ui = {
       tableLoader: document.getElementById("tableLoader"),
@@ -338,6 +361,7 @@
       deleteModal: document.getElementById("deleteModal"),
       deleteMemberName: document.getElementById("deleteMemberName"),
       confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
+      tabs: document.querySelectorAll(".member-tab"),
     };
 
     /* --- API Calls --- */
@@ -358,14 +382,33 @@
     }
 
     function renderTable(members) {
-      if (members.length === 0) {
+      // 1. Filter by Tab
+      let filtered = members;
+      if (activeTab !== "all") {
+        filtered = members.filter(
+          (m) => m.features && m.features.includes(activeTab),
+        );
+      }
+
+      // 2. Filter by Search
+      const query = ui.memberSearch.value.toLowerCase();
+      if (query) {
+        filtered = filtered.filter(
+          (m) =>
+            m.full_name.toLowerCase().includes(query) ||
+            m.email.toLowerCase().includes(query) ||
+            (m.member_code && m.member_code.toLowerCase().includes(query)),
+        );
+      }
+
+      if (filtered.length === 0) {
         ui.memberListBody.innerHTML = "";
         ui.emptyState.classList.remove("hidden");
         return;
       }
 
       ui.emptyState.classList.add("hidden");
-      ui.memberListBody.innerHTML = members
+      ui.memberListBody.innerHTML = filtered
         .map(
           (m) => `
                 <tr class="group hover:bg-slate-50/80 transition-all">
@@ -524,14 +567,26 @@
 
     /* --- Search --- */
     ui.memberSearch.addEventListener("input", (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = membersData.filter(
-        (m) =>
-          m.full_name.toLowerCase().includes(query) ||
-          m.email.toLowerCase().includes(query) ||
-          (m.member_code && m.member_code.toLowerCase().includes(query)),
-      );
-      renderTable(filtered);
+      renderTable(membersData);
+    });
+
+    /* --- Tabs --- */
+    ui.tabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        // Update state
+        activeTab = btn.dataset.tab;
+
+        // Update UI classes
+        ui.tabs.forEach((b) => {
+          b.classList.remove("bg-white", "text-emerald-600", "shadow-sm");
+          b.classList.add("text-slate-500", "hover:text-slate-700");
+        });
+        btn.classList.add("bg-white", "text-emerald-600", "shadow-sm");
+        btn.classList.remove("text-slate-500", "hover:text-slate-700");
+
+        // Re-render
+        renderTable(membersData);
+      });
     });
 
     /* --- Initialization --- */
