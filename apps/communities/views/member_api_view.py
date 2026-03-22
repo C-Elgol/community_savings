@@ -203,3 +203,28 @@ class AddMemberToFeatureAPI(View):
         except Exception as e:
             logger.error(f"Error adding members to feature: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+class RemoveMemberFromFeatureAPI(View):
+    @transaction.atomic
+    def post(self, request, community_id, feature_type):
+        community = get_object_or_404(Community, id=community_id)
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+                
+            member_id = data.get('member_id')
+            if not member_id:
+                return JsonResponse({'success': False, 'message': _("Member ID is required.")}, status=400)
+                
+            membership = get_object_or_404(Membership, id=member_id, community=community)
+            membership.remove_from_feature(feature_type)
+            
+            return JsonResponse({
+                'success': True, 
+                'message': _(f"Member successfully removed from {feature_type}.")
+            })
+        except Exception as e:
+            logger.error(f"Error removing member from feature: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)

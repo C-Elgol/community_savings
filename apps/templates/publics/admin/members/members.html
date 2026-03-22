@@ -314,13 +314,12 @@
     >
       <i class="fas fa-user-minus"></i>
     </div>
-    <h3 class="text-2xl font-black text-slate-800 mb-2">
+    <h3 class="text-2xl font-black text-slate-800 mb-2" id="deleteModalTitle">
       {% trans "Remove Member?" %}
     </h3>
-    <p class="text-slate-500 text-sm mb-8">
-      {% trans "Are you sure you want to remove" %}
-      <strong id="deleteMemberName"></strong>? {% trans "This action cannot be
-      undone." %}
+    <p class="text-[10px] font-black uppercase text-rose-600 mb-4 tracking-widest" id="deleteMemberName"></p>
+    <p class="text-slate-500 text-sm mb-8" id="deleteModalDesc">
+      {% trans "Are you sure you want to remove this member?" %}
     </p>
     <div class="flex gap-3">
       <button
@@ -388,11 +387,13 @@
         ),
       eligible: (feature) => `{% url 'communities:eligible_feature_members_api' community_id=community.id feature_type='njangi' %}`.replace('njangi', feature),
       enroll: (feature) => `{% url 'communities:add_members_to_feature_api' community_id=community.id feature_type='njangi' %}`.replace('njangi', feature),
+      removeFromFeature: (feature) => `{% url 'communities:remove_member_from_feature_api' community.id 'FEATURE' %}`.replace('FEATURE', feature),
     };
 
     let membersData = [];
     let editMode = false;
     let currentDeleteId = null;
+    let currentDeleteFeature = null;
     let activeTab = "all";
     
     let currentFeature = null;
@@ -412,6 +413,8 @@
       submitIcon: document.getElementById("submitIcon"),
       deleteModal: document.getElementById("deleteModal"),
       deleteMemberName: document.getElementById("deleteMemberName"),
+      deleteModalTitle: document.getElementById("deleteModalTitle"),
+      deleteModalDesc: document.getElementById("deleteModalDesc"),
       confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
       tabs: document.querySelectorAll(".member-tab"),
       addNjangiBtn: document.getElementById("addNjangiBtn"),
@@ -500,7 +503,7 @@
                             <button onclick="openEditModal('${m.id}')" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all" title="Edit">
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
-                            <button onclick="openDeleteModal('${m.id}', '${m.full_name}')" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all" title="Remove">
+                            <button onclick="openDeleteModal('${m.id}', '${m.full_name}', '${activeTab}')" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all" title="Remove">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </div>
@@ -542,10 +545,23 @@
 
     async function deleteMember() {
       if (!currentDeleteId) return;
+      
+      const url = currentDeleteFeature && currentDeleteFeature !== 'all' 
+          ? ENDPOINTS.removeFromFeature(currentDeleteFeature)
+          : ENDPOINTS.delete(currentDeleteId);
+      
+      const body = currentDeleteFeature && currentDeleteFeature !== 'all'
+          ? JSON.stringify({ member_id: currentDeleteId })
+          : null;
+
       try {
-        const res = await fetch(ENDPOINTS.delete(currentDeleteId), {
+        const res = await fetch(url, {
           method: "POST",
-          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+          headers: { 
+              "X-CSRFToken": "{{ csrf_token }}",
+              "Content-Type": "application/json"
+          },
+          body: body
         });
         const data = await res.json();
         if (data.success) {
@@ -554,7 +570,7 @@
           fetchMembers();
         }
       } catch (err) {
-        toast("danger", "Delete failed");
+        toast("danger", "Removal failed");
       }
     }
 
@@ -597,15 +613,26 @@
       editMode = false;
     };
 
-    window.openDeleteModal = (id, name) => {
+    window.openDeleteModal = (id, name, feature = 'all') => {
       currentDeleteId = id;
+      currentDeleteFeature = feature;
       ui.deleteMemberName.textContent = name;
+      
+      if (feature && feature !== 'all') {
+          ui.deleteModalTitle.textContent = "{% trans 'Remove from Feature' %}";
+          ui.deleteModalDesc.textContent = "{% trans 'Are you sure you want to remove this member from the selected feature?' %}";
+      } else {
+          ui.deleteModalTitle.textContent = "{% trans 'Remove from Community' %}";
+          ui.deleteModalDesc.textContent = "{% trans 'Are you sure you want to remove this member from the community? This action is permanent.' %}";
+      }
+      
       ui.deleteModal.classList.replace("hidden", "flex");
     };
 
     window.closeDeleteModal = () => {
       ui.deleteModal.classList.replace("flex", "hidden");
       currentDeleteId = null;
+      currentDeleteFeature = null;
     };
 
     function setLoading(isLoading) {

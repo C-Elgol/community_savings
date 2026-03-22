@@ -25,6 +25,7 @@ from apps.communities.views.member_api_view import (
     MemberDeleteAPI,
     EligibleFeatureMemberAPI,
     AddMemberToFeatureAPI,
+    RemoveMemberFromFeatureAPI,
 )
 from apps.communities.views.application_api_view import (
     ApplicationListAPI,
@@ -63,6 +64,7 @@ urlpatterns = [
     # Feature Membership API
     path("api/communities/<uuid:community_id>/features/<str:feature_type>/eligible-members/", EligibleFeatureMemberAPI.as_view(), name="eligible_feature_members_api"),
     path("api/communities/<uuid:community_id>/features/<str:feature_type>/add-members/", AddMemberToFeatureAPI.as_view(), name="add_members_to_feature_api"),
+    path("api/communities/<uuid:community_id>/features/<str:feature_type>/remove-member/", RemoveMemberFromFeatureAPI.as_view(), name="remove_member_from_feature_api"),
 
     # Application API
     path("api/communities/<uuid:community_id>/applications/", ApplicationListAPI.as_view(), name="application_list_api"),
