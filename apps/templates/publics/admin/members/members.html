@@ -43,18 +43,38 @@
     >
       {% trans "All Members" %}
     </button>
-    <button 
-      data-tab="njangi"
-      class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
-    >
-      {% trans "Njangi Members" %}
-    </button>
-    <button 
-      data-tab="savings"
-      class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
-    >
-      {% trans "Saving Members" %}
-    </button>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="njangi"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Njangi Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('njangi')" 
+          id="addNjangiBtn"
+          class="hidden w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200"
+          title="{% trans 'Add to Njangi' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="savings"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Saving Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('savings')" 
+          id="addSavingsBtn"
+          class="hidden w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xs hover:bg-orange-600 transition-all shadow-lg shadow-orange-200"
+          title="{% trans 'Add to Savings' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
   </div>
 
   <!-- Table Section -->
@@ -318,7 +338,33 @@
     </div>
   </div>
 </div>
-{% endblock %} {% block extra_js %}
+
+<!-- Add to Feature Modal -->
+<div id="featureEnrollModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 animate-in fade-in zoom-in duration-300">
+        <h3 class="text-2xl font-black text-slate-800 mb-2" id="featureModalTitle">{% trans "Add to Feature" %}</h3>
+        <p class="text-slate-500 text-sm mb-6" id="featureModalDesc">{% trans "Select community members to enroll." %}</p>
+
+        <div class="relative mb-4">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="memberFilter" placeholder="{% trans 'Find member...' %}" class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm">
+        </div>
+
+        <div class="max-h-64 overflow-y-auto mb-8 custom-scrollbar pr-2" id="eligibleMemberList">
+            <!-- Loaded via JS -->
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="closeFeatureModal()" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition">{% trans "Cancel" %}</button>
+            <button onclick="enrollSelectedMembers()" id="enrollBtn" class="flex-1 py-4 gradient-bg text-white rounded-xl font-bold text-sm hover:opacity-95 transition shadow-lg shadow-emerald-200">
+                <span id="enrollLabel">{% trans "Enroll Selected" %}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+ {% block extra_js %}
 <script>
   (function () {
     const COMMUNITY_ID = "{{ community.id }}";
@@ -340,12 +386,18 @@
           "00000000-0000-0000-0000-000000000000",
           id,
         ),
+      eligible: (feature) => `{% url 'communities:eligible_feature_members_api' community_id=community.id feature_type='njangi' %}`.replace('njangi', feature),
+      enroll: (feature) => `{% url 'communities:add_members_to_feature_api' community_id=community.id feature_type='njangi' %}`.replace('njangi', feature),
     };
 
     let membersData = [];
     let editMode = false;
     let currentDeleteId = null;
     let activeTab = "all";
+    
+    let currentFeature = null;
+    let selectedMembers = new Set();
+    let eligibleMembers = [];
 
     const ui = {
       tableLoader: document.getElementById("tableLoader"),
@@ -362,6 +414,14 @@
       deleteMemberName: document.getElementById("deleteMemberName"),
       confirmDeleteBtn: document.getElementById("confirmDeleteBtn"),
       tabs: document.querySelectorAll(".member-tab"),
+      addNjangiBtn: document.getElementById("addNjangiBtn"),
+      addSavingsBtn: document.getElementById("addSavingsBtn"),
+      featureEnrollModal: document.getElementById("featureEnrollModal"),
+      eligibleMemberList: document.getElementById("eligibleMemberList"),
+      enrollBtn: document.getElementById("enrollBtn"),
+      enrollLabel: document.getElementById("enrollLabel"),
+      featureModalTitle: document.getElementById("featureModalTitle"),
+      memberFilter: document.getElementById("memberFilter"),
     };
 
     /* --- API Calls --- */
@@ -565,6 +625,99 @@
       window.toastManager?.buildToast().setMessage(msg).setType(type).show();
     }
 
+    /* --- Feature Enrollment --- */
+    window.openAddFeatureMemberModal = async (feature) => {
+        currentFeature = feature;
+        selectedMembers.clear();
+        ui.featureModalTitle.textContent = feature === 'njangi' ? "{% trans 'Add to Njangi' %}" : "{% trans 'Add to Savings' %}";
+        ui.featureEnrollModal.classList.replace('hidden', 'flex');
+        
+        ui.eligibleMemberList.innerHTML = '<div class="py-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>';
+        
+        try {
+            const res = await fetch(ENDPOINTS.eligible(feature));
+            const data = await res.json();
+            if (data.success) {
+                eligibleMembers = data.members;
+                renderEligibleMembers();
+            }
+        } catch (err) {
+            toast('danger', 'Failed to load eligible members');
+        }
+    };
+
+    function renderEligibleMembers() {
+        const query = ui.memberFilter.value.toLowerCase();
+        const filtered = eligibleMembers.filter(m => 
+            m.full_name.toLowerCase().includes(query) || 
+            m.email.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            ui.eligibleMemberList.innerHTML = '<div class="py-8 text-center text-slate-400 font-bold text-sm">No eligible members found.</div>';
+            return;
+        }
+
+        ui.eligibleMemberList.innerHTML = filtered.map(m => `
+            <label class="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-all">
+                <input type="checkbox" value="${m.id}" onchange="toggleMemberSelection('${m.id}')" ${selectedMembers.has(m.id) ? 'checked' : ''} class="w-5 h-5 rounded-lg border-2 border-slate-200 text-emerald-500 focus:ring-emerald-500">
+                <div class="flex-1">
+                    <p class="text-sm font-black text-slate-800">${m.full_name}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">${m.email}</p>
+                </div>
+            </label>
+        `).join('');
+    }
+
+    window.toggleMemberSelection = (id) => {
+        if (selectedMembers.has(id)) selectedMembers.delete(id);
+        else selectedMembers.add(id);
+    };
+
+    window.enrollSelectedMembers = async () => {
+        if (selectedMembers.size === 0) {
+            toast('warning', 'Please select at least one member');
+            return;
+        }
+
+        const ids = Array.from(selectedMembers);
+        ui.enrollBtn.disabled = true;
+        ui.enrollLabel.textContent = 'Processing...';
+
+        try {
+            const res = await fetch(ENDPOINTS.enroll(currentFeature), {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify({ member_ids: ids })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                closeFeatureModal();
+                fetchMembers();
+            } else {
+                toast('warning', data.message);
+            }
+        } catch (err) {
+            toast('danger', 'Enrollment failed');
+        } finally {
+            ui.enrollBtn.disabled = false;
+            ui.enrollLabel.textContent = 'Enroll Selected';
+        }
+    };
+
+    window.closeFeatureModal = () => {
+        ui.featureEnrollModal.classList.replace('flex', 'hidden');
+        currentFeature = null;
+        selectedMembers.clear();
+        ui.memberFilter.value = '';
+    };
+
+    ui.memberFilter.addEventListener('input', renderEligibleMembers);
+
     /* --- Search --- */
     ui.memberSearch.addEventListener("input", (e) => {
       renderTable(membersData);
@@ -575,6 +728,10 @@
       btn.addEventListener("click", () => {
         // Update state
         activeTab = btn.dataset.tab;
+
+        // Update UI buttons
+        ui.addNjangiBtn.classList.toggle('hidden', activeTab !== 'njangi');
+        ui.addSavingsBtn.classList.toggle('hidden', activeTab !== 'savings');
 
         // Update UI classes
         ui.tabs.forEach((b) => {

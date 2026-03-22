@@ -152,3 +152,54 @@ class MemberDeleteAPI(View):
         m = get_object_or_404(Membership, id=member_id)
         m.soft_delete()
         return JsonResponse({'success': True, 'message': _("Member removed successfully.")})
+
+class EligibleFeatureMemberAPI(View):
+    def get(self, request, community_id, feature_type):
+        community = get_object_or_404(Community, id=community_id)
+        # Members of this community who are NOT in the feature_type
+        # or whose participation is not active
+        members = Membership.objects.filter(
+            community=community, 
+            is_deleted=False
+        ).exclude(
+            feature_participations__feature__feature_type=feature_type,
+            feature_participations__is_active=True
+        ).select_related('user')
+        
+        data = [{
+            'id': str(m.id),
+            'full_name': m.user.get_full_name or m.user.fullname or _("No Name"),
+            'email': m.user.email,
+        } for m in members]
+        
+        return JsonResponse({'success': True, 'members': data})
+
+class AddMemberToFeatureAPI(View):
+    @transaction.atomic
+    def post(self, request, community_id, feature_type):
+        community = get_object_or_404(Community, id=community_id)
+        try:
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+                
+            member_ids = data.get('member_ids', [])
+            
+            if not member_ids:
+                return JsonResponse({'success': False, 'message': _("No members selected.")}, status=400)
+                
+            memberships = Membership.objects.filter(id__in=member_ids, community=community)
+            
+            added_count = 0
+            for m in memberships:
+                m.add_to_feature(feature_type)
+                added_count += 1
+                
+            return JsonResponse({
+                'success': True, 
+                'message': _(f"Successfully added {added_count} members to {feature_type}.")
+            })
+        except Exception as e:
+            logger.error(f"Error adding members to feature: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
