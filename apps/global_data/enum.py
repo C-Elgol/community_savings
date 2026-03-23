@@ -81,7 +81,6 @@ class LoanStatus(models.TextChoices):
 
 
 class FineType(models.TextChoices):
-    REGISTRATION = "registration", _("Registration")
     LATE_CONTRIBUTION = "late_contribution", _("Late Contribution")
     ABSENCE = "absence", _("Absence")
     LATE_REPAYMENT = "late_repayment", _("Late Repayment")
@@ -124,4 +123,3 @@ class CommunityFeatureType(models.TextChoices):
     NJANGI = "njangi", _("Njangi")
     SAVINGS = "savings", _("Savings")
     LOANS = "loans", _("Loans")
-    FINES = "fines", _("Fines")
