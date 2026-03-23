@@ -208,3 +208,37 @@ class PayFineAPI(View):
         except Exception as e:
             logger.error(f"Error paying fine: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+class MemberFineListAPI(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+            
+        fines = Fine.objects.filter(membership__user=request.user).select_related('membership__community')
+        
+        fines_list = []
+        for f in fines.order_by('-issued_date'):
+            paid_for_this = f.payments.aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+            remaining = f.amount - paid_for_this
+            
+            fines_list.append({
+                'id': f.id,
+                'community_name': f.membership.community.name,
+                'fine_type_display': f.get_fine_type_display(),
+                'amount': float(f.amount),
+                'remaining': float(remaining),
+                'issued_date': f.issued_date.isoformat(),
+                'status': f.status,
+                'status_display': f.get_status_display(),
+                'reason': f.reason,
+            })
+            
+        total_remaining = sum(f['remaining'] for f in fines_list)
+        
+        return JsonResponse({
+            'success': True,
+            'fines': fines_list,
+            'stats': {
+                'unpaid_total': float(total_remaining)
+            }
+        })

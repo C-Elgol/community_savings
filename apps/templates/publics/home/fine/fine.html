@@ -1,13 +1,146 @@
-{% extends 'publics/home/base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends 'publics/home/base.html' %} 
+{% load static %} 
+{% load i18n %} 
 
 {% block content %}
- <!-- ========== FINES PAGE ========== -->
-        <div id="fines" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Fines</h2><span class="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-sm">Unpaid: XAF 2,000</span></div>
-                <div class="space-y-3"><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Late contribution (Feb)</p><p class="text-sm text-slate-500">Issued: 25 Feb 2026</p></div><div class="text-right"><p class="font-bold text-rose-700">XAF 2,000</p><span class="text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">Unpaid</span></div></div><div class="flex items-center justify-between p-4 border rounded-lg"><div><p class="font-medium">Absence fee (Jan meeting)</p><p class="text-sm text-slate-500">Issued: 10 Jan 2026 · paid</p></div><div class="text-right"><p class="font-bold text-slate-500 line-through">XAF 1,000</p><span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Paid</span></div></div></div>
+<div id="fines" class="page max-w-4xl mx-auto space-y-8">
+    <!-- Header with Stats -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-black text-slate-800">{% trans "Your Fines" %}</h1>
+            <p class="text-slate-500 font-medium">{% trans "Track and manage your community penalties" %}</p>
+        </div>
+        
+        <div class="px-8 py-4 bg-rose-50 rounded-[2rem] border border-rose-100 flex items-center gap-4 shadow-sm shadow-rose-100/50">
+            <div class="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-rose-400">{% trans "Total Unpaid" %}</p>
+                <p id="unpaidSummary" class="text-xl font-black text-rose-700">XAF 0</p>
             </div>
         </div>
+    </div>
+
+    <!-- Fines List -->
+    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 min-h-[400px]" id="finesContainer">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-list-ul text-emerald-500"></i>
+                {% trans "Fine History" %}
+            </h2>
+            <div id="loadingIndicator" class="hidden">
+                <i class="fas fa-spinner fa-spin text-emerald-500"></i>
+            </div>
+        </div>
+
+        <div id="finesList" class="space-y-4">
+            <!-- Fines list populated via JS -->
+            <div class="py-20 text-center text-slate-300">
+                <i class="fas fa-receipt text-4xl mb-4"></i>
+                <p class="font-bold">{% trans "Loading your records..." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fine-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .fine-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    .page {
+        display: none;
+    }
+    .active-page {
+        display: block !important;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        "use strict";
+
+        const API_URL = "{% url 'finance:member_fine_api' %}";
+        const el = {
+            list: document.getElementById('finesList'),
+            unpaidSummary: document.getElementById('unpaidSummary'),
+            loading: document.getElementById('loadingIndicator')
+        };
+
+        async function fetchFines() {
+            el.loading.classList.remove('hidden');
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if (data.success) {
+                    renderFines(data.fines);
+                    el.unpaidSummary.textContent = `XAF ${data.stats.unpaid_total.toLocaleString()}`;
+                } else {
+                    el.list.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold">${data.message}</div>`;
+                }
+            } catch (err) {
+                el.list.innerHTML = `<div class="p-8 text-center text-rose-500 font-bold">{% trans "Failed to load fines" %}</div>`;
+            } finally {
+                el.loading.classList.add('hidden');
+            }
+        }
+
+        function renderFines(fines) {
+            if (fines.length === 0) {
+                el.list.innerHTML = `
+                    <div class="py-20 text-center text-slate-400">
+                        <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-check-double text-3xl text-emerald-500"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">{% trans "You're all clear!" %}</h3>
+                        <p>{% trans "You have no recorded fines in this community." %}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            el.list.innerHTML = fines.map(f => {
+                const isPaid = f.status === 'paid';
+                const isPartial = f.status === 'partial';
+                const statusClass = isPaid ? 'bg-emerald-100 text-emerald-700' : 
+                                   isPartial ? 'bg-amber-100 text-amber-700' : 
+                                   'bg-rose-100 text-rose-700';
+                
+                return `
+                    <div class="fine-card p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        <div class="flex gap-4">
+                            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-xl text-slate-400 border border-slate-100 group-hover:text-emerald-500 transition-all">
+                                <i class="fas ${f.fine_type === 'late_contribution' ? 'fa-clock' : 'fa-user-times'}"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-black uppercase tracking-widest text-emerald-600">${f.community_name}</p>
+                                <h4 class="font-black text-slate-800 leading-tight">${f.fine_type_display}</h4>
+                                <p class="text-xs text-slate-400 font-bold">${f.reason}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center sm:items-end flex-row sm:flex-col justify-between sm:justify-center gap-2 border-t sm:border-t-0 border-slate-200 pt-4 sm:pt-0">
+                            <div class="text-left sm:text-right">
+                                <p class="text-lg font-black ${isPaid ? 'text-slate-400 line-through' : 'text-slate-800'}">XAF ${f.amount.toLocaleString()}</p>
+                                ${isPartial ? `<p class="text-[10px] font-black text-amber-600 uppercase tracking-tighter">{% trans "Balance" %}: XAF ${f.remaining.toLocaleString()}</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${new Date(f.issued_date).toLocaleDateString()}</span>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${f.status_display}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        fetchFines();
+    })();
+</script>
 {% endblock %}
