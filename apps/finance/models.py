@@ -123,9 +123,22 @@ class MemberFinanceSnapshot(SavingsBaseModel):
         if not self.membership.has_feature(CommunityFeatureType.SAVINGS):
             raise ValidationError("Member is not part of savings.")
 
+class NjangiRotation(SavingsBaseModel):
+    membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_rotations")
+    season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="njangi_rotations")
+    position = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = [("season", "position"), ("season", "membership")]
+        ordering = ["position"]
+
+    def __str__(self):
+        return f"{self.membership.user.get_full_name} - Pos {self.position}"
+
 class NjangiBenefit(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_benefits")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="njangi_benefits")
+    cycle = models.OneToOneField(ContributionCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name="njangi_benefit")
     transaction_id = models.CharField(max_length=100, unique=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     benefited_date = models.DateField()
@@ -136,7 +149,7 @@ class NjangiBenefit(SavingsBaseModel):
         unique_together = [("membership", "season")]
 
     def __str__(self):
-        return f"Njangi Benefit - {self.membership.user.full_name}"
+        return f"Njangi Benefit - {self.membership.user.get_full_name}"
     def clean(self):
         if not self.membership.has_feature(CommunityFeatureType.NJANGI):
             raise ValidationError("Member is not eligible for Njangi benefits.")
