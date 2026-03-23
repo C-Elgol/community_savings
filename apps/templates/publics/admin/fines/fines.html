@@ -1,12 +1,318 @@
-{% extends 'publics/admin/base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends 'publics/admin/base.html' %} 
+{% load static %} 
+{% load i18n %} 
+
 {% block content %}
-<!-- ========== FINES PAGE ========== -->
-        <div id="fines" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">Fines</h2>
-                <div class="space-y-3"><div class="flex justify-between p-3 border-b"><span>John Doe · late contribution</span><span class="font-semibold text-rose-700">XAF 2,000</span><span class="bg-amber-100 text-amber-800 px-2 text-xs rounded-full">Unpaid</span></div><div class="flex justify-between p-3 border-b"><span>Martha N. · absence fee</span><span class="font-semibold text-emerald-700">XAF 1,000</span><span class="bg-green-100 text-green-800 px-2 text-xs rounded-full">Paid</span></div></div>
+<div id="finesPage" class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">{% trans "Fines Management" %}</h1>
+            <p class="text-xs text-slate-500">
+                {% trans "Tracking and collecting penalties for" %}: 
+                <span class="font-bold text-slate-700">{{ community.name }}</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                <input 
+                    type="text" 
+                    id="memberSearch" 
+                    placeholder="{% trans 'Search members...' %}"
+                    class="pl-12 pr-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none w-64 transition-all"
+                >
             </div>
         </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Total Fines" %}</p>
+            <h3 id="statTotal" class="text-2xl font-black text-slate-800">XAF 0</h3>
+        </div>
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">{% trans "Collected" %}</p>
+            <h3 id="statPaid" class="text-2xl font-black text-emerald-700">XAF 0</h3>
+        </div>
+        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">{% trans "Pending" %}</p>
+            <h3 id="statPending" class="text-2xl font-black text-rose-700">XAF 0</h3>
+        </div>
+    </div>
+
+    <!-- Tabs and Table Section -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <!-- Tabs -->
+        <div class="flex p-2 bg-slate-50/50 border-b border-slate-50">
+            <button onclick="filterFines('all')" class="fine-tab px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all active-tab" data-status="all">{% trans "All" %}</button>
+            <button onclick="filterFines('unpaid')" class="fine-tab px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-slate-600" data-status="unpaid">{% trans "Unpaid" %}</button>
+            <button onclick="filterFines('paid')" class="fine-tab px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-slate-600" data-status="paid">{% trans "Paid" %}</button>
+            <button onclick="filterFines('waived')" class="fine-tab px-6 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all text-slate-400 hover:text-slate-600" data-status="waived">{% trans "Waived" %}</button>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto" id="finesTableContainer">
+            <table class="w-full">
+                <thead class="bg-slate-50/30 text-[10px] uppercase font-black tracking-widest text-slate-400 text-left">
+                    <tr>
+                        <th class="px-8 py-5">{% trans "Member" %}</th>
+                        <th class="px-8 py-5">{% trans "Type" %}</th>
+                        <th class="px-8 py-5">{% trans "Amount" %}</th>
+                        <th class="px-8 py-5">{% trans "Date" %}</th>
+                        <th class="px-8 py-5">{% trans "Status" %}</th>
+                        <th class="px-8 py-5 text-center">{% trans "Action" %}</th>
+                    </tr>
+                </thead>
+                <tbody id="finesListBody" class="divide-y divide-slate-50">
+                    <!-- Fines populated via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========== MODALS ========== -->
+
+<!-- 1. Pay Fine Modal -->
+<div id="payFineModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all">
+        <div class="p-8">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800">{% trans "Pay Fine" %}</h3>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1" id="payFineMemberName">Member Name</p>
+                </div>
+                <button onclick="closePayModal()" class="w-10 h-10 rounded-full hover:bg-slate-50 text-slate-400 transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="payFineForm" class="space-y-6">
+                <input type="hidden" id="payFineId">
+                <div class="p-6 bg-emerald-50 rounded-3xl border border-emerald-100/50">
+                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">{% trans "Amount to Pay" %}</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-xs font-bold text-emerald-600">XAF</span>
+                        <input type="number" id="payAmount" step="0.01" required class="w-full bg-transparent border-none p-0 text-3xl font-black text-emerald-700 focus:ring-0 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Payment Reference (Optional)" %}</label>
+                    <input type="text" id="payReference" placeholder="e.g. Mobile Money Ref" class="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none font-medium">
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closePayModal()" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all">
+                        {% trans "Cancel" %}
+                    </button>
+                    <button type="submit" id="btnConfirmPay" class="flex-2 px-8 py-4 bg-emerald-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-700/20 active:scale-95 flex items-center justify-center gap-2">
+                        <i id="payBtnIcon" class="fas fa-check-circle"></i>
+                        <span id="payBtnLabel">{% trans "Confirm Payment" %}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .active-tab {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        color: #065f46 !important; /* emerald-800 */
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        "use strict";
+
+        const COMMUNITY_ID = "{{ community.id }}";
+        const ENDPOINTS = {
+            fines: `{% url 'finance:fine_list_api' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', COMMUNITY_ID),
+            pay: (id) => `/finance/api/fine/${id}/pay/`
+        };
+
+        const state = {
+            fines: [],
+            currentStatus: 'all',
+            searchQuery: ''
+        };
+
+        const el = {
+            listBody: document.getElementById('finesListBody'),
+            statTotal: document.getElementById('statTotal'),
+            statPaid: document.getElementById('statPaid'),
+            statPending: document.getElementById('statPending'),
+            search: document.getElementById('memberSearch'),
+            payModal: document.getElementById('payFineModal'),
+            payForm: document.getElementById('payFineForm')
+        };
+
+        const tableLoader = new SectionLoaderManager('finesTableContainer', 'fill-emerald-500', 0.5);
+
+        async function fetchFines() {
+            tableLoader.showLoader();
+            try {
+                const url = new URL(ENDPOINTS.fines, window.location.origin);
+                url.searchParams.append('status', state.currentStatus);
+                url.searchParams.append('search', state.searchQuery);
+
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.success) {
+                    state.fines = data.fines;
+                    renderStats(data.stats);
+                    renderFines();
+                }
+            } catch (err) {
+                toast('error', 'Failed to fetch fines');
+            } finally {
+                tableLoader.hideLoader();
+            }
+        }
+
+        function renderStats(stats) {
+            el.statTotal.textContent = `XAF ${stats.total.toLocaleString()}`;
+            el.statPaid.textContent = `XAF ${stats.paid.toLocaleString()}`;
+            el.statPending.textContent = `XAF ${stats.pending.toLocaleString()}`;
+        }
+
+        function renderFines() {
+            if (state.fines.length === 0) {
+                el.listBody.innerHTML = '<tr><td colspan="6" class="py-20 text-center text-slate-400">No fines found</td></tr>';
+                return;
+            }
+
+            el.listBody.innerHTML = state.fines.map(f => {
+                const statusClass = f.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                                   f.status === 'partial' ? 'bg-amber-100 text-amber-700' :
+                                   f.status === 'waived' ? 'bg-slate-100 text-slate-500' :
+                                   'bg-rose-100 text-rose-700';
+
+                return `
+                    <tr class="hover:bg-slate-50/50 transition-all group">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-xs font-black text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all">${f.member_name.charAt(0)}</div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">${f.member_name}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${f.reason}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2 py-1 bg-slate-100 rounded-lg group-hover:bg-white transition-all border border-transparent group-hover:border-slate-100">${f.fine_type_display}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-black text-slate-800">XAF ${f.amount.toLocaleString()}</p>
+                        </td>
+                        <td class="px-8 py-5 text-xs text-slate-400 font-bold">${new Date(f.issued_date).toLocaleDateString()}</td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${f.status_display}</span>
+                        </td>
+                        <td class="px-8 py-5 text-center">
+                            ${f.status !== 'paid' && f.status !== 'waived' ? `
+                                <button onclick='openPayModal(${JSON.stringify(f)})' class="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Pay Fine">
+                                    <i class="fas fa-receipt text-lg"></i>
+                                </button>
+                            ` : `
+                                <i class="fas fa-check-circle text-emerald-400 opacity-30"></i>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.filterFines = (status) => {
+            state.currentStatus = status;
+            document.querySelectorAll('.fine-tab').forEach(btn => {
+                if (btn.dataset.status === status) {
+                    btn.classList.add('active-tab');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('active-tab');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            fetchFines();
+        };
+
+        el.search.oninput = (e) => {
+            state.searchQuery = e.target.value;
+            // Debounce maybe?
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(fetchFines, 300);
+        };
+
+        window.openPayModal = (fine) => {
+            document.getElementById('payFineId').value = fine.id;
+            document.getElementById('payFineMemberName').textContent = fine.member_name;
+            document.getElementById('payAmount').value = fine.amount;
+            el.payModal.classList.remove('hidden');
+        };
+
+        window.closePayModal = () => {
+            el.payModal.classList.add('hidden');
+            el.payForm.reset();
+        };
+
+        el.payForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('payFineId').value;
+            const amount = document.getElementById('payAmount').value;
+            const ref = document.getElementById('payReference').value;
+
+            setLoading(true);
+            try {
+                const res = await fetch(ENDPOINTS.pay(id), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ amount, payment_reference: ref })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    toast('success', data.message);
+                    closePayModal();
+                    fetchFines();
+                } else {
+                    toast('error', data.message);
+                }
+            } catch (err) {
+                toast('error', 'Payment failed');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        function setLoading(loading) {
+            const btn = document.getElementById('btnConfirmPay');
+            const label = document.getElementById('payBtnLabel');
+            const icon = document.getElementById('payBtnIcon');
+            btn.disabled = loading;
+            if (loading) {
+                icon.className = 'fas fa-spinner fa-spin';
+                label.textContent = 'Processing...';
+            } else {
+                icon.className = 'fas fa-check-circle';
+                label.textContent = 'Confirm Payment';
+            }
+        }
+
+        function toast(type, msg) {
+            window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+        }
+
+        fetchFines();
+    })();
+</script>
 {% endblock %}

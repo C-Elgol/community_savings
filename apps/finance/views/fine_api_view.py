@@ -1,7 +1,8 @@
 import json
 import logging
 from decimal import Decimal
-from django.db import transaction
+from django.db import transaction, models
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -9,7 +10,7 @@ from django.views import View
 from django.utils.translation import gettext_lazy as _
 
 from apps.communities.models import Community, Membership
-from apps.finance.models import ContributionCycle, Contribution, Fine, FinancialSeason
+from apps.finance.models import ContributionCycle, Contribution, Fine, FinancialSeason, FinePayment
 from apps.global_data.enum import CommunityFeatureType, FineType, FineStatus, ContributionStatus
 
 logger = logging.getLogger(__name__)
@@ -124,4 +125,86 @@ class LaunchFinesAPI(View):
             })
         except Exception as e:
             logger.error(f"Error launching fines: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+class FineListAPI(View):
+    def get(self, request, community_id):
+        community = get_object_or_404(Community, id=community_id)
+        status_filter = request.GET.get('status')
+        search_query = request.GET.get('search', '').strip()
+        
+        fines = Fine.objects.filter(membership__community=community).select_related('membership__user')
+        
+        if status_filter and status_filter != 'all':
+            fines = fines.filter(status=status_filter)
+            
+        if search_query:
+            fines = fines.filter(membership__user__fullname__icontains=search_query) | \
+                    fines.filter(membership__user__first_name__icontains=search_query) | \
+                    fines.filter(membership__user__last_name__icontains=search_query)
+
+        # Stats
+        all_fines = Fine.objects.filter(membership__community=community)
+        total_amount = all_fines.aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+        paid_amount = FinePayment.objects.filter(fine__in=all_fines).aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+        pending_amount = total_amount - paid_amount
+
+        fines_list = [
+            {
+                'id': f.id,
+                'member_name': f.membership.user.get_full_name,
+                'fine_type': f.fine_type,
+                'fine_type_display': f.get_fine_type_display(),
+                'amount': float(f.amount),
+                'reason': f.reason,
+                'issued_date': f.issued_date.isoformat(),
+                'status': f.status,
+                'status_display': f.get_status_display(),
+            }
+            for f in fines.order_by('-issued_date')
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'fines': fines_list,
+            'stats': {
+                'total': float(total_amount),
+                'paid': float(paid_amount),
+                'pending': float(pending_amount),
+            }
+        })
+
+class PayFineAPI(View):
+    @transaction.atomic
+    def post(self, request, fine_id):
+        fine = get_object_or_404(Fine, id=fine_id)
+        try:
+            data = json.loads(request.body)
+            amount = Decimal(str(data.get('amount', fine.amount)))
+            payment_ref = data.get('payment_reference', '')
+            
+            
+            FinePayment.objects.create(
+                fine=fine,
+                amount=amount,
+                paid_at=timezone.now(),
+                payment_reference=payment_ref,
+                received_by=request.user if request.user.is_authenticated else None
+            )
+            
+            # Update fine status
+            total_paid = fine.payments.aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+            if total_paid >= fine.amount:
+                fine.status = FineStatus.PAID
+            elif total_paid > 0:
+                fine.status = FineStatus.PARTIAL
+            fine.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': _("Payment recorded successfully."),
+                'new_status': fine.status
+            })
+        except Exception as e:
+            logger.error(f"Error paying fine: {str(e)}")
             return JsonResponse({'success': False, 'message': str(e)}, status=500)

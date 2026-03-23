@@ -81,12 +81,11 @@
     </a>
     <!-- Fines -->
     <a
-      href="#"
+      href="{% url 'finance:admin_fines' community.id %}"
       data-page="fines"
-      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_fines' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
     >
-      <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i
-      ><span>Fines</span>
+      <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i><span>Fines</span>
     </a>
     <!-- Meetings -->
     <a
