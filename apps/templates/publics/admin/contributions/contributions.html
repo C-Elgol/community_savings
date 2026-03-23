@@ -724,6 +724,40 @@
   </div>
 </div>
 
+<!-- Confirm Delete Rotation Modal -->
+<div id="confirmDeleteRotationModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">
+        <i class="fas fa-trash-alt"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Remove Member?" %}</h3>
+      <p class="text-sm text-slate-500 mb-8">{% trans "Are you sure you want to remove this member from the rotation?" %}</p>
+      <div class="flex gap-3">
+        <button type="button" onclick="closeConfirmDeleteRotationModal()" class="flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
+        <button type="button" id="btnConfirmDeleteRotation" class="flex-1 py-3.5 bg-rose-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all">{% trans "Remove" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Benefit Modal -->
+<div id="confirmBenefitModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">
+        <i class="fas fa-hand-holding-usd"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Record Benefit?" %}</h3>
+      <p class="text-sm text-slate-500 mb-8">{% trans "Mark this member as having received the Njangi pot for this meeting?" %}</p>
+      <div class="flex gap-3">
+        <button type="button" onclick="closeConfirmBenefitModal()" class="flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
+        <button type="button" id="btnConfirmBenefit" class="flex-1 py-3.5 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all">{% trans "Confirm" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
   .active-modal {
     transform: scale(1) !important;
@@ -783,6 +817,8 @@
       currentTab: 'contributions',
       rotations: [],
       meetingBeneficiary: null,
+      deleteRotationId: null,
+      benefitMemberId: null,
     };
 
     // Elements
@@ -811,6 +847,10 @@
       meetingBeneficiaryCard: document.getElementById("meetingBeneficiaryCard"),
       addRotationModal: document.getElementById("addRotationModal"),
       formAddRotation: document.getElementById("formAddRotation"),
+      confirmDeleteRotationModal: document.getElementById("confirmDeleteRotationModal"),
+      btnConfirmDeleteRotation: document.getElementById("btnConfirmDeleteRotation"),
+      confirmBenefitModal: document.getElementById("confirmBenefitModal"),
+      btnConfirmBenefit: document.getElementById("btnConfirmBenefit"),
     };
 
     const tableLoader = new SectionLoaderManager(
@@ -980,10 +1020,22 @@
         }
     };
 
-    window.deleteRotation = async (id) => {
-        if (!confirm("{% trans 'Remove from rotation?' %}")) return;
+    window.deleteRotation = (id) => {
+        state.deleteRotationId = id;
+        el.confirmDeleteRotationModal.classList.remove('hidden');
+        setTimeout(() => el.confirmDeleteRotationModal.querySelector('.bg-white')?.classList.add('active-modal'), 10);
+    }
+
+    window.closeConfirmDeleteRotationModal = () => {
+        el.confirmDeleteRotationModal.querySelector('.bg-white')?.classList.remove('active-modal');
+        setTimeout(() => el.confirmDeleteRotationModal.classList.add('hidden'), 300);
+        state.deleteRotationId = null;
+    }
+
+    el.btnConfirmDeleteRotation.onclick = async () => {
+        if (!state.deleteRotationId) return;
         try {
-            const res = await fetch(API_URLS.njangiRotationDelete(id), {
+            const res = await fetch(API_URLS.njangiRotationDelete(state.deleteRotationId), {
                 method: 'DELETE',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' }
             });
@@ -991,6 +1043,7 @@
             if (result.success) {
                 toast('success', result.message);
                 fetchRotation();
+                closeConfirmDeleteRotationModal();
             }
         } catch (err) {
             toast('error', 'Delete failed');
@@ -1047,10 +1100,20 @@
             </div>`;
     }
 
-    window.recordBenefit = async (membershipId) => {
-        if (!state.currentCycle) return;
-        if (!confirm("{% trans 'Mark this member as having received the Njangi pot for this meeting?' %}")) return;
-        
+    window.recordBenefit = (membershipId) => {
+        state.benefitMemberId = membershipId;
+        el.confirmBenefitModal.classList.remove('hidden');
+        setTimeout(() => el.confirmBenefitModal.querySelector('.bg-white')?.classList.add('active-modal'), 10);
+    }
+
+    window.closeConfirmBenefitModal = () => {
+        el.confirmBenefitModal.querySelector('.bg-white')?.classList.remove('active-modal');
+        setTimeout(() => el.confirmBenefitModal.classList.add('hidden'), 300);
+        state.benefitMemberId = null;
+    }
+
+    el.btnConfirmBenefit.onclick = async () => {
+        if (!state.currentCycle || !state.benefitMemberId) return;
         try {
             const res = await fetch(API_URLS.njangiBeneficiary(state.currentCycle), {
                 method: 'POST',
@@ -1058,12 +1121,13 @@
                     'X-CSRFToken': '{{ csrf_token }}',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ membership_id: membershipId })
+                body: JSON.stringify({ membership_id: state.benefitMemberId })
             });
             const result = await res.json();
             if (result.success) {
                 toast('success', result.message);
                 fetchMeetingBeneficiary(state.currentCycle);
+                closeConfirmBenefitModal();
             } else {
                 toast('error', result.message);
             }
