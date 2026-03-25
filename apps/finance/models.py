@@ -11,6 +11,7 @@ from apps.global_data.enum import (
     FineStatus,
     LoanApplicationStatus,
     LoanStatus,
+    CommunityFeatureType,
 )
 from apps.communities.models import Community, Membership, MembershipApplication
 
@@ -53,6 +54,12 @@ class RegistrationPayment(SavingsBaseModel):
 class ContributionCycle(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="contribution_cycles")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="contribution_cycles")
+    feature_type = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        choices=CommunityFeatureType.choices
+    )
     title = models.CharField(max_length=255)
     due_date = models.DateField()
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -61,6 +68,13 @@ class ContributionCycle(SavingsBaseModel):
 
     class Meta:
         ordering = ["-due_date"]
+    
+    def clean(self):
+        if not self.community.features.filter(
+            feature_type=self.feature_type,
+            is_active=True
+        ).exists():
+            raise ValidationError(f"{self.feature_type} is not enabled in this community.")
 
 
 class Contribution(SavingsBaseModel):

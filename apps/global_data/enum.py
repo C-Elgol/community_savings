@@ -123,3 +123,9 @@ class CommunityFeatureType(models.TextChoices):
     NJANGI = "njangi", _("Njangi")
     SAVINGS = "savings", _("Savings")
     LOANS = "loans", _("Loans")
+    PROJECT = "project", _("Project")
+    ENTERTAINMENT = "entertainment", _("Entertainment")
+    SINKING_FUND = "sinking_fund", _("Sinking Fund")
+    EVENTS = "events", _("Events")
+    MEETINGS = "meetings", _("Meetings")
+    
