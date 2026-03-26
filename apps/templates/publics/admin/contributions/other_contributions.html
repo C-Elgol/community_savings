@@ -14,12 +14,14 @@
         {% elif ft == 'entertainment' %}fa-glass-cheers
         {% elif ft == 'sinking_fund' %}fa-shield-alt
         {% elif ft == 'project' %}fa-project-diagram
+        {% elif ft == 'events' %}fa-calendar-alt
         {% endif %}"></i>
       <span>
         {% if ft == 'savings' %}{% trans "Savings" %}
         {% elif ft == 'entertainment' %}{% trans "Entertainment" %}
         {% elif ft == 'sinking_fund' %}{% trans "Sinking Fund" %}
         {% elif ft == 'project' %}{% trans "Project" %}
+        {% elif ft == 'events' %}{% trans "Events" %}
         {% endif %}
       </span>
     </button>
@@ -599,17 +601,15 @@
     const ENABLED_FEATURES = {{ enabled_features|safe }};
 
     const FEATURE_LABELS = {
-      savings: "Savings",
-      entertainment: "Entertainment",
       sinking_fund: "Sinking Fund",
       project: "Project",
+      events: "Events",
     };
 
     const FEATURE_ICONS = {
-      savings: "fa-piggy-bank",
-      entertainment: "fa-glass-cheers",
       sinking_fund: "fa-shield-alt",
       project: "fa-project-diagram",
+      events: "fa-calendar-alt",
     };
 
     const API_URLS = {

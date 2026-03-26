@@ -32,6 +32,7 @@ class AdminSettingsView(LoginRequiredMixin, TemplateView):
             {'type': CommunityFeatureType.ENTERTAINMENT, 'label': 'Entertainment'},
             {'type': CommunityFeatureType.SINKING_FUND, 'label': 'Sinking Fund'},
             {'type': CommunityFeatureType.PROJECT, 'label': 'Project'},
+            {'type': CommunityFeatureType.EVENTS, 'label': 'Events'},
         ]
         
         feature_states = []

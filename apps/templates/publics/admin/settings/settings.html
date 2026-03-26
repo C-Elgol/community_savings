@@ -87,6 +87,7 @@
                                         {% elif feature.type == 'entertainment' %}fa-glass-cheers
                                         {% elif feature.type == 'sinking_fund' %}fa-shield-alt
                                         {% elif feature.type == 'project' %}fa-project-diagram
+                                        {% elif feature.type == 'events' %}fa-calendar-alt
                                         {% endif %} text-xl"></i>
                                 </div>
                                 <div>
@@ -98,6 +99,7 @@
                                         {% elif feature.type == 'entertainment' %}{% trans "Social fund for celebrations and gatherings." %}
                                         {% elif feature.type == 'sinking_fund' %}{% trans "Emergency reserves for unexpected expenses." %}
                                         {% elif feature.type == 'project' %}{% trans "Group investments and project funding." %}
+                                        {% elif feature.type == 'events' %}{% trans "Special community events and gathering contributions." %}
                                         {% endif %}
                                     </p>
                                 </div>

@@ -11,6 +11,7 @@ CONTRIBUTION_FEATURE_TYPES = [
     CommunityFeatureType.ENTERTAINMENT,
     CommunityFeatureType.SINKING_FUND,
     CommunityFeatureType.PROJECT,
+    CommunityFeatureType.EVENTS,
 ]
 
 
