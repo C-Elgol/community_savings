@@ -11,7 +11,12 @@ from apps.finance.tasks.contribution_tasks import send_contribution_recorded_ema
 
 class SeasonAPI(View):
     def get(self, request, community_id):
-        seasons = FinancialSeason.objects.filter(community_id=community_id).values('id', 'title', 'season_date', 'is_closed')
+        feature_type = request.GET.get('feature_type')
+        filters = {'community_id': community_id}
+        if feature_type:
+            filters['feature_type'] = feature_type
+            
+        seasons = FinancialSeason.objects.filter(**filters).values('id', 'title', 'season_date', 'is_closed')
         return JsonResponse({'success': True, 'seasons': list(seasons)})
 
     def post(self, request, community_id):
@@ -20,6 +25,7 @@ class SeasonAPI(View):
             community = get_object_or_404(Community, id=community_id)
             season = FinancialSeason.objects.create(
                 community=community,
+                feature_type=data.get('feature_type'),
                 title=data.get('title'),
                 season_date=data.get('season_date')
             )
@@ -144,7 +150,7 @@ class ContributionAPI(View):
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
-VALID_FEATURE_TYPES = {'savings', 'entertainment', 'sinking_fund', 'project'}
+VALID_FEATURE_TYPES = {'savings', 'entertainment', 'sinking_fund', 'project', 'events'}
 
 
 class ContributionCycleAPI(View):

@@ -613,7 +613,7 @@
     };
 
     const API_URLS = {
-      seasons: `/finance/api/community/${COMMUNITY_ID}/seasons/`,
+      seasons: (featureType) => `/finance/api/community/${COMMUNITY_ID}/seasons/?feature_type=${featureType}`,
       seasonCreate: `/finance/api/community/${COMMUNITY_ID}/seasons/`,
       featureCycles: (seasonId, featureType) =>
         `/finance/api/season/${seasonId}/feature-cycles/?feature_type=${featureType}`,
@@ -742,7 +742,7 @@
     ═══════════════════════ */
     async function fetchSeasons() {
       try {
-        const res = await fetch(API_URLS.seasons);
+        const res = await fetch(API_URLS.seasons(state.currentFeatureType));
         const data = await res.json();
         if (data.success) {
           renderSeasonList(data.seasons);
@@ -1038,6 +1038,7 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const payload = Object.fromEntries(fd);
+      payload.feature_type = state.currentFeatureType;
       try {
         const res = await fetch(API_URLS.seasonCreate, {
           method: "POST",

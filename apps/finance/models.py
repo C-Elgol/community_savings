@@ -18,12 +18,18 @@ from apps.communities.models import Community, Membership, MembershipApplication
 
 class FinancialSeason(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="financial_seasons")
+    feature_type = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        choices=CommunityFeatureType.choices
+    )
     season_date = models.DateField(db_index=True, help_text="Example: 2025-01-01 for January 2025")
     title = models.CharField(max_length=100, blank=True)
     is_closed = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = [("community", "season_date")]
+        unique_together = [("community", "feature_type", "season_date")]
         ordering = ["-season_date"]
 
     def __str__(self):
