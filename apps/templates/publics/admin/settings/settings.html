@@ -1,13 +1,258 @@
 {% extends 'publics/admin/base.html' %}
 {% load static %}
 {% load i18n %}
-{% block content %}
 
-        <!-- ========== SETTINGS PAGE ========== -->
-        <div id="settings" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">System Settings</h2>
-                <div class="space-y-4"><div class="flex justify-between items-center"><span>Community name</span><input class="border rounded px-3 py-1" value="NjangiHub"></div><div class="flex justify-between items-center"><span>Default interest rate</span><input class="border rounded px-3 py-1" value="5.0%"></div><div class="flex justify-between items-center"><span>Require guarantor</span><input type="checkbox" checked class="toggle"></div></div>
-            </div>
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">{% trans "Community Settings" %}</h1>
+            <p class="text-xs text-slate-500">{% trans "Manage your community configuration, policies, and enabled features." %}</p>
         </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar Tabs (Mobile version would be a dropdown) -->
+        <div class="lg:col-span-1 space-y-2">
+            <button onclick="switchTab('general')" id="tab_general" class="settings-tab w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all bg-white text-emerald-700 shadow-sm border border-emerald-100">
+                <i class="fas fa-info-circle w-5"></i>
+                <span>{% trans "General Information" %}</span>
+            </button>
+            <button onclick="switchTab('features')" id="tab_features" class="settings-tab w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all text-slate-500 hover:bg-white/50">
+                <i class="fas fa-toggle-on w-5"></i>
+                <span>{% trans "Feature Management" %}</span>
+            </button>
+            <button onclick="switchTab('policy')" id="tab_policy" class="settings-tab w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all text-slate-500 hover:bg-white/50">
+                <i class="fas fa-balance-scale w-5"></i>
+                <span>{% trans "Financial Policy" %}</span>
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- General Settings Section -->
+            <div id="section_general" class="settings-section space-y-6">
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                    <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-id-card text-emerald-500"></i>
+                        {% trans "Basic Identity" %}
+                    </h3>
+                    
+                    <form id="formCommunitySettings" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "COMMUNITY NAME" %}</label>
+                                <input type="text" name="name" value="{{ community.name }}" required class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "CURRENCY" %}</label>
+                                <input type="text" name="currency" value="{{ community.currency }}" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "DESCRIPTION" %}</label>
+                            <textarea name="description" rows="3" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none">{{ community.description }}</textarea>
+                        </div>
+
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="px-8 py-3.5 bg-emerald-700 text-white rounded-2xl font-black text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all active:scale-95">
+                                {% trans "Save Changes" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Feature Management Section -->
+            <div id="section_features" class="settings-section hidden space-y-6">
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-puzzle-piece text-emerald-500"></i>
+                        {% trans "Available Features" %}
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-8 font-bold uppercase tracking-widest">{% trans "Enable or disable modules for your community" %}</p>
+                    
+                    <div class="divide-y divide-slate-50">
+                        {% for feature in feature_states %}
+                        <div class="py-6 flex items-center justify-between group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl {% if feature.is_active %}bg-emerald-50 text-emerald-600{% else %}bg-slate-50 text-slate-400{% endif %} flex items-center justify-center transition-colors">
+                                    <i class="fas 
+                                        {% if feature.type == 'njangi' %}fa-users
+                                        {% elif feature.type == 'savings' %}fa-piggy-bank
+                                        {% elif feature.type == 'loans' %}fa-hand-holding-usd
+                                        {% elif feature.type == 'entertainment' %}fa-glass-cheers
+                                        {% elif feature.type == 'sinking_fund' %}fa-shield-alt
+                                        {% elif feature.type == 'project' %}fa-project-diagram
+                                        {% elif feature.type == 'events' %}fa-calendar-alt
+                                        {% endif %} text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">{{ feature.label }}</h4>
+                                    <p class="text-xs text-slate-400">
+                                        {% if feature.type == 'njangi' %}{% trans "Rotating contribution and benefit system." %}
+                                        {% elif feature.type == 'savings' %}{% trans "Individual and group savings management." %}
+                                        {% elif feature.type == 'loans' %}{% trans "Member loans and repayment tracking." %}
+                                        {% elif feature.type == 'entertainment' %}{% trans "Social fund for celebrations and gatherings." %}
+                                        {% elif feature.type == 'sinking_fund' %}{% trans "Emergency reserves for unexpected expenses." %}
+                                        {% elif feature.type == 'project' %}{% trans "Group investments and project funding." %}
+                                        {% elif feature.type == 'events' %}{% trans "Special community events and gathering contributions." %}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" onchange="toggleFeature('{{ feature.type }}', this.checked)" class="sr-only peer" {% if feature.is_active %}checked{% endif %}>
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Policy Section -->
+            <div id="section_policy" class="settings-section hidden space-y-6">
+                <!-- Reusing Policy Update Logic -->
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                    <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-file-contract text-emerald-500"></i>
+                        {% trans "Policy Configuration" %}
+                    </h3>
+                    
+                    <form id="formPolicySettings" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "DEFAULT INTEREST RATE (%)" %}</label>
+                                <input type="number" step="0.01" name="default_interest_rate" value="{{ policy.default_interest_rate }}" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{% trans "MAX LOANS PER MEMBER" %}</label>
+                                <input type="number" name="max_active_loans_per_member" value="{{ policy.max_active_loans_per_member }}" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+                            </div>
+                            <div class="flex items-center gap-3 ml-1 md:col-span-2 py-2">
+                                <input type="checkbox" name="requires_guarantor" id="requires_guarantor" class="w-5 h-5 text-emerald-600 rounded-lg focus:ring-emerald-500 border-slate-200" {% if policy.requires_guarantor %}checked{% endif %}>
+                                <label for="requires_guarantor" class="text-sm text-slate-600 font-bold uppercase tracking-widest">{% trans "Require Guarantors for Loans" %}</label>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-4 border-t border-slate-50">
+                            <button type="submit" class="px-8 py-3.5 bg-slate-800 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-slate-900 transition-all active:scale-95">
+                                {% trans "Update Policy" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const COMMUNITY_ID = "{{ community.id }}";
+
+    function switchTab(tabId) {
+        // Toggle tabs
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm', 'border-emerald-100');
+            tab.classList.add('text-slate-500', 'hover:bg-white/50');
+        });
+        const activeTab = document.getElementById(`tab_${tabId}`);
+        activeTab.classList.remove('text-slate-500', 'hover:bg-white/50');
+        activeTab.classList.add('bg-white', 'text-emerald-700', 'shadow-sm', 'border-emerald-100');
+
+        // Toggle sections
+        document.querySelectorAll('.settings-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+        document.getElementById(`section_${tabId}`).classList.remove('hidden');
+    }
+
+    async function toggleFeature(featureType, isActive) {
+        try {
+            const res = await fetch(`/communities/api/communities/${COMMUNITY_ID}/features/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    feature_type: featureType,
+                    is_active: isActive
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                // Update icon style if needed
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Failed to update feature state');
+        }
+    }
+
+    document.getElementById('formCommunitySettings').onsubmit = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = Object.fromEntries(fd);
+        
+        try {
+            const res = await fetch(`/communities/api/communities/${COMMUNITY_ID}/settings/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Request failed');
+        }
+    };
+
+    document.getElementById('formPolicySettings').onsubmit = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        // Special handling for checkbox
+        const data = Object.fromEntries(fd);
+        data.requires_guarantor = e.target.requires_guarantor.checked;
+
+        try {
+            const res = await fetch(`/communities/communities/${COMMUNITY_ID}/policy/update/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: fd // PolicyUpdateView expects multipart/form-data via POST
+            });
+            const responseData = await res.json();
+            if (responseData.success) {
+                toast('success', responseData.message);
+            } else {
+                toast('error', responseData.message);
+            }
+        } catch (err) {
+            toast('error', 'Policy update failed');
+        }
+    };
+
+    function toast(type, msg) {
+        window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+</script>
 {% endblock %}

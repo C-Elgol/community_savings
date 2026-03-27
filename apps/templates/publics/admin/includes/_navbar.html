@@ -21,16 +21,14 @@
       <div class="flex items-center gap-2 cursor-pointer group">
         <div class="hidden sm:block text-right">
           <p class="text-sm font-semibold text-slate-800">
-            {% if user.is_authenticated %}{{ user.get_full_name }}{% else
-            %}Samuel Admin{% endif %}
+            {% if user.is_authenticated %}{{ user.get_full_name }}{% else %}Samuel Admin{% endif %}
           </p>
           <p class="text-xs text-slate-500">Super Admin</p>
         </div>
         <div
           class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-800 font-bold"
         >
-          {% if user.is_authenticated %}{{ user.first_name|first }}{{
-          user.last_name|first }}{% else %}SA{% endif %}
+          {% if user.is_authenticated %}{{ user.first_name|first }}{{ user.last_name|first }}{% else %}SA{% endif %}
         </div>
         <i
           class="fas fa-chevron-down text-slate-400 text-xs group-hover:text-slate-600"

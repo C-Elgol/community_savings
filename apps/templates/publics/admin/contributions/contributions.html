@@ -786,11 +786,11 @@
     // Context & URLs
     const COMMUNITY_ID = "{{ community.id }}";
     const API_URLS = {
-      seasons:
+      seasons: (featureType) =>
         `{% url 'finance:season_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
           "00000000-0000-0000-0000-000000000000",
           COMMUNITY_ID,
-        ),
+        ) + `?feature_type=${featureType}`,
       seasonCreate:
         `{% url 'finance:season_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
           "00000000-0000-0000-0000-000000000000",
@@ -883,7 +883,7 @@
     ═══════════════════════ */
     async function fetchSeasons() {
       try {
-        const res = await fetch(API_URLS.seasons);
+        const res = await fetch(API_URLS.seasons('njangi'));
         const data = await res.json();
         if (data.success) {
           renderSeasonList(data.seasons);
@@ -1371,6 +1371,7 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const payload = Object.fromEntries(fd);
+      payload.feature_type = 'njangi';
       const res = await fetch(API_URLS.seasonCreate, {
         method: "POST",
         headers: {

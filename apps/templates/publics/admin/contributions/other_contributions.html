@@ -1,0 +1,1218 @@
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block content %}
+<div id="contributionsPage" class="space-y-6">
+  <!-- Feature Type Tabs -->
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-2 flex flex-wrap gap-1">
+    {% for ft in enabled_features %}
+    <button
+      onclick="switchFeatureType('{{ ft }}')"
+      id="featureTab_{{ ft }}"
+      class="feature-tab px-5 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2
+        {% if forloop.first %}bg-emerald-700 text-white shadow-lg shadow-emerald-700/20{% else %}text-slate-400 hover:bg-slate-50{% endif %}"
+    >
+      <i class="fas 
+        {% if ft == 'savings' %}fa-piggy-bank
+        {% elif ft == 'entertainment' %}fa-glass-cheers
+        {% elif ft == 'sinking_fund' %}fa-shield-alt
+        {% elif ft == 'project' %}fa-project-diagram
+        {% elif ft == 'events' %}fa-calendar-alt
+        {% endif %}"></i>
+      <span>
+        {% if ft == 'savings' %}{% trans "Savings" %}
+        {% elif ft == 'entertainment' %}{% trans "Entertainment" %}
+        {% elif ft == 'sinking_fund' %}{% trans "Sinking Fund" %}
+        {% elif ft == 'project' %}{% trans "Project" %}
+        {% elif ft == 'events' %}{% trans "Events" %}
+        {% endif %}
+      </span>
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- State 1: Selection Required -->
+  <div
+    id="selectionState"
+    class="hidden min-h-[400px] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-dashed border-slate-300"
+  >
+    <div
+      class="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6"
+    >
+      <i class="fas fa-calendar-alt text-3xl text-emerald-600"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-slate-800 mb-2">
+      {% trans "Select a Financial Season" %}
+    </h2>
+    <p class="text-slate-500 max-w-sm mb-8">
+      {% trans "To manage contributions, please select an existing season or create a new one for this community." %}
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button
+        id="btnOpenSeasonModal"
+        class="px-6 py-3 bg-emerald-700 text-white rounded-xl font-semibold shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all active:scale-95"
+      >
+        {% trans "Choose Season" %}
+      </button>
+      <button
+        id="btnCreateNewSeason"
+        class="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all"
+      >
+        {% trans "Start New Season" %}
+      </button>
+    </div>
+  </div>
+
+  <!-- State 2: Management View -->
+  <div id="managementState" class="hidden space-y-6">
+    <!-- Header & Top Stats -->
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span
+            id="displaySeasonTitle"
+            class="text-xs font-bold uppercase tracking-widest text-emerald-600 px-2 py-0.5 bg-emerald-50 rounded-md"
+            >---</span
+          >
+          <button
+            id="btnChangeSeason"
+            class="text-[10px] text-slate-400 hover:text-emerald-700 uppercase font-black underline decoration-dashed transition-all"
+          >
+            {% trans "Switch" %}
+          </button>
+        </div>
+        <h1 id="displayCycleTitle" class="text-2xl font-black text-slate-800">
+          {% trans "Contributions" %}
+        </h1>
+        <p class="text-xs text-slate-500">
+          {% trans "Managing" %}:
+          <span class="font-bold text-slate-700">{{ community.name }}</span>
+          &mdash;
+          <span id="displayFeatureLabel" class="font-bold text-emerald-600 uppercase">---</span>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <select
+          id="cycleSelector"
+          class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none transition-all min-w-[180px]"
+        >
+          <option value="">{% trans "Select Cycle" %}</option>
+        </select>
+        <button
+          id="btnNewCycle"
+          class="p-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-all active:scale-95 shadow-sm"
+          title="{% trans 'New Contribution Cycle' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
+      >
+        <p
+          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+        >
+          {% trans "Expected Total" %}
+        </p>
+        <h3 id="statExpected" class="text-xl font-black text-slate-800">
+          XAF 0
+        </h3>
+      </div>
+      <div
+        class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
+      >
+        <p
+          class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1"
+        >
+          {% trans "Collected" %}
+        </p>
+        <h3 id="statCollected" class="text-xl font-black text-emerald-700">
+          XAF 0
+        </h3>
+      </div>
+      <div
+        class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
+      >
+        <p
+          class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1"
+        >
+          {% trans "Pending" %}
+        </p>
+        <h3 id="statPending" class="text-xl font-black text-amber-600">
+          0 {% trans "Members" %}
+        </h3>
+      </div>
+      <div
+        class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
+      >
+        <p
+          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+        >
+          {% trans "Efficiency" %}
+        </p>
+        <h3 id="statEfficiency" class="text-xl font-black text-slate-800">
+          0%
+        </h3>
+      </div>
+    </div>
+
+    <!-- Main Table Section -->
+    <div
+      class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden"
+      id="contributionTableContainer"
+    >
+      <div
+        class="p-6 border-b border-slate-50 flex items-center justify-between"
+      >
+        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+          <i class="fas fa-users text-emerald-400"></i>
+          {% trans "Member Recordings" %}
+        </h3>
+        <div class="relative">
+          <i
+            class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs"
+          ></i>
+          <input
+            type="text"
+            id="memberSearch"
+            placeholder="{% trans 'Filter names...' %}"
+            class="pl-8 pr-4 py-1.5 bg-slate-50 border-none rounded-full text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none w-40 sm:w-60 transition-all"
+          />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead
+            class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400"
+          >
+            <tr>
+              <th class="px-6 py-4 text-left">{% trans "Member" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Ref" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Expected" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Amount Paid" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
+              <th class="px-6 py-4 text-center">{% trans "Action" %}</th>
+            </tr>
+          </thead>
+          <tbody id="memberListBody" class="divide-y divide-slate-50">
+            <tr>
+              <td colspan="6" class="py-20 text-center">
+                <div class="flex flex-col items-center text-slate-300">
+                  <i class="fas fa-mouse-pointer text-xl mb-3"></i>
+                  <p class="text-xs font-medium">
+                    {% trans "Select a contribution cycle to start recording" %}
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODALS ========== -->
+
+<!-- 1. Season Selection Modal -->
+<div
+  id="seasonModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 active-modal"
+  >
+    <div class="p-8 pb-4 flex justify-between items-center">
+      <h3 class="text-xl font-black text-slate-800">
+        {% trans "Select Season" %}
+      </h3>
+      <button
+        class="close-modal w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
+      >
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+    <div
+      class="px-8 py-4 space-y-2 max-h-[300px] overflow-y-auto scrollbar-hide"
+      id="seasonList"
+    >
+      <!-- Sessions list -->
+    </div>
+    <div class="p-8 pt-4">
+      <button
+        id="btnShowCreateSeason"
+        class="w-full py-3 bg-slate-50 border border-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-plus-circle text-emerald-500"></i> {% trans "Create New Season" %}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Create Season Modal -->
+<div
+  id="createSeasonModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <h3 class="text-xl font-black text-slate-800 mb-6">
+        {% trans "New Financial Season" %}
+      </h3>
+      <form id="formCreateSeason" class="space-y-4">
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "TITLE (optional)" %}</label
+          >
+          <input
+            type="text"
+            name="title"
+            placeholder="e.g. 2026/2027 Year"
+            class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+          />
+        </div>
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "START DATE" %}</label
+          >
+          <input
+            type="date"
+            name="season_date"
+            required
+            class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+          />
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            class="close-modal flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3.5 bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all active:scale-95"
+          >
+            {% trans "Create" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Create Cycle Modal -->
+<div
+  id="createCycleModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <h3 id="createCycleModalTitle" class="text-xl font-black text-slate-800 mb-6">
+        {% trans "New Contribution Cycle" %}
+      </h3>
+      <form id="formCreateCycle" class="space-y-4">
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "TITLE" %}</label
+          >
+          <input
+            type="text"
+            name="title"
+            required
+            placeholder="e.g. March Collection"
+            class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "DATE" %}</label
+            >
+            <input
+              type="date"
+              name="due_date"
+              required
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "EXPECTED AMOUNT" %}</label
+            >
+            <input
+              type="number"
+              name="expected_amount"
+              required
+              placeholder="10,000"
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-3 ml-1">
+          <input
+            type="checkbox"
+            name="is_special"
+            id="is_special"
+            class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300"
+          />
+          <label for="is_special" class="text-sm text-slate-500 font-medium"
+            >{% trans "Special / Extraordinary" %}</label
+          >
+        </div>
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            class="close-modal flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-lg hover:bg-slate-900 transition-all active:scale-95"
+          >
+            {% trans "Add Cycle" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Record Contribution Modal (With Signature Pad) -->
+<div
+  id="recordContributionModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <h3
+        class="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"
+      >
+        <i class="fas fa-hand-holding-usd text-emerald-500"></i>
+        <span id="modalMemberName">{% trans "Record Contribution" %}</span>
+      </h3>
+
+      <form id="formRecordContribution" class="space-y-6">
+        <input type="hidden" name="membership_id" id="modalMembershipId" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "AMOUNT PAID" %}</label
+            >
+            <input
+              type="number"
+              step="0.01"
+              name="amount_paid"
+              id="modalAmountPaid"
+              required
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+              >{% trans "COMMENT" %}</label
+            >
+            <textarea
+              name="comment"
+              id="modalComment"
+              rows="1"
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none"
+            ></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1 flex justify-between"
+            >
+              <span>{% trans "MEMBER SIGNATURE" %}</span>
+              <button
+                type="button"
+                id="clear-signature"
+                class="text-emerald-600 hover:text-emerald-700"
+              >
+                {% trans "Clear" %}
+              </button>
+            </label>
+            <div
+              class="relative bg-slate-50 rounded-2xl border border-dashed border-slate-200 overflow-hidden"
+            >
+              <canvas
+                id="signature-pad"
+                class="w-full h-40 cursor-crosshair"
+              ></canvas>
+              <input type="hidden" name="signature" id="signature-input" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            class="close-modal flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3.5 bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all active:scale-95"
+          >
+            {% trans "Save Recording" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 5. View Contribution Detail Modal -->
+<div
+  id="viewContributionModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h3 class="text-xl font-black text-slate-800" id="viewMemberName">
+            Member Name
+          </h3>
+          <p
+            class="text-xs font-bold text-emerald-600 uppercase tracking-widest"
+            id="viewPaymentRef"
+          >
+            PAY000
+          </p>
+        </div>
+        <button
+          class="close-modal w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
+        >
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-50 rounded-2xl">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+              {% trans "Amount Paid" %}
+            </p>
+            <p class="text-lg font-black text-slate-800" id="viewAmountPaid">
+              XAF 0
+            </p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-2xl">
+            <p
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+            >
+              {% trans "Date" %}
+            </p>
+            <p class="text-sm font-bold text-slate-700" id="viewPaymentDate">
+              ---
+            </p>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl">
+          <p
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
+          >
+            {% trans "Comment" %}
+          </p>
+          <p class="text-sm text-slate-600 italic" id="viewComment">
+            No comment provided
+          </p>
+        </div>
+
+        <div>
+          <p
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1"
+          >
+            {% trans "Signature" %}
+          </p>
+          <div
+            class="bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4 flex items-center justify-center min-h-[120px]"
+          >
+            <img
+              id="viewSignatureImg"
+              src=""
+              alt="Signature"
+              class="max-h-24 opacity-80"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <button
+          class="close-modal w-full py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm hover:bg-slate-900 transition-all"
+        >
+          {% trans "Close Details" %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .active-modal {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+  (function () {
+    "use strict";
+
+    const COMMUNITY_ID = "{{ community.id }}";
+    const ENABLED_FEATURES = {{ enabled_features|safe }};
+
+    const FEATURE_LABELS = {
+      sinking_fund: "Sinking Fund",
+      project: "Project",
+      events: "Events",
+    };
+
+    const FEATURE_ICONS = {
+      sinking_fund: "fa-shield-alt",
+      project: "fa-project-diagram",
+      events: "fa-calendar-alt",
+    };
+
+    const API_URLS = {
+      seasons: (featureType) => `/finance/api/community/${COMMUNITY_ID}/seasons/?feature_type=${featureType}`,
+      seasonCreate: `/finance/api/community/${COMMUNITY_ID}/seasons/`,
+      featureCycles: (seasonId, featureType) =>
+        `/finance/api/season/${seasonId}/feature-cycles/?feature_type=${featureType}`,
+      featureCycleCreate: (seasonId) =>
+        `/finance/api/season/${seasonId}/feature-cycles/`,
+      featureContributions: (cycleId) =>
+        `/finance/api/cycle/${cycleId}/feature-contributions/`,
+      featureRecord: (cycleId) =>
+        `/finance/api/cycle/${cycleId}/feature-contributions/`,
+    };
+
+    // State
+    const state = {
+      currentFeatureType: ENABLED_FEATURES.length > 0 ? ENABLED_FEATURES[0] : null,
+      currentSeason: null,
+      currentCycle: null,
+      members: [],
+    };
+
+    // DOM elements
+    const el = {
+      selectionState: document.getElementById("selectionState"),
+      managementState: document.getElementById("managementState"),
+      seasonModal: document.getElementById("seasonModal"),
+      seasonList: document.getElementById("seasonList"),
+      cycleSelector: document.getElementById("cycleSelector"),
+      memberListBody: document.getElementById("memberListBody"),
+      displayFeatureLabel: document.getElementById("displayFeatureLabel"),
+    };
+
+    const tableLoader = new SectionLoaderManager(
+      "contributionTableContainer",
+      "fill-emerald-500",
+      0.5,
+    );
+
+    /* ═══════════════════════
+       INITIALIZATION
+    ═══════════════════════ */
+    function init() {
+      if (!COMMUNITY_ID || COMMUNITY_ID === "None") {
+        toast("warning", "No active community found.");
+        return;
+      }
+
+      if (!state.currentFeatureType) {
+        toast("warning", "No contribution features are enabled for this community.");
+        return;
+      }
+
+      updateFeatureLabel();
+
+      const savedSeason = localStorage.getItem(
+        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`
+      );
+      if (savedSeason) {
+        state.currentSeason = JSON.parse(savedSeason);
+        showManagement();
+        initCycles();
+      } else {
+        el.selectionState.classList.remove("hidden");
+      }
+    }
+
+    /* ═══════════════════════
+       FEATURE TYPE SWITCHING
+    ═══════════════════════ */
+    window.switchFeatureType = function (featureType) {
+      if (state.currentFeatureType === featureType) return;
+
+      state.currentFeatureType = featureType;
+      state.currentCycle = null;
+      state.members = [];
+
+      // Update tab UI
+      document.querySelectorAll(".feature-tab").forEach((tab) => {
+        tab.classList.remove(
+          "bg-emerald-700",
+          "text-white",
+          "shadow-lg",
+          "shadow-emerald-700/20"
+        );
+        tab.classList.add("text-slate-400", "hover:bg-slate-50");
+      });
+      const activeTab = document.getElementById(`featureTab_${featureType}`);
+      if (activeTab) {
+        activeTab.classList.remove("text-slate-400", "hover:bg-slate-50");
+        activeTab.classList.add(
+          "bg-emerald-700",
+          "text-white",
+          "shadow-lg",
+          "shadow-emerald-700/20"
+        );
+      }
+
+      updateFeatureLabel();
+
+      // Reset views
+      el.managementState.classList.add("hidden");
+      el.selectionState.classList.add("hidden");
+
+      // Try loading saved season for this feature type
+      const savedSeason = localStorage.getItem(
+        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`
+      );
+      if (savedSeason) {
+        state.currentSeason = JSON.parse(savedSeason);
+        showManagement();
+        initCycles();
+      } else {
+        state.currentSeason = null;
+        el.selectionState.classList.remove("hidden");
+      }
+
+      resetMemberTable();
+      resetStats();
+    };
+
+    function updateFeatureLabel() {
+      el.displayFeatureLabel.textContent =
+        FEATURE_LABELS[state.currentFeatureType] || state.currentFeatureType;
+    }
+
+    /* ═══════════════════════
+       CRUD ACTIONS
+    ═══════════════════════ */
+    async function fetchSeasons() {
+      try {
+        const res = await fetch(API_URLS.seasons(state.currentFeatureType));
+        const data = await res.json();
+        if (data.success) {
+          renderSeasonList(data.seasons);
+        }
+      } catch (err) {
+        toast("error", "Failed to fetch seasons");
+      }
+    }
+
+    async function initCycles() {
+      if (!state.currentSeason) return;
+      try {
+        const res = await fetch(
+          API_URLS.featureCycles(state.currentSeason.id, state.currentFeatureType)
+        );
+        const data = await res.json();
+        if (data.success) {
+          el.cycleSelector.innerHTML =
+            '<option value="">{% trans "Select Cycle" %}</option>';
+          data.cycles.forEach((c) => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.title} (${c.due_date})`;
+            el.cycleSelector.appendChild(opt);
+          });
+
+          document.getElementById("displaySeasonTitle").textContent =
+            state.currentSeason.title || state.currentSeason.season_date;
+        }
+      } catch (err) {
+        toast("error", "Failed to load cycles");
+      }
+    }
+
+    async function fetchContributions(cycleId) {
+      tableLoader.showLoader();
+      try {
+        const res = await fetch(API_URLS.featureContributions(cycleId));
+        const data = await res.json();
+        if (data.success) {
+          state.members = data.contributions;
+          renderMembers();
+          updateStats();
+        }
+      } catch (err) {
+        toast("error", "Failed to fetch contributions");
+      } finally {
+        tableLoader.hideLoader();
+      }
+    }
+
+    async function saveContribution(
+      membershipId,
+      amount,
+      comment = "",
+      signature = ""
+    ) {
+      if (!state.currentCycle) return;
+      try {
+        const res = await fetch(API_URLS.featureRecord(state.currentCycle), {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            membership_id: membershipId,
+            amount_paid: amount,
+            comment: comment,
+            signature: signature,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast(
+            "success",
+            `Recorded successfully. Ref: ${data.payment_reference}`
+          );
+          const m = state.members.find((x) => x.membership_id === membershipId);
+          if (m) {
+            m.amount_paid = amount;
+            m.payment_reference = data.payment_reference;
+            m.status =
+              parseFloat(amount) >= parseFloat(m.expected_amount)
+                ? "paid"
+                : parseFloat(amount)
+                  ? "partial"
+                  : "pending";
+          }
+          updateStats();
+          renderMembers(document.getElementById("memberSearch").value);
+        } else {
+          toast("error", data.message || "Failed to record contribution");
+        }
+      } catch (err) {
+        toast("error", "Sync failed");
+      }
+    }
+
+    /* ═══════════════════════
+       UI RENDERING
+    ═══════════════════════ */
+    function renderSeasonList(seasons) {
+      el.seasonList.innerHTML = seasons.length
+        ? ""
+        : '<p class="text-center py-4 text-slate-400">{% trans "No seasons yet" %}</p>';
+      seasons.forEach((s) => {
+        const row = document.createElement("div");
+        row.className =
+          "p-4 bg-slate-50 hover:bg-emerald-50 rounded-2xl cursor-pointer transition-all border border-transparent hover:border-emerald-100 group";
+        row.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-bold text-slate-800 group-hover:text-emerald-700">${s.title || "Untitled Season"}</p>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${s.season_date}</p>
+            </div>
+            <i class="fas fa-arrow-right text-slate-200 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all"></i>
+          </div>
+        `;
+        row.onclick = () => selectSeason(s);
+        el.seasonList.appendChild(row);
+      });
+    }
+
+    function renderMembers(filter = "") {
+      el.memberListBody.innerHTML = "";
+      const filtered = state.members.filter((m) =>
+        m.member_name.toLowerCase().includes(filter.toLowerCase())
+      );
+
+      if (filtered.length === 0) {
+        el.memberListBody.innerHTML =
+          '<tr><td colspan="6" class="py-10 text-center text-slate-400">{% trans "No matching members" %}</td></tr>';
+        return;
+      }
+
+      filtered.forEach((m) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/50 transition-colors";
+
+        const statusClass =
+          m.status === "paid"
+            ? "bg-emerald-100 text-emerald-700"
+            : m.status === "partial"
+              ? "bg-amber-100 text-amber-700"
+              : "bg-slate-100 text-slate-400";
+
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">${m.member_name.charAt(0)}</div>
+              <span class="font-bold text-slate-700 text-sm">${m.member_name}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="text-[10px] font-black font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">${m.payment_reference || "---"}</span>
+          </td>
+          <td class="px-6 py-4 font-mono font-bold text-slate-400 text-xs">${m.expected_amount}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-slate-700">${m.amount_paid}</span>
+              <button class="btn-pay-full p-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" data-mid="${m.membership_id}" data-full="${m.expected_amount}" title="{% trans 'Pay Full' %}">
+                <i class="fas fa-bolt"></i>
+              </button>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="status-badge px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${m.status}</span>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex items-center justify-center gap-2">
+              <button class="btn-view-detail p-2 text-slate-400 hover:text-emerald-600 transition-all"
+                data-mid="${m.membership_id}"
+                title="{% trans 'View Details' %}">
+                <i class="fas fa-eye text-lg"></i>
+              </button>
+              <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2"
+                data-mid="${m.membership_id}"
+                data-name="${m.member_name}"
+                data-amount="${m.amount_paid}"
+                data-expected="${m.expected_amount}">
+                <i class="fas fa-signature"></i> {% trans "Record" %}
+              </button>
+            </div>
+          </td>
+        `;
+        el.memberListBody.appendChild(tr);
+      });
+    }
+
+    function updateStats() {
+      const expectedPerMember = state.members[0]?.expected_amount || 0;
+      const totalExpected = state.members.length * expectedPerMember;
+      const totalCollected = state.members.reduce(
+        (sum, m) => sum + parseFloat(m.amount_paid),
+        0
+      );
+      const pendingCount = state.members.filter(
+        (m) => m.status !== "paid"
+      ).length;
+      const efficiency = totalExpected
+        ? Math.round((totalCollected / totalExpected) * 100)
+        : 0;
+
+      document.getElementById("statExpected").textContent =
+        `XAF ${totalExpected.toLocaleString()}`;
+      document.getElementById("statCollected").textContent =
+        `XAF ${totalCollected.toLocaleString()}`;
+      document.getElementById("statPending").textContent =
+        `${pendingCount} {% trans "Members" %}`;
+      document.getElementById("statEfficiency").textContent = `${efficiency}%`;
+    }
+
+    function resetStats() {
+      document.getElementById("statExpected").textContent = "XAF 0";
+      document.getElementById("statCollected").textContent = "XAF 0";
+      document.getElementById("statPending").textContent = '0 {% trans "Members" %}';
+      document.getElementById("statEfficiency").textContent = "0%";
+    }
+
+    function resetMemberTable() {
+      el.memberListBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-20 text-center">
+            <div class="flex flex-col items-center text-slate-300">
+              <i class="fas fa-mouse-pointer text-xl mb-3"></i>
+              <p class="text-xs font-medium">{% trans "Select a contribution cycle to start recording" %}</p>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    /* ═══════════════════════
+       HELPERS & EVENTS
+    ═══════════════════════ */
+    function selectSeason(s) {
+      state.currentSeason = s;
+      state.currentCycle = null;
+      localStorage.setItem(
+        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`,
+        JSON.stringify(s)
+      );
+      closeAllModals();
+      showManagement();
+      initCycles();
+      resetMemberTable();
+      resetStats();
+      toast("info", `Switched to season: ${s.title || s.season_date}`);
+    }
+
+    function showManagement() {
+      el.selectionState.classList.add("hidden");
+      el.managementState.classList.remove("hidden");
+    }
+
+    function closeAllModals() {
+      document.querySelectorAll(".fixed").forEach((m) => {
+        if (m.id && m.id.includes("Modal")) m.classList.add("hidden");
+      });
+    }
+
+    document
+      .querySelectorAll(".close-modal")
+      .forEach((b) => (b.onclick = closeAllModals));
+
+    document.getElementById("btnOpenSeasonModal").onclick = () => {
+      el.seasonModal.classList.remove("hidden");
+      fetchSeasons();
+    };
+
+    document.getElementById("btnChangeSeason").onclick = () => {
+      el.seasonModal.classList.remove("hidden");
+      fetchSeasons();
+    };
+
+    document.getElementById("btnShowCreateSeason").onclick = () => {
+      document.getElementById("createSeasonModal").classList.remove("hidden");
+    };
+
+    document.getElementById("btnCreateNewSeason").onclick = () => {
+      document.getElementById("createSeasonModal").classList.remove("hidden");
+    };
+
+    document.getElementById("btnNewCycle").onclick = () => {
+      const label = FEATURE_LABELS[state.currentFeatureType] || "Contribution";
+      document.getElementById("createCycleModalTitle").textContent =
+        `New ${label} Cycle`;
+      document.getElementById("createCycleModal").classList.remove("hidden");
+    };
+
+    document.getElementById("formCreateSeason").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = Object.fromEntries(fd);
+      payload.feature_type = state.currentFeatureType;
+      try {
+        const res = await fetch(API_URLS.seasonCreate, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast("success", "Season created");
+          fetchSeasons();
+          closeAllModals();
+          e.target.reset();
+        } else {
+          toast("error", data.message || "Failed to create season");
+        }
+      } catch (err) {
+        toast("error", "Request failed");
+      }
+    };
+
+    document.getElementById("formCreateCycle").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const payload = Object.fromEntries(fd);
+      payload.is_special = e.target.is_special.checked;
+      payload.feature_type = state.currentFeatureType;
+
+      try {
+        const res = await fetch(
+          API_URLS.featureCycleCreate(state.currentSeason.id),
+          {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+        const data = await res.json();
+        if (data.success) {
+          toast("success", "Contribution cycle added");
+          initCycles();
+          closeAllModals();
+          e.target.reset();
+        } else {
+          toast("error", data.message || "Failed to create cycle");
+        }
+      } catch (err) {
+        toast("error", "Request failed");
+      }
+    };
+
+    el.cycleSelector.onchange = (e) => {
+      state.currentCycle = e.target.value;
+      if (state.currentCycle) {
+        fetchContributions(state.currentCycle);
+        document.getElementById("displayCycleTitle").textContent =
+          e.target.options[e.target.selectedIndex].text.split(" (")[0];
+      } else {
+        resetMemberTable();
+        resetStats();
+      }
+    };
+
+    document.getElementById("memberSearch").oninput = (e) =>
+      renderMembers(e.target.value);
+
+    // Signature Pad Setup
+    const canvas = document.getElementById("signature-pad");
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: "rgba(255, 255, 255, 0)",
+      penColor: "rgb(5, 150, 105)",
+    });
+
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear();
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    document
+      .getElementById("clear-signature")
+      .addEventListener("click", () => signaturePad.clear());
+
+    // Table event delegation
+    el.memberListBody.addEventListener("click", (e) => {
+      // Quick pay full
+      const fullBtn = e.target.closest(".btn-pay-full");
+      if (fullBtn) {
+        const mid = fullBtn.dataset.mid;
+        const fullAmount = fullBtn.dataset.full;
+        saveContribution(mid, fullAmount);
+        return;
+      }
+
+      // View detail
+      const viewBtn = e.target.closest(".btn-view-detail");
+      if (viewBtn) {
+        const mid = viewBtn.dataset.mid;
+        const m = state.members.find((x) => x.membership_id === mid);
+        if (!m || !m.payment_reference) {
+          toast("info", "No detailed record found for this member");
+          return;
+        }
+
+        document.getElementById("viewMemberName").textContent = m.member_name;
+        document.getElementById("viewPaymentRef").textContent =
+          m.payment_reference;
+        document.getElementById("viewAmountPaid").textContent =
+          `XAF ${parseFloat(m.amount_paid).toLocaleString()}`;
+        document.getElementById("viewPaymentDate").textContent = m.paid_at
+          ? new Date(m.paid_at).toLocaleDateString()
+          : "---";
+        document.getElementById("viewComment").textContent =
+          m.comment || "No comment provided";
+        document.getElementById("viewSignatureImg").src = m.signature || "";
+
+        document
+          .getElementById("viewContributionModal")
+          .classList.remove("hidden");
+      }
+
+      // Open record modal
+      const recordBtn = e.target.closest(".btn-open-record");
+      if (recordBtn) {
+        const mid = recordBtn.dataset.mid;
+        const name = recordBtn.dataset.name;
+        const amount = recordBtn.dataset.amount;
+        const expected = recordBtn.dataset.expected;
+
+        document.getElementById("modalMembershipId").value = mid;
+        document.getElementById("modalMemberName").innerHTML =
+          `{% trans "Record Contribution for" %} <span class="text-emerald-600">${name}</span>`;
+        document.getElementById("modalAmountPaid").value =
+          amount === "0.00" ? expected : amount;
+        document.getElementById("modalComment").value = "";
+        signaturePad.clear();
+
+        document
+          .getElementById("recordContributionModal")
+          .classList.remove("hidden");
+        resizeCanvas();
+      }
+    });
+
+    document.getElementById("formRecordContribution").onsubmit = async (e) => {
+      e.preventDefault();
+      if (signaturePad.isEmpty()) {
+        toast("warning", "Please provide a signature");
+        return;
+      }
+
+      const mid = document.getElementById("modalMembershipId").value;
+      const amount = document.getElementById("modalAmountPaid").value;
+      const comment = document.getElementById("modalComment").value;
+      const signature = signaturePad.toDataURL();
+
+      await saveContribution(mid, amount, comment, signature);
+      closeAllModals();
+    };
+
+    function toast(type, msg) {
+      window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    init();
+  })();
+</script>
+{% endblock %}

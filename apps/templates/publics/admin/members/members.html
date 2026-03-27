@@ -75,6 +75,70 @@
           <i class="fas fa-plus"></i>
         </button>
     </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="entertainment"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Entertainment Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('entertainment')" 
+          id="addEntertainmentBtn"
+          class="hidden w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center text-xs hover:bg-purple-600 transition-all shadow-lg shadow-purple-200"
+          title="{% trans 'Add to Entertainment' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="sinking_fund"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Sinking Fund Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('sinking_fund')" 
+          id="addSinkingFundBtn"
+          class="hidden w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center text-xs hover:bg-blue-600 transition-all shadow-lg shadow-blue-200"
+          title="{% trans 'Add to Sinking Fund' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="events"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Event Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('events')" 
+          id="addEventsBtn"
+          class="hidden w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center text-xs hover:bg-sky-600 transition-all shadow-lg shadow-sky-200"
+          title="{% trans 'Add to Events' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="project"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Project Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('project')" 
+          id="addProjectBtn"
+          class="hidden w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200"
+          title="{% trans 'Add to Project' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
   </div>
 
   <!-- Table Section -->
@@ -419,6 +483,10 @@
       tabs: document.querySelectorAll(".member-tab"),
       addNjangiBtn: document.getElementById("addNjangiBtn"),
       addSavingsBtn: document.getElementById("addSavingsBtn"),
+      addEntertainmentBtn: document.getElementById("addEntertainmentBtn"),
+      addSinkingFundBtn: document.getElementById("addSinkingFundBtn"),
+      addEventsBtn: document.getElementById("addEventsBtn"),
+      addProjectBtn: document.getElementById("addProjectBtn"),
       featureEnrollModal: document.getElementById("featureEnrollModal"),
       eligibleMemberList: document.getElementById("eligibleMemberList"),
       enrollBtn: document.getElementById("enrollBtn"),
@@ -656,7 +724,17 @@
     window.openAddFeatureMemberModal = async (feature) => {
         currentFeature = feature;
         selectedMembers.clear();
-        ui.featureModalTitle.textContent = feature === 'njangi' ? "{% trans 'Add to Njangi' %}" : "{% trans 'Add to Savings' %}";
+        
+        const titles = {
+            'njangi': "{% trans 'Add to Njangi' %}",
+            'savings': "{% trans 'Add to Savings' %}",
+            'entertainment': "{% trans 'Add to Entertainment' %}",
+            'sinking_fund': "{% trans 'Add to Sinking Fund' %}",
+            'events': "{% trans 'Add to Events' %}",
+            'project': "{% trans 'Add to Project' %}"
+        };
+        
+        ui.featureModalTitle.textContent = titles[feature] || "{% trans 'Add to Feature' %}";
         ui.featureEnrollModal.classList.replace('hidden', 'flex');
         
         ui.eligibleMemberList.innerHTML = '<div class="py-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>';
@@ -759,6 +837,10 @@
         // Update UI buttons
         ui.addNjangiBtn.classList.toggle('hidden', activeTab !== 'njangi');
         ui.addSavingsBtn.classList.toggle('hidden', activeTab !== 'savings');
+        ui.addEntertainmentBtn.classList.toggle('hidden', activeTab !== 'entertainment');
+        ui.addSinkingFundBtn.classList.toggle('hidden', activeTab !== 'sinking_fund');
+        ui.addEventsBtn.classList.toggle('hidden', activeTab !== 'events');
+        ui.addProjectBtn.classList.toggle('hidden', activeTab !== 'project');
 
         // Update UI classes
         ui.tabs.forEach((b) => {

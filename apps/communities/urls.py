@@ -6,6 +6,11 @@ from apps.communities.views.community_view import (
     CommunityUpdateView,
     CommunityDeleteView,
 )
+from apps.communities.views.settings_view import (
+    AdminSettingsView,
+    UpdateFeatureStatusAPI,
+    UpdateCommunitySettingsAPI,
+)
 from apps.communities.views.policy_view import (
     CommunityPolicyDetailView,
     CommunityPolicyUpdateView,
@@ -71,4 +76,9 @@ urlpatterns = [
     path("api/applications/<uuid:application_id>/", ApplicationDetailAPI.as_view(), name="application_detail_api"),
     path("api/applications/<uuid:application_id>/process/", ApplicationProcessAPI.as_view(), name="application_process_api"),
     path("api/communities/<uuid:community_id>/apply/", ApplicationCreateAPI.as_view(), name="application_create_api"),
+
+    # Settings
+    path("communities/<uuid:community_id>/settings/", AdminSettingsView.as_view(), name="settings"),
+    path("api/communities/<uuid:community_id>/features/toggle/", UpdateFeatureStatusAPI.as_view(), name="toggle_feature_api"),
+    path("api/communities/<uuid:community_id>/settings/update/", UpdateCommunitySettingsAPI.as_view(), name="update_settings_api"),
 ]

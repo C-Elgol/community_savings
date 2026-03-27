@@ -55,9 +55,9 @@
     </a>
     <!-- Contributions -->
     <a
-      href="#"
+      href="{% url 'finance:admin_contributions' community.id %}"
       data-page="contributions"
-      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_contributions' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
     >
       <i class="fas fa-coins w-5 text-slate-400"></i><span>Contributions</span>
     </a>
@@ -132,9 +132,9 @@
     </a>
     <!-- Settings -->
     <a
-      href="#"
+      href="{% url 'communities:settings' community.id %}"
       data-page="settings"
-      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex {% if request.resolver_match.url_name == 'settings' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
     >
       <i class="fas fa-cog w-5 text-slate-400"></i><span>Settings</span>
     </a>
