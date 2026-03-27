@@ -112,8 +112,9 @@ class Contribution(SavingsBaseModel):
         return f"{self.membership.user.full_name} - {self.cycle.title}"
 
     def clean(self):
-        if not self.membership.has_feature(CommunityFeatureType.NJANGI):
-            raise ValidationError("This member is not part of the Njangi system.")
+        feature = self.cycle.feature_type or CommunityFeatureType.NJANGI
+        if not self.membership.has_feature(feature):
+            raise ValidationError(f"This member is not part of the {feature} system.")
 
 class MemberFinanceSnapshot(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="finance_snapshots")

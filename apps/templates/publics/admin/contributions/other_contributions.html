@@ -195,6 +195,7 @@
               <th class="px-6 py-4 text-left">{% trans "Ref" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Expected" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Amount Paid" %}</th>
+              <th class="px-6 py-4 text-left">{% trans "Total Season" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
               <th class="px-6 py-4 text-center">{% trans "Action" %}</th>
             </tr>
@@ -575,6 +576,54 @@
   </div>
 </div>
 
+<!-- 6. Member Season Contributions Modal -->
+<div
+  id="seasonContributionsModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h3 class="text-2xl font-black text-slate-800" id="histMemberName">
+            {% trans "Member History" %}
+          </h3>
+          <p class="text-xs font-bold text-emerald-600 uppercase tracking-widest" id="histFeatureLabel">
+            ---
+          </p>
+        </div>
+        <button
+          class="close-modal w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
+        >
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="max-h-[400px] overflow-y-auto mb-6 custom-scrollbar pr-2">
+        <table class="w-full text-left">
+          <thead class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50">
+            <tr>
+              <th class="py-3 px-4">{% trans "Cycle" %}</th>
+              <th class="py-3 px-4">{% trans "Date" %}</th>
+              <th class="py-3 px-4 text-right">{% trans "Amount" %}</th>
+            </tr>
+          </thead>
+          <tbody id="histTableBody" class="divide-y divide-slate-50">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between p-6 bg-slate-50 rounded-3xl">
+        <span class="text-sm font-black text-slate-500 uppercase tracking-widest">{% trans "Grand Total Saved" %}</span>
+        <span class="text-2xl font-black text-emerald-700" id="histGrandTotal">XAF 0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
   .active-modal {
     transform: scale(1) !important;
@@ -623,6 +672,8 @@
         `/finance/api/cycle/${cycleId}/feature-contributions/`,
       featureRecord: (cycleId) =>
         `/finance/api/cycle/${cycleId}/feature-contributions/`,
+      memberSeasonContributions: (seasonId, membershipId) =>
+        `/finance/api/season/${seasonId}/membership/${membershipId}/contributions/`,
     };
 
     // State
@@ -823,7 +874,9 @@
           );
           const m = state.members.find((x) => x.membership_id === membershipId);
           if (m) {
+            const oldAmount = parseFloat(m.amount_paid || 0);
             m.amount_paid = amount;
+            m.total_season_amount = (parseFloat(m.total_season_amount || 0) - oldAmount + parseFloat(amount)).toFixed(2);
             m.payment_reference = data.payment_reference;
             m.status =
               parseFloat(amount) >= parseFloat(m.expected_amount)
@@ -875,7 +928,7 @@
 
       if (filtered.length === 0) {
         el.memberListBody.innerHTML =
-          '<tr><td colspan="6" class="py-10 text-center text-slate-400">{% trans "No matching members" %}</td></tr>';
+          '<tr><td colspan="7" class="py-10 text-center text-slate-400">{% trans "No matching members" %}</td></tr>';
         return;
       }
 
@@ -908,6 +961,14 @@
                 <i class="fas fa-bolt"></i>
               </button>
             </div>
+          </td>
+          <td class="px-6 py-4">
+            <button class="btn-view-season-total p-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-black hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+               data-mid="${m.membership_id}"
+               data-name="${m.member_name}">
+               XAF ${parseFloat(m.total_season_amount || 0).toLocaleString()}
+               <i class="fas fa-history text-[10px] opacity-50"></i>
+            </button>
           </td>
           <td class="px-6 py-4">
             <span class="status-badge px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${m.status}</span>
@@ -966,7 +1027,7 @@
     function resetMemberTable() {
       el.memberListBody.innerHTML = `
         <tr>
-          <td colspan="6" class="py-20 text-center">
+          <td colspan="7" class="py-20 text-center">
             <div class="flex flex-col items-center text-slate-300">
               <i class="fas fa-mouse-pointer text-xl mb-3"></i>
               <p class="text-xs font-medium">{% trans "Select a contribution cycle to start recording" %}</p>
@@ -1190,7 +1251,57 @@
           .classList.remove("hidden");
         resizeCanvas();
       }
+
+      // View Season Total / History
+      const historyBtn = e.target.closest(".btn-view-season-total");
+      if (historyBtn) {
+        const mid = historyBtn.dataset.mid;
+        const name = historyBtn.dataset.name;
+        openSeasonContributionsModal(mid, name);
+      }
     });
+
+    async function openSeasonContributionsModal(membershipId, name) {
+        if (!state.currentSeason) return;
+        
+        const modal = document.getElementById("seasonContributionsModal");
+        const tableBody = document.getElementById("histTableBody");
+        
+        document.getElementById("histMemberName").textContent = name;
+        document.getElementById("histFeatureLabel").textContent = FEATURE_LABELS[state.currentFeatureType] || "";
+        tableBody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading history...</td></tr>';
+        document.getElementById("histGrandTotal").textContent = "XAF 0";
+        
+        modal.classList.remove("hidden");
+        
+        try {
+            const res = await fetch(API_URLS.memberSeasonContributions(state.currentSeason.id, membershipId));
+            const data = await res.json();
+            if (data.success) {
+                if (data.history.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-slate-400">No records found for this season.</td></tr>';
+                } else {
+                    tableBody.innerHTML = data.history.map(row => `
+                        <tr>
+                            <td class="py-3 px-4">
+                                <p class="text-sm font-bold text-slate-700">${row.cycle_title}</p>
+                                <p class="text-[10px] font-black font-mono text-emerald-600">${row.payment_reference || "---"}</p>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="text-xs text-slate-500 font-medium">${new Date(row.due_date).toLocaleDateString()}</span>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <span class="text-sm font-black text-slate-800">XAF ${parseFloat(row.amount_paid).toLocaleString()}</span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                document.getElementById("histGrandTotal").textContent = `XAF ${parseFloat(data.grand_total).toLocaleString()}`;
+            }
+        } catch (err) {
+            toast('error', 'Failed to load contribution history');
+        }
+    }
 
     document.getElementById("formRecordContribution").onsubmit = async (e) => {
       e.preventDefault();

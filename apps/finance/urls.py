@@ -5,7 +5,7 @@ from apps.finance.views.member_loan_view import MemberLoanView
 from apps.finance.views.members_fine_view import MemberFineView
 from apps.finance.views.admin_contribution_and_cycle_views import AdminContributionAndCycleView
 from apps.finance.views.admin_contributions_view import AdminContributionsView
-from apps.finance.views.contribution_api_view import SeasonAPI, CycleAPI, ContributionAPI, ContributionCycleAPI, ContributionRecordAPI
+from apps.finance.views.contribution_api_view import SeasonAPI, CycleAPI, ContributionAPI, ContributionCycleAPI, ContributionRecordAPI, MemberSeasonContributionsAPI
 from apps.finance.views.fine_api_view import FineEligibleMembersAPI, LaunchFinesAPI, FineListAPI, PayFineAPI, MemberFineListAPI
 from apps.finance.views.fine_list_view import AdminFineListView
 from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingBeneficiaryAPI
@@ -35,5 +35,6 @@ urlpatterns = [
     # Feature-type Contribution APIs (Savings, Entertainment, Sinking Fund, Project)
     path('api/season/<uuid:season_id>/feature-cycles/', ContributionCycleAPI.as_view(), name='feature_cycle_api'),
     path('api/cycle/<uuid:cycle_id>/feature-contributions/', ContributionRecordAPI.as_view(), name='feature_contribution_api'),
+    path('api/season/<uuid:season_id>/membership/<uuid:membership_id>/contributions/', MemberSeasonContributionsAPI.as_view(), name='member_season_contributions_api'),
 ]
 

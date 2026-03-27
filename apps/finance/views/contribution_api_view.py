@@ -6,6 +6,7 @@ from apps.communities.models import Community, Membership
 from apps.global_data.enum import ContributionStatus
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Sum
 import json
 from apps.finance.tasks.contribution_tasks import send_contribution_recorded_email_task
 
@@ -214,6 +215,15 @@ class ContributionRecordAPI(View):
         contributions = Contribution.objects.filter(cycle=cycle)
         contrib_map = {str(c.membership_id): c for c in contributions}
 
+        # Fetch season totals for all members in this season/feature
+        season_totals = Contribution.objects.filter(
+            cycle__season=cycle.season,
+            cycle__feature_type=feature_type,
+            status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL]
+        ).values('membership_id').annotate(total=Sum('amount_paid'))
+        
+        totals_map = {str(item['membership_id']): item['total'] for item in season_totals}
+
         data = []
         for m in memberships:
             c = contrib_map.get(str(m.id))
@@ -222,6 +232,7 @@ class ContributionRecordAPI(View):
                 'member_name': m.user.get_full_name,
                 'expected_amount': str(cycle.expected_amount),
                 'amount_paid': str(c.amount_paid) if c else '0.00',
+                'total_season_amount': str(totals_map.get(str(m.id), '0.00')),
                 'status': c.status if c else ContributionStatus.PENDING,
                 'paid_at': c.paid_at.isoformat() if c and c.paid_at else None,
                 'payment_reference': c.payment_reference if c else None,
@@ -295,3 +306,40 @@ class ContributionRecordAPI(View):
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+class MemberSeasonContributionsAPI(View):
+    """API to fetch all contributions for a specific member in a season for a feature type."""
+
+    def get(self, request, season_id, membership_id):
+        season = get_object_or_404(FinancialSeason, id=season_id)
+        membership = get_object_or_404(Membership, id=membership_id)
+        feature_type = season.feature_type
+
+        contributions = Contribution.objects.filter(
+            membership=membership,
+            cycle__season=season,
+            cycle__feature_type=feature_type
+        ).select_related('cycle').order_by('cycle__due_date')
+
+        history = []
+        grand_total = 0
+        for c in contributions:
+            amount = float(c.amount_paid)
+            grand_total += amount
+            history.append({
+                'cycle_title': c.cycle.title,
+                'due_date': c.cycle.due_date.isoformat(),
+                'amount_paid': str(c.amount_paid),
+                'status': c.status,
+                'payment_reference': c.payment_reference,
+                'paid_at': c.paid_at.isoformat() if c.paid_at else None,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'member_name': membership.user.get_full_name,
+            'feature_label': (feature_type or 'contribution').replace('_', ' ').title(),
+            'history': history,
+            'grand_total': str(grand_total)
+        })
