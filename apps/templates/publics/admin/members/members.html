@@ -123,6 +123,22 @@
           <i class="fas fa-plus"></i>
         </button>
     </div>
+    <div class="flex items-center gap-1 group">
+        <button 
+          data-tab="project"
+          class="member-tab px-6 py-2.5 rounded-2xl text-sm font-black transition-all text-slate-500 hover:text-slate-700"
+        >
+          {% trans "Project Members" %}
+        </button>
+        <button 
+          onclick="openAddFeatureMemberModal('project')" 
+          id="addProjectBtn"
+          class="hidden w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs hover:bg-emerald-800 transition-all shadow-lg shadow-emerald-200"
+          title="{% trans 'Add to Project' %}"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+    </div>
   </div>
 
   <!-- Table Section -->
@@ -470,6 +486,7 @@
       addEntertainmentBtn: document.getElementById("addEntertainmentBtn"),
       addSinkingFundBtn: document.getElementById("addSinkingFundBtn"),
       addEventsBtn: document.getElementById("addEventsBtn"),
+      addProjectBtn: document.getElementById("addProjectBtn"),
       featureEnrollModal: document.getElementById("featureEnrollModal"),
       eligibleMemberList: document.getElementById("eligibleMemberList"),
       enrollBtn: document.getElementById("enrollBtn"),
@@ -713,7 +730,8 @@
             'savings': "{% trans 'Add to Savings' %}",
             'entertainment': "{% trans 'Add to Entertainment' %}",
             'sinking_fund': "{% trans 'Add to Sinking Fund' %}",
-            'events': "{% trans 'Add to Events' %}"
+            'events': "{% trans 'Add to Events' %}",
+            'project': "{% trans 'Add to Project' %}"
         };
         
         ui.featureModalTitle.textContent = titles[feature] || "{% trans 'Add to Feature' %}";
@@ -822,6 +840,7 @@
         ui.addEntertainmentBtn.classList.toggle('hidden', activeTab !== 'entertainment');
         ui.addSinkingFundBtn.classList.toggle('hidden', activeTab !== 'sinking_fund');
         ui.addEventsBtn.classList.toggle('hidden', activeTab !== 'events');
+        ui.addProjectBtn.classList.toggle('hidden', activeTab !== 'project');
 
         // Update UI classes
         ui.tabs.forEach((b) => {
