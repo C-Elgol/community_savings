@@ -1001,11 +1001,12 @@
         (sum, m) => sum + parseFloat(m.amount_paid),
         0
       );
-      const pendingCount = state.members.filter(
-        (m) => m.status !== "paid"
+      const contributedCount = state.members.filter(
+        (m) => parseFloat(m.amount_paid) > 0
       ).length;
-      const efficiency = totalExpected
-        ? Math.round((totalCollected / totalExpected) * 100)
+      const pendingCount = state.members.length - contributedCount;
+      const efficiency = state.members.length
+        ? Math.round((contributedCount / state.members.length) * 100)
         : 0;
 
       document.getElementById("statExpected").textContent =
