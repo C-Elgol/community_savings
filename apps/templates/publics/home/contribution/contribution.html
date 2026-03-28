@@ -1,106 +1,234 @@
 {% extends 'publics/home/base.html' %} {% load static %} {% load i18n %} {% load humanize %} {% block content %}
 
 <!-- ========== CONTRIBUTIONS PAGE ========== -->
-<div id="contributions" class="page">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-bold text-slate-800">
-        {% trans "Your Njangi Contributions" %}
-      </h2>
+<!-- ========== CONTRIBUTIONS PAGE ========== -->
+<div id="contributions" class="page max-w-5xl mx-auto py-8 px-4 sm:px-6">
+  <!-- Header & Filters Section -->
+  <div class="mb-10">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+      <div>
+        <h1 class="text-3xl font-black text-slate-900 mb-2">
+          {% trans "Financial Overview" %}
+        </h1>
+        <p class="text-slate-500 font-medium">
+          {% trans "Track your contributions and savings progress across communities." %}
+        </p>
+      </div>
+
+      <!-- Season Selector -->
+      <form id="filterForm" method="GET" class="flex flex-col sm:flex-row items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+        <input type="hidden" name="feature_type" id="activeFeatureInput" value="{{ active_feature }}">
+        
+        <div class="relative w-full sm:w-64">
+          <i class="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <select 
+            name="season_id" 
+            onchange="this.form.submit()"
+            class="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 outline-none appearance-none transition-all cursor-pointer"
+          >
+            <option value="">{% trans "All Seasons" %}</option>
+            {% for season in available_seasons %}
+              <option value="{{ season.id }}" {% if active_season_id == season.id|stringformat:"s" %}selected{% endif %}>
+                {{ season.title|default:season.season_date }}
+              </option>
+            {% endfor %}
+          </select>
+          <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
+        </div>
+      </form>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="bg-emerald-50 p-4 rounded-xl">
-        <p class="text-sm text-emerald-700 font-medium">
-          {% trans "Total contributed" %}
-        </p>
-        <p class="text-2xl font-bold text-slate-800">
-          XAF {{ total_contributed|floatformat:0|intcomma }}
-        </p>
+    <!-- Feature Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
+      {% for ft in available_features %}
+      <button 
+        type="button"
+        onclick="switchFeature('{{ ft }}')"
+        class="flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all
+          {% if active_feature == ft %}
+            bg-slate-900 text-white shadow-xl shadow-slate-900/20 scale-105 z-10
+          {% else %}
+            bg-white text-slate-400 border border-slate-100 hover:bg-slate-50 hover:text-slate-600
+          {% endif %}"
+      >
+        <div class="flex items-center gap-2">
+          <i class="fas 
+            {% if ft == 'njangi' %}fa-users
+            {% elif ft == 'savings' %}fa-piggy-bank
+            {% elif ft == 'entertainment' %}fa-glass-cheers
+            {% elif ft == 'sinking_fund' %}fa-shield-alt
+            {% elif ft == 'project' %}fa-project-diagram
+            {% elif ft == 'events' %}fa-calendar-alt
+            {% else %}fa-coins{% endif %}"></i>
+          <span>
+            {% if ft == 'njangi' %}{% trans "Njangi" %}
+            {% elif ft == 'savings' %}{% trans "Savings" %}
+            {% elif ft == 'entertainment' %}{% trans "Entertainment" %}
+            {% elif ft == 'sinking_fund' %}{% trans "Sinking Fund" %}
+            {% elif ft == 'project' %}{% trans "Project" %}
+            {% elif ft == 'events' %}{% trans "Events" %}
+            {% else %}{{ ft }}{% endif %}
+          </span>
+        </div>
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+    <div class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-500 overflow-hidden relative">
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
+      <div class="relative z-10">
+        <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30">
+          <i class="fas fa-wallet text-xl"></i>
+        </div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{% trans "Total Contributed" %}</p>
+        <h3 class="text-3xl font-black text-slate-900 tracking-tight">XAF {{ total_contributed|floatformat:0|intcomma }}</h3>
       </div>
-      <div class="bg-indigo-50 p-4 rounded-xl">
-        <p class="text-sm text-indigo-700 font-medium">
-          {% trans "This season" %}
-        </p>
-        <p class="text-2xl font-bold text-slate-800">
-          XAF {{ this_season_contributed|floatformat:0|intcomma }}
-        </p>
+    </div>
+
+    {% if active_feature == 'njangi' %}
+    <div class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-500 overflow-hidden relative">
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
+      <div class="relative z-10">
+        <div class="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-600/30">
+          <i class="fas fa-hand-holding-usd text-xl"></i>
+        </div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{% trans "Season Beneficiaries" %}</p>
+        <div class="mt-4 space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-hide">
+          {% for ben in season_beneficiaries %}
+            <div class="flex items-center justify-between gap-3 p-2.5 bg-slate-50/50 rounded-xl border border-slate-100/50 hover:bg-white hover:shadow-sm transition-all duration-300">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-[9px] border border-emerald-200/50">
+                  {{ ben.membership.user.get_full_name|slice:":1" }}
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[11px] font-black text-slate-800 leading-none">{{ ben.membership.user.get_full_name }}</span>
+                  <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">{{ ben.cycle.title }}</span>
+                </div>
+              </div>
+              {% if ben.membership.user == request.user %}
+                <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-lg text-[7px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20">{% trans "You" %}</span>
+              {% endif %}
+            </div>
+          {% empty %}
+            <div class="py-6 text-center">
+              <i class="fas fa-user-clock text-slate-200 text-xl mb-2"></i>
+              <p class="text-[10px] text-slate-300 italic font-medium">{% trans "Awaiting results..." %}</p>
+            </div>
+          {% endfor %}
+        </div>
       </div>
-      <div class="bg-amber-50 p-4 rounded-xl">
-        <p class="text-sm text-amber-700 font-medium">
-          {% trans "Pending cycles" %}
-        </p>
-        <p class="text-2xl font-bold text-slate-800">
-          {{ pending_cycles_count }}
-        </p>
+    </div>
+    {% else %}
+    <div class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-amber-900/5 transition-all duration-500 overflow-hidden relative">
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
+      <div class="relative z-10">
+        <div class="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+          <i class="fas fa-hourglass-half text-xl"></i>
+        </div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{% trans "Pending Contributions" %}</p>
+        <h3 class="text-3xl font-black text-slate-900 tracking-tight">{{ pending_cycles_count }}</h3>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="group bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl shadow-slate-900/20 overflow-hidden relative sm:col-span-2 lg:col-span-1">
+      <div class="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
+      <div class="relative z-10">
+        <div class="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/10">
+          <i class="fas fa-chart-line text-xl"></i>
+        </div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{% trans "Active Feature" %}</p>
+        <h3 class="text-2xl font-black text-white">{{ active_feature_label }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contributions Table -->
+  <div class="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+    <div class="p-8 border-b border-slate-50 flex items-center justify-between">
+      <h3 class="font-black text-slate-800 text-lg">{% trans "Contribution History" %}</h3>
+      <div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400">
+        <i class="fas fa-list-ul text-xs"></i>
       </div>
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-500">
-          <tr>
-            <th class="px-4 py-3 text-left">{% trans "Community" %}</th>
-            <th class="px-4 py-3 text-left">{% trans "Cycle" %}</th>
-            <th class="px-4 py-3 text-left">{% trans "Due date" %}</th>
-            <th class="px-4 py-3 text-left">{% trans "Expected" %}</th>
-            <th class="px-4 py-3 text-left">{% trans "Paid" %}</th>
-            <th class="px-4 py-3 text-left">{% trans "Status" %}</th>
-            <th class="px-4 py-3 text-left"></th>
+      <table class="w-full">
+        <thead>
+          <tr class="bg-slate-50/50">
+            <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Community & Cycle" %}</th>
+            <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Schedule" %}</th>
+            <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Amount Details" %}</th>
+            <th class="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">{% trans "Status" %}</th>
+            <th class="px-8 py-5"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-50">
           {% for contrib in contributions %}
-          <tr class="border-b">
-            <td class="px-4 py-3 font-medium">
-              {{ contrib.membership.community.name }}
+          <tr class="group hover:bg-slate-50 transition-colors duration-300">
+            <td class="px-8 py-6">
+              <div class="flex flex-col">
+                <span class="text-sm font-black text-slate-800 group-hover:text-emerald-700 transition-colors">{{ contrib.membership.community.name }}</span>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-tight mt-0.5">{{ contrib.cycle.title }}</span>
+              </div>
             </td>
-            <td class="px-4 py-3">{{ contrib.cycle.title }}</td>
-            <td class="px-4 py-3">{{ contrib.cycle.due_date|date:"d M" }}</td>
-            <td class="px-4 py-3">
-              XAF {{ contrib.expected_amount|floatformat:0|intcomma }}
+            <td class="px-8 py-6">
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-slate-700">{{ contrib.cycle.due_date|date:"d M Y" }}</span>
+                <span class="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{{ contrib.cycle.season.title|default:contrib.cycle.season.season_date }}</span>
+              </div>
             </td>
-            <td class="px-4 py-3">
-              XAF {{ contrib.amount_paid|floatformat:0|intcomma }}
+            <td class="px-8 py-6 text-right font-mono">
+              <div class="flex flex-col items-end">
+                <span class="text-sm font-black text-slate-800">XAF {{ contrib.amount_paid|floatformat:0|intcomma }}</span>
+                <span class="text-[10px] text-slate-400 font-bold">{% trans "Goal" %}: {{ contrib.expected_amount|floatformat:0|intcomma }}</span>
+              </div>
             </td>
-            <td class="px-4 py-3">
+            <td class="px-8 py-6 text-center">
               {% if contrib.status == 'paid' %}
-              <span
-                class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs"
-                >{% trans "Paid" %}</span
-              >
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-emerald-200/50">
+                  <i class="fas fa-check-circle text-[8px]"></i> {% trans "Paid" %}
+                </span>
               {% elif contrib.status == 'partial' %}
-              <span
-                class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs"
-                >{% trans "Partial" %}</span
-              >
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-amber-200/50">
+                  <i class="fas fa-adjust text-[8px]"></i> {% trans "Partial" %}
+                </span>
               {% elif contrib.status == 'overdue' %}
-              <span
-                class="bg-rose-100 text-rose-800 px-2 py-1 rounded-full text-xs"
-                >{% trans "Overdue" %}</span
-              >
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-rose-200/50">
+                  <i class="fas fa-exclamation-triangle text-[8px]"></i> {% trans "Overdue" %}
+                </span>
               {% else %}
-              <span
-                class="bg-slate-100 text-slate-600 px-2 py-1 rounded-full text-xs"
-                >{% trans "Pending" %}</span
-              >
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-tighter border border-slate-200/50">
+                  <i class="fas fa-clock text-[8px]"></i> {% trans "Pending" %}
+                </span>
               {% endif %}
             </td>
-            <td class="px-4 py-3">
+            <td class="px-8 py-6 text-right">
               {% if contrib.payment_reference %}
-              <button
-                class="text-emerald-700"
-                title="{{ contrib.payment_reference }}"
-              >
-                <i class="fas fa-receipt"></i>
-              </button>
+              <div class="flex items-center justify-end group/receipt">
+                <span class="hidden sm:inline-block mr-3 text-[10px] font-mono font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded opacity-0 group-hover/receipt:opacity-100 transition-opacity">{{ contrib.payment_reference }}</span>
+                <button class="w-10 h-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-emerald-600 hover:text-white hover:rotate-12 transition-all duration-300 shadow-sm">
+                  <i class="fas fa-receipt"></i>
+                </button>
+              </div>
               {% endif %}
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
-              {% trans "No contributions found." %}
+            <td colspan="5" class="px-8 py-24 text-center">
+              <div class="flex flex-col items-center justify-center max-w-xs mx-auto">
+                <div class="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 text-2xl mb-6">
+                  <i class="fas fa-folder-open"></i>
+                </div>
+                <h4 class="text-slate-800 font-black mb-2 lowercase first-letter:uppercase">{% trans "No matching records found" %}</h4>
+                <p class="text-slate-400 text-xs font-medium lowercase first-letter:uppercase">
+                  {% trans "Try selecting a different feature or financial season to view your progress." %}
+                </p>
+              </div>
             </td>
           </tr>
           {% endfor %}
@@ -109,4 +237,24 @@
     </div>
   </div>
 </div>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  function switchFeature(featureType) {
+    document.getElementById('activeFeatureInput').value = featureType;
+    // We clear the season_id when switching features to avoid invalid filter combinations
+    const seasonSelect = document.querySelector('select[name="season_id"]');
+    if (seasonSelect) seasonSelect.value = "";
+    document.getElementById('filterForm').submit();
+  }
+</script>
 {% endblock %}
