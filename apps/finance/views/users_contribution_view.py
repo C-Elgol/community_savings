@@ -20,6 +20,20 @@ class UsersContributionView(LoginRequiredMixin, ListView):
         self.active_feature = self.request.GET.get('feature_type', 'njangi')
         self.active_season_id = self.request.GET.get('season_id')
 
+        # If no season_id provided, find the latest one for this feature
+        if not self.active_season_id:
+            seasons = FinancialSeason.objects.filter(
+                community__memberships__in=memberships
+            ).distinct()
+            
+            if self.active_feature == 'njangi':
+                latest_season = seasons.filter(Q(feature_type='njangi') | Q(feature_type__isnull=True)).order_by('-season_date').first()
+            else:
+                latest_season = seasons.filter(feature_type=self.active_feature).order_by('-season_date').first()
+            
+            if latest_season:
+                self.active_season_id = str(latest_season.id)
+
         queryset = Contribution.objects.filter(
             membership__in=memberships
         ).select_related(

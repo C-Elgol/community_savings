@@ -109,7 +109,7 @@ class Contribution(SavingsBaseModel):
         ]
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.cycle.title}"
+        return f"{self.membership.user.fullname} - {self.cycle.title}"
 
     def clean(self):
         feature = self.cycle.feature_type or CommunityFeatureType.NJANGI
