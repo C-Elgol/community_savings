@@ -10,6 +10,9 @@ from apps.finance.views.fine_api_view import FineEligibleMembersAPI, LaunchFines
 from apps.finance.views.fine_list_view import AdminFineListView
 from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingBeneficiaryAPI
 
+from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView
+from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI
+
 app_name = "finance"
     
 urlpatterns = [
@@ -19,6 +22,8 @@ urlpatterns = [
     path('admin-fines/<uuid:community_id>/', AdminFineListView.as_view(), name='admin_fines'),
     path('admin-contribution/<uuid:community_id>/', AdminContributionAndCycleView.as_view(), name='admin_contribution'),
     path('admin-contributions/<uuid:community_id>/', AdminContributionsView.as_view(), name='admin_contributions'),
+    path('admin-loan-applications/<uuid:community_id>/', AdminLoanApplicationView.as_view(), name='admin_loan_applications'),
+    path('admin-loans/<uuid:community_id>/', AdminLoanListView.as_view(), name='admin_loans'),
     # APIs
     path('api/community/<uuid:community_id>/seasons/', SeasonAPI.as_view(), name='season_api'),
     path('api/season/<uuid:season_id>/cycles/', CycleAPI.as_view(), name='cycle_api'),
@@ -28,6 +33,11 @@ urlpatterns = [
     path('api/community/<uuid:community_id>/fines/', FineListAPI.as_view(), name='fine_list_api'),
     path('api/fine/<uuid:fine_id>/pay/', PayFineAPI.as_view(), name='pay_fine_api'),
     path('api/me/fines/', MemberFineListAPI.as_view(), name='member_fine_api'),
+    path('api/community/<uuid:community_id>/loan-applications/', LoanApplicationAPI.as_view(), name='loan_application_api'),
+    path('api/loan-application/<uuid:application_id>/', LoanApplicationAPI.as_view(), name='loan_application_detail_api'),
+    path('api/community/<uuid:community_id>/loans/', LoanAPI.as_view(), name='loan_api'),
+    path('api/community/<uuid:community_id>/loan-products/', LoanProductAPI.as_view(), name='loan_product_api'),
+    path('api/community/<uuid:community_id>/memberships/', MembershipAPI.as_view(), name='membership_api'),
     # Njangi Rotation and Beneficiary
     path('api/season/<uuid:season_id>/njangi-rotation/', NjangiRotationAPI.as_view(), name='njangi_rotation_api'),
     path('api/njangi-rotation/<uuid:rotation_id>/', NjangiRotationAPI.as_view(), name='njangi_rotation_detail_api'),
