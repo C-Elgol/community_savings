@@ -85,6 +85,11 @@ class LoanApplicationAPI(View):
                     loan_app.status = LoanApplicationStatus.APPROVED
                     loan_app.save()
                     
+                    # Calculate maturity date
+                    term_months = loan_app.proposed_term_months
+                    borrow_date = timezone.now().date()
+                    maturity_date = borrow_date + timezone.timedelta(days=30 * term_months)
+                    
                     # Create the actual loan
                     Loan.objects.create(
                         application=loan_app,
@@ -92,7 +97,8 @@ class LoanApplicationAPI(View):
                         season=loan_app.season,
                         amount_borrowed=loan_app.amount_requested,
                         interest_to_be_paid=(loan_app.amount_requested * loan_app.loan_product.interest_rate) / 100,
-                        borrow_date=timezone.now().date(),
+                        borrow_date=borrow_date,
+                        maturity_date=maturity_date,
                         repayment_frequency=loan_app.repayment_frequency,
                         status='active'
                     )

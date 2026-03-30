@@ -172,6 +172,15 @@
         formApply: document.getElementById("formLoanApply")
     };
 
+    function resizeCanvas() {
+        if (!el.canvas) return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        el.canvas.width = el.canvas.offsetWidth * ratio;
+        el.canvas.height = el.canvas.offsetHeight * ratio;
+        el.canvas.getContext("2d").scale(ratio, ratio);
+        if (state.signaturePad) state.signaturePad.clear();
+    }
+
     function init() {
         if (!COMMUNITY_ID || COMMUNITY_ID === "None") return;
         
@@ -181,14 +190,6 @@
             penColor: '#064e3b'
         });
 
-        // Resize canvas correctly
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            el.canvas.width = el.canvas.offsetWidth * ratio;
-            el.canvas.height = el.canvas.offsetHeight * ratio;
-            el.canvas.getContext("2d").scale(ratio, ratio);
-            state.signaturePad.clear();
-        }
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
@@ -287,7 +288,14 @@
     /* ═══════════════════════
        APP FLOW
     ═══════════════════════ */
-    document.getElementById("btnApply").onclick = () => el.applyModal.classList.remove("hidden");
+    document.getElementById("btnApply").onclick = () => {
+        el.applyModal.classList.remove("hidden");
+        // We must wait for the modal to be visible before resizing the canvas
+        // otherwise offsetWidth/Height will be 0.
+        setTimeout(() => {
+            resizeCanvas();
+        }, 50);
+    };
     
     document.getElementById("btnClearSignature").onclick = () => state.signaturePad.clear();
 
