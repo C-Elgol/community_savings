@@ -871,6 +871,13 @@
           if (state.currentView === 'net_income') {
             renderNetIncome(data.net_income);
           }
+        } else if (res.status === 404) {
+          // Stale season ID in localStorage
+          localStorage.removeItem(`contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`);
+          state.currentSeason = null;
+          el.managementState.classList.add("hidden");
+          el.selectionState.classList.remove("hidden");
+          toast("warning", "The saved season no longer exists. Please select another.");
         }
       } catch (err) {
         toast("error", "Failed to load cycles");
@@ -1138,7 +1145,7 @@
                   ${new Date(c.due_date).toLocaleDateString()}
               </td>
               <td class="px-6 py-5 font-mono text-xs text-slate-400">
-                  ${parseFloat(c.expected_amount).toLocaleString()}
+                  ${parseFloat(c.total_expected || 0).toLocaleString()}
               </td>
               <td class="px-6 py-5 text-right">
                   <span class="text-sm font-black text-emerald-700">XAF ${parseFloat(c.total_collected).toLocaleString()}</span>

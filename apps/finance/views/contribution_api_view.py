@@ -162,10 +162,26 @@ class ContributionCycleAPI(View):
         if feature_type not in VALID_FEATURE_TYPES:
             return JsonResponse({'success': False, 'message': 'Invalid feature type'}, status=400)
 
+        # Existence check
+        from django.http import Http404
+        try:
+            season = get_object_or_404(FinancialSeason, id=season_id)
+        except Http404:
+            return JsonResponse({'success': False, 'message': f'Financial Season with ID {season_id} not found'}, status=404)
+
         cycles_qs = ContributionCycle.objects.filter(
             season_id=season_id,
             feature_type=feature_type
         ).order_by('due_date')
+        
+        # Get members count for this feature to calculate total expected
+        from apps.communities.models import Membership
+        memberships_count = Membership.objects.filter(
+            community=season.community,
+            status='active',
+            feature_participations__feature__feature_type=feature_type,
+            feature_participations__is_active=True
+        ).distinct().count()
         
         cycles_data = []
         grand_total = 0
@@ -178,11 +194,14 @@ class ContributionCycleAPI(View):
             total_collected = float(total_collected)
             grand_total += total_collected
             
+            total_expected = float(cycle.expected_amount) * memberships_count
+            
             cycles_data.append({
                 'id': str(cycle.id),
                 'title': cycle.title,
                 'due_date': cycle.due_date.isoformat(),
                 'expected_amount': str(cycle.expected_amount),
+                'total_expected': str(total_expected),
                 'is_closed': cycle.is_closed,
                 'total_collected': str(total_collected)
             })
@@ -198,9 +217,13 @@ class ContributionCycleAPI(View):
             data = json.loads(request.body)
             feature_type = data.get('feature_type', '')
             if feature_type not in VALID_FEATURE_TYPES:
-                return JsonResponse({'success': False, 'message': 'Invalid feature type'}, status=400)
+                return JsonResponse({'success': False, 'message': f'Invalid feature type: {feature_type}'}, status=400)
 
-            season = get_object_or_404(FinancialSeason, id=season_id)
+            from django.http import Http404
+            try:
+                season = get_object_or_404(FinancialSeason, id=season_id)
+            except Http404:
+                return JsonResponse({'success': False, 'message': f'Financial Season with ID {season_id} not found'}, status=404)
 
             # Validate that the feature is enabled in this community
             if not season.community.features.filter(feature_type=feature_type, is_active=True).exists():
