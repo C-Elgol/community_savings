@@ -415,7 +415,7 @@ class Membership(SavingsBaseModel):
         ]
 
     def __str__(self):
-        return f"{self.user.full_name} - {self.community.name}"
+        return f"{self.user.fullname} - {self.community.name}"
 
 
     def has_feature(self, feature_type: str) -> bool:

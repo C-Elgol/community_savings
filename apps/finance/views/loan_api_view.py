@@ -38,10 +38,23 @@ class LoanApplicationAPI(View):
             membership_id = data.get('membership_id')
             product_id = data.get('product_id')
             season_id = data.get('season_id')
+            signature = data.get('signature_data')
             
-            membership = get_object_or_404(Membership, id=membership_id)
+            # If membership_id is missing, assume it's the current user applying
+            if not membership_id:
+                membership = Membership.objects.filter(user=request.user, community_id=community_id, status='active').first()
+                if not membership:
+                    return JsonResponse({'success': False, 'message': 'Active membership not found'}, status=404)
+            else:
+                membership = get_object_or_404(Membership, id=membership_id)
+            
+            # If season_id is missing, use the active season for the community
+            if not season_id:
+                season = FinancialSeason.objects.filter(community_id=community_id, is_closed=False).first()
+            else:
+                season = FinancialSeason.objects.filter(id=season_id).first()
+            
             product = get_object_or_404(LoanProduct, id=product_id)
-            season = FinancialSeason.objects.filter(id=season_id).first()
             
             loan_app = LoanApplication.objects.create(
                 membership=membership,
@@ -50,7 +63,9 @@ class LoanApplicationAPI(View):
                 amount_requested=data.get('amount_requested'),
                 proposed_term_months=data.get('term_months'),
                 purpose=data.get('purpose', ''),
-                status=LoanApplicationStatus.SUBMITTED
+                signature_data=signature,
+                status=LoanApplicationStatus.SUBMITTED,
+                submitted_at=timezone.now()
             )
             
             return JsonResponse({'success': True, 'message': 'Loan application submitted successfully'})

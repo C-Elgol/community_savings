@@ -218,9 +218,10 @@ class LoanApplication(SavingsBaseModel):
     recommended_score = models.PositiveIntegerField(null=True, blank=True)
     recommended_creditworthiness = models.CharField(max_length=20, blank=True)
     recommended_risk_band = models.CharField(max_length=20, blank=True)
+    signature_data = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.amount_requested}"
+        return f"{self.membership.user.fullname} - {self.amount_requested}"
     def clean(self):
         if not self.membership.has_feature(CommunityFeatureType.LOANS):
             raise ValidationError("Member is not eligible for loans.")
@@ -266,7 +267,7 @@ class Loan(SavingsBaseModel):
         indexes = [models.Index(fields=["status", "borrow_date"])]
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.amount_borrowed}"
+        return f"{self.membership.user.fullname} - {self.amount_borrowed}"
 
     @property
     def total_amount_plus_interest(self):
