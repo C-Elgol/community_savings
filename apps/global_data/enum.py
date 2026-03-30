@@ -128,4 +128,9 @@ class CommunityFeatureType(models.TextChoices):
     SINKING_FUND = "sinking_fund", _("Sinking Fund")
     EVENTS = "events", _("Events")
     MEETINGS = "meetings", _("Meetings")
+
+class RepaymentFrequency(models.TextChoices):
+    WEEKLY = "weekly", _("Weekly")
+    BIWEEKLY = "biweekly", _("Biweekly")
+    MONTHLY = "monthly", _("Monthly")
     

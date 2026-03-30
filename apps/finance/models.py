@@ -12,6 +12,7 @@ from apps.global_data.enum import (
     LoanApplicationStatus,
     LoanStatus,
     CommunityFeatureType,
+    RepaymentFrequency,
 )
 from apps.communities.models import Community, Membership, MembershipApplication
 
@@ -200,6 +201,11 @@ class LoanApplication(SavingsBaseModel):
 
     amount_requested = models.DecimalField(max_digits=12, decimal_places=2)
     proposed_term_months = models.PositiveIntegerField()
+    repayment_frequency = models.CharField(
+        max_length=20,
+        choices=RepaymentFrequency.choices,
+        default=RepaymentFrequency.MONTHLY
+    )
     purpose = models.TextField()
 
     status = models.CharField(max_length=30, choices=LoanApplicationStatus.choices, default=LoanApplicationStatus.DRAFT)
@@ -254,6 +260,11 @@ class Loan(SavingsBaseModel):
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     interest_to_be_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     borrow_date = models.DateField()
+    repayment_frequency = models.CharField(
+        max_length=20,
+        choices=RepaymentFrequency.choices,
+        default=RepaymentFrequency.MONTHLY
+    )
     first_due_date = models.DateField(null=True, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
 

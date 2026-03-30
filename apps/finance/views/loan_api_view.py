@@ -39,6 +39,7 @@ class LoanApplicationAPI(View):
             product_id = data.get('product_id')
             season_id = data.get('season_id')
             signature = data.get('signature_data')
+            frequency = data.get('repayment_frequency', 'monthly')
             
             # If membership_id is missing, assume it's the current user applying
             if not membership_id:
@@ -62,6 +63,7 @@ class LoanApplicationAPI(View):
                 season=season,
                 amount_requested=data.get('amount_requested'),
                 proposed_term_months=data.get('term_months'),
+                repayment_frequency=frequency,
                 purpose=data.get('purpose', ''),
                 signature_data=signature,
                 status=LoanApplicationStatus.SUBMITTED,
@@ -91,6 +93,7 @@ class LoanApplicationAPI(View):
                         amount_borrowed=loan_app.amount_requested,
                         interest_to_be_paid=(loan_app.amount_requested * loan_app.loan_product.interest_rate) / 100,
                         borrow_date=timezone.now().date(),
+                        repayment_frequency=loan_app.repayment_frequency,
                         status='active'
                     )
                 return JsonResponse({'success': True, 'message': 'Loan application approved and loan created'})
@@ -122,7 +125,9 @@ class LoanAPI(View):
                 'amount_borrowed': str(l.amount_borrowed),
                 'amount_paid': str(l.amount_paid),
                 'interest': str(l.interest_to_be_paid),
+                'total_amount': str(l.total_amount_plus_interest),
                 'borrow_date': l.borrow_date.isoformat(),
+                'maturity_date': l.maturity_date.isoformat() if l.maturity_date else None,
                 'status': l.status,
                 'product_name': l.application.loan_product.name if l.application else '---'
             })
