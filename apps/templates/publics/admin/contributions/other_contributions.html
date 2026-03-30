@@ -165,14 +165,27 @@
       class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden"
       id="contributionTableContainer"
     >
-      <div
-        class="p-6 border-b border-slate-50 flex items-center justify-between"
-      >
-        <h3 class="font-bold text-slate-800 flex items-center gap-2">
-          <i class="fas fa-users text-emerald-400"></i>
-          {% trans "Member Recordings" %}
-        </h3>
-        <div class="relative">
+      <div class="px-6 py-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
+          <button 
+            onclick="switchContributionView('recordings')"
+            id="tabRecordings"
+            class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 bg-white text-emerald-700 shadow-sm"
+          >
+            <i class="fas fa-users text-emerald-400"></i>
+            {% trans "Member Recordings" %}
+          </button>
+          <button 
+            onclick="switchContributionView('net_income')"
+            id="tabNetIncome"
+            class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:bg-white hover:text-slate-600"
+          >
+            <i class="fas fa-chart-line text-emerald-400"></i>
+            {% trans "Net Income" %}
+          </button>
+        </div>
+
+        <div class="relative" id="memberSearchContainer">
           <i
             class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs"
           ></i>
@@ -180,12 +193,12 @@
             type="text"
             id="memberSearch"
             placeholder="{% trans 'Filter names...' %}"
-            class="pl-8 pr-4 py-1.5 bg-slate-50 border-none rounded-full text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none w-40 sm:w-60 transition-all"
+            class="pl-8 pr-4 py-1.5 bg-slate-50 border-none rounded-full text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none w-full sm:w-60 transition-all"
           />
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto" id="memberTableContainer">
         <table class="w-full">
           <thead
             class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400"
@@ -202,7 +215,7 @@
           </thead>
           <tbody id="memberListBody" class="divide-y divide-slate-50">
             <tr>
-              <td colspan="6" class="py-20 text-center">
+              <td colspan="7" class="py-20 text-center">
                 <div class="flex flex-col items-center text-slate-300">
                   <i class="fas fa-mouse-pointer text-xl mb-3"></i>
                   <p class="text-xs font-medium">
@@ -213,6 +226,29 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Net Income View -->
+      <div id="netIncomeContainer" class="hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400">
+              <tr>
+                <th class="px-6 py-4 text-left">{% trans "Cycle Title" %}</th>
+                <th class="px-6 py-4 text-left">{% trans "Due Date" %}</th>
+                <th class="px-6 py-4 text-left">{% trans "Expected Total" %}</th>
+                <th class="px-6 py-4 text-right">{% trans "Total Collected" %}</th>
+              </tr>
+            </thead>
+            <tbody id="cycleSummaryBody" class="divide-y divide-slate-50">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+        <div class="p-8 bg-emerald-50/50 flex flex-col items-end">
+           <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">{% trans "Net Income for Season" %}</p>
+           <h4 id="seasonNetIncomeTotal" class="text-3xl font-black text-emerald-800">XAF 0</h4>
+        </div>
       </div>
     </div>
   </div>
@@ -682,6 +718,8 @@
       currentSeason: null,
       currentCycle: null,
       members: [],
+      cycles: [],
+      currentView: 'recordings', // 'recordings' or 'net_income'
     };
 
     // DOM elements
@@ -693,6 +731,12 @@
       cycleSelector: document.getElementById("cycleSelector"),
       memberListBody: document.getElementById("memberListBody"),
       displayFeatureLabel: document.getElementById("displayFeatureLabel"),
+      memberTableContainer: document.getElementById("memberTableContainer"),
+      netIncomeContainer: document.getElementById("netIncomeContainer"),
+      cycleSummaryBody: document.getElementById("cycleSummaryBody"),
+      tabRecordings: document.getElementById("tabRecordings"),
+      tabNetIncome: document.getElementById("tabNetIncome"),
+      memberSearchContainer: document.getElementById("memberSearchContainer"),
     };
 
     const tableLoader = new SectionLoaderManager(
@@ -811,6 +855,7 @@
         );
         const data = await res.json();
         if (data.success) {
+          state.cycles = data.cycles;
           el.cycleSelector.innerHTML =
             '<option value="">{% trans "Select Cycle" %}</option>';
           data.cycles.forEach((c) => {
@@ -822,6 +867,10 @@
 
           document.getElementById("displaySeasonTitle").textContent =
             state.currentSeason.title || state.currentSeason.season_date;
+          
+          if (state.currentView === 'net_income') {
+            renderNetIncome(data.net_income);
+          }
         }
       } catch (err) {
         toast("error", "Failed to load cycles");
@@ -1036,6 +1085,69 @@
           </td>
         </tr>
       `;
+    }
+
+    /* ═══════════════════════
+       VIEW SWITCHING (NET INCOME)
+    ═══════════════════════ */
+    window.switchContributionView = function (view) {
+      state.currentView = view;
+
+      if (view === "recordings") {
+        el.tabRecordings.classList.add("bg-white", "text-emerald-700", "shadow-sm");
+        el.tabRecordings.classList.remove("text-slate-400", "hover:bg-white", "hover:text-slate-600");
+        el.tabNetIncome.classList.remove("bg-white", "text-emerald-700", "shadow-sm");
+        el.tabNetIncome.classList.add("text-slate-400", "hover:bg-white", "hover:text-slate-600");
+
+        el.memberTableContainer.classList.remove("hidden");
+        el.memberSearchContainer.classList.remove("hidden");
+        el.netIncomeContainer.classList.add("hidden");
+      } else {
+        el.tabNetIncome.classList.add("bg-white", "text-emerald-700", "shadow-sm");
+        el.tabNetIncome.classList.remove("text-slate-400", "hover:bg-white", "hover:text-slate-600");
+        el.tabRecordings.classList.remove("bg-white", "text-emerald-700", "shadow-sm");
+        el.tabRecordings.classList.add("text-slate-400", "hover:bg-white", "hover:text-slate-600");
+
+        el.memberTableContainer.classList.add("hidden");
+        el.memberSearchContainer.classList.add("hidden");
+        el.netIncomeContainer.classList.remove("hidden");
+
+        // Reload cycles to get the latest totals
+        initCycles();
+      }
+    };
+
+    function renderNetIncome(seasonTotal = "0.00") {
+      el.cycleSummaryBody.innerHTML = "";
+      
+      if (state.cycles.length === 0) {
+          el.cycleSummaryBody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-slate-400">{% trans "No cycles found for this season" %}</td></tr>';
+          document.getElementById("seasonNetIncomeTotal").textContent = "XAF 0";
+          return;
+      }
+
+      state.cycles.forEach(c => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-50/50 transition-colors";
+          tr.innerHTML = `
+              <td class="px-6 py-5">
+                  <span class="font-bold text-slate-700">${c.title}</span>
+                  ${c.is_closed ? '<span class="ml-2 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">CLOSED</span>' : ''}
+              </td>
+              <td class="px-6 py-5 text-xs text-slate-500 font-medium">
+                  ${new Date(c.due_date).toLocaleDateString()}
+              </td>
+              <td class="px-6 py-5 font-mono text-xs text-slate-400">
+                  ${parseFloat(c.expected_amount).toLocaleString()}
+              </td>
+              <td class="px-6 py-5 text-right">
+                  <span class="text-sm font-black text-emerald-700">XAF ${parseFloat(c.total_collected).toLocaleString()}</span>
+              </td>
+          `;
+          el.cycleSummaryBody.appendChild(tr);
+      });
+
+      document.getElementById("seasonNetIncomeTotal").textContent = `XAF ${parseFloat(seasonTotal).toLocaleString()}`;
     }
 
     /* ═══════════════════════

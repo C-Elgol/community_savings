@@ -162,11 +162,36 @@ class ContributionCycleAPI(View):
         if feature_type not in VALID_FEATURE_TYPES:
             return JsonResponse({'success': False, 'message': 'Invalid feature type'}, status=400)
 
-        cycles = ContributionCycle.objects.filter(
+        cycles_qs = ContributionCycle.objects.filter(
             season_id=season_id,
             feature_type=feature_type
-        ).values('id', 'title', 'due_date', 'expected_amount', 'is_closed')
-        return JsonResponse({'success': True, 'cycles': list(cycles)})
+        ).order_by('due_date')
+        
+        cycles_data = []
+        grand_total = 0
+        for cycle in cycles_qs:
+            total_collected = Contribution.objects.filter(
+                cycle=cycle,
+                status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL]
+            ).aggregate(total=Sum('amount_paid'))['total'] or 0
+            
+            total_collected = float(total_collected)
+            grand_total += total_collected
+            
+            cycles_data.append({
+                'id': str(cycle.id),
+                'title': cycle.title,
+                'due_date': cycle.due_date.isoformat(),
+                'expected_amount': str(cycle.expected_amount),
+                'is_closed': cycle.is_closed,
+                'total_collected': str(total_collected)
+            })
+
+        return JsonResponse({
+            'success': True, 
+            'cycles': cycles_data,
+            'net_income': str(grand_total)
+        })
 
     def post(self, request, season_id):
         try:
