@@ -60,7 +60,7 @@ class ContributionAPI(View):
             feature_participations__is_active=True
         ).distinct()
         
-        contributions = Contribution.objects.filter(cycle=cycle)
+        contributions = Contribution.objects.filter(cycle=cycle, feature_type="njangi")
         contrib_map = {str(c.membership_id): c for c in contributions}
         
         data = []
@@ -247,7 +247,7 @@ class ContributionRecordAPI(View):
             feature_participations__is_active=True
         ).select_related('user').distinct()
 
-        contributions = Contribution.objects.filter(cycle=cycle)
+        contributions = Contribution.objects.filter(cycle=cycle, feature_type=feature_type)
         contrib_map = {str(c.membership_id): c for c in contributions}
 
         # Fetch season totals for all members in this season/feature
