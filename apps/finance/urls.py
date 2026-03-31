@@ -11,7 +11,7 @@ from apps.finance.views.fine_list_view import AdminFineListView
 from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingBeneficiaryAPI
 
 from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView, AdminLoanProductView
-from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI
+from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
 
 app_name = "finance"
     
@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/community/<uuid:community_id>/loan-applications/', LoanApplicationAPI.as_view(), name='loan_application_api'),
     path('api/loan-application/<uuid:application_id>/', LoanApplicationAPI.as_view(), name='loan_application_detail_api'),
     path('api/community/<uuid:community_id>/loans/', LoanAPI.as_view(), name='loan_api'),
+    path('api/loan/<uuid:loan_id>/payment/', LoanPaymentAPI.as_view(), name='loan_payment_api'),
     path('api/community/<uuid:community_id>/loan-products/', LoanProductAPI.as_view(), name='loan_product_api'),
     path('api/loan-product/<uuid:product_id>/', LoanProductAPI.as_view(), name='loan_product_detail_api'),
     path('api/community/<uuid:community_id>/memberships/', MembershipAPI.as_view(), name='membership_api'),

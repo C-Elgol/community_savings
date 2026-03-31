@@ -1,9 +1,10 @@
 from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
-from apps.finance.models import LoanApplication, Loan, LoanProduct, FinancialSeason, Membership
-from apps.global_data.enum import LoanApplicationStatus
+from apps.finance.models import LoanApplication, Loan, LoanProduct, FinancialSeason, Membership, LoanPayment
+from apps.global_data.enum import LoanApplicationStatus, LoanStatus
 import json
+from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
@@ -100,7 +101,7 @@ class LoanApplicationAPI(View):
                         borrow_date=borrow_date,
                         maturity_date=maturity_date,
                         repayment_frequency=loan_app.repayment_frequency,
-                        status='active'
+                        status=LoanStatus.UNPAID
                     )
                 return JsonResponse({'success': True, 'message': 'Loan application approved and loan created'})
             
@@ -132,6 +133,7 @@ class LoanAPI(View):
                 'amount_paid': str(l.amount_paid),
                 'interest': str(l.interest_to_be_paid),
                 'total_amount': str(l.total_amount_plus_interest),
+                'amount_left': str(l.amount_left_to_pay),
                 'borrow_date': l.borrow_date.isoformat(),
                 'maturity_date': l.maturity_date.isoformat() if l.maturity_date else None,
                 'status': l.status,
@@ -139,6 +141,44 @@ class LoanAPI(View):
             })
             
         return JsonResponse({'success': True, 'loans': data})
+
+class LoanPaymentAPI(View):
+    def post(self, request, loan_id):
+        try:
+            data = json.loads(request.body)
+            amount = Decimal(str(data.get('amount', 0)))
+            payment_date = data.get('payment_date', timezone.now().date())
+            comment = data.get('comment', '')
+            
+            with transaction.atomic():
+                loan = get_object_or_404(Loan, id=loan_id)
+                
+                # Create payment record
+                LoanPayment.objects.create(
+                    loan=loan,
+                    season=loan.season,
+                    amount=amount,
+                    payment_date=payment_date,
+                    recorded_by=request.user,
+                    comment=comment
+                )
+                
+                # Update loan status
+                loan.amount_paid += amount
+                total_to_pay = loan.total_amount_plus_interest
+                
+                if loan.amount_paid >= total_to_pay:
+                    loan.status = LoanStatus.PAID
+                elif loan.amount_paid > 0:
+                    loan.status = LoanStatus.PARTIAL
+                else:
+                    loan.status = LoanStatus.UNPAID
+                
+                loan.save()
+                
+            return JsonResponse({'success': True, 'message': 'Payment recorded successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 class LoanProductAPI(View):
     def get(self, request, community_id=None, product_id=None):
