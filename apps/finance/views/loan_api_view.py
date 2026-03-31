@@ -141,9 +141,59 @@ class LoanAPI(View):
         return JsonResponse({'success': True, 'loans': data})
 
 class LoanProductAPI(View):
-    def get(self, request, community_id):
-        products = LoanProduct.objects.filter(community_id=community_id, is_active=True).values('id', 'name', 'min_amount', 'max_amount', 'interest_rate')
+    def get(self, request, community_id=None, product_id=None):
+        if product_id:
+            p = get_object_or_404(LoanProduct, id=product_id)
+            return JsonResponse({'success': True, 'product': {
+                'id': str(p.id), 'name': p.name, 'description': p.description,
+                'interest_rate': str(p.interest_rate), 'max_term_months': p.max_term_months,
+                'min_amount': str(p.min_amount), 'max_amount': str(p.max_amount)
+            }})
+        
+        products = LoanProduct.objects.filter(community_id=community_id, is_active=True).values(
+            'id', 'name', 'description', 'interest_rate', 'max_term_months', 'min_amount', 'max_amount'
+        )
         return JsonResponse({'success': True, 'products': list(products)})
+
+    def post(self, request, community_id):
+        try:
+            data = json.loads(request.body)
+            product = LoanProduct.objects.create(
+                community_id=community_id,
+                name=data.get('name'),
+                description=data.get('description', ''),
+                interest_rate=data.get('interest_rate'),
+                max_term_months=data.get('max_term_months', 12),
+                min_amount=data.get('min_amount', 0),
+                max_amount=data.get('max_amount', 1000000)
+            )
+            return JsonResponse({'success': True, 'message': 'Product created successfully', 'id': str(product.id)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    def patch(self, request, product_id):
+        try:
+            data = json.loads(request.body)
+            product = get_object_or_404(LoanProduct, id=product_id)
+            if 'name' in data: product.name = data['name']
+            if 'description' in data: product.description = data['description']
+            if 'interest_rate' in data: product.interest_rate = data['interest_rate']
+            if 'max_term_months' in data: product.max_term_months = data['max_term_months']
+            if 'min_amount' in data: product.min_amount = data['min_amount']
+            if 'max_amount' in data: product.max_amount = data['max_amount']
+            product.save()
+            return JsonResponse({'success': True, 'message': 'Product updated successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    def delete(self, request, product_id):
+        try:
+            product = get_object_or_404(LoanProduct, id=product_id)
+            product.is_active = False
+            product.save()
+            return JsonResponse({'success': True, 'message': 'Product deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 class MembershipAPI(View):
     def get(self, request, community_id):
