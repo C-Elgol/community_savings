@@ -271,6 +271,7 @@ class ContributionRecordAPI(View):
                 'paid_at': c.paid_at.isoformat() if c and c.paid_at else None,
                 'payment_reference': c.payment_reference if c else None,
                 'comment': c.comment if c else '',
+                'features': list(m.feature_participations.filter(is_active=True).values_list('feature__feature_type', flat=True)),
                 'signature': c.signature if c else '',
             })
 

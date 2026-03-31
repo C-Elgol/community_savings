@@ -940,7 +940,13 @@
       const container = document.getElementById("featureInputsContainer");
       container.innerHTML = "";
       
-      const featuresToShow = enrolledFeatures.length > 0 ? enrolledFeatures : ENABLED_FEATURES;
+      // Only show features the member is enrolled in
+      const featuresToShow = enrolledFeatures;
+
+      if (featuresToShow.length === 0) {
+        container.innerHTML = '<div class="col-span-2 py-4 text-center text-slate-400 text-xs">{% trans "This member is not enrolled in any active features." %}</div>';
+        return;
+      }
 
       featuresToShow.forEach(ft => {
         const val = existingAmounts[ft] !== undefined ? existingAmounts[ft] : "";
@@ -1357,17 +1363,25 @@
           .classList.remove("hidden");
         resizeCanvas();
 
-        // Fetch all feature contributions
+        const member = state.members.find(x => x.membership_id === mid);
+        const initialFeatures = member ? member.features || [] : [];
+        
+        // Show initial inputs based on member list features
+        populateFeatureInputs({}, initialFeatures);
+
+        // Fetch all feature contributions for this cycle to get amounts
         try {
             const res = await fetch(API_URLS.membershipCycleAllFeatures(state.currentCycle, mid));
             const data = await res.json();
             if (data.success) {
-                populateFeatureInputs(data.contributions, data.enrolled_features);
-            } else {
-                populateFeatureInputs({}, []);
+                // Use features from API if available, else fallback to initial
+                const features = (data.enrolled_features && data.enrolled_features.length > 0) 
+                    ? data.enrolled_features 
+                    : initialFeatures;
+                populateFeatureInputs(data.contributions, features);
             }
         } catch (err) {
-            populateFeatureInputs({}, []);
+            console.error("Error fetching feature contributions:", err);
         }
       }
 
