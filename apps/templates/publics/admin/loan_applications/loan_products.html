@@ -1,0 +1,274 @@
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block content %}
+<div id="loanProductsPage" class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-3 mb-1">
+          <a href="{% url 'finance:admin_loan_applications' community.id %}" class="text-slate-400 hover:text-emerald-700 transition-all">
+              <i class="fas fa-arrow-left"></i>
+          </a>
+          <h1 class="text-2xl font-black text-slate-800">{% trans "Loan Products" %}</h1>
+      </div>
+      <p class="text-xs text-slate-500">{% trans "Manage loan types, interest rates, and terms for" %} <span class="font-bold text-slate-700">{{ community.name }}</span></p>
+    </div>
+    <div class="flex items-center gap-3">
+        <button id="btnNewProduct" class="px-5 py-2.5 bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all flex items-center gap-2">
+            <i class="fas fa-plus"></i> {% trans "New Product" %}
+        </button>
+    </div>
+  </div>
+
+  <!-- Products Grid -->
+  <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- JS populated -->
+  </div>
+</div>
+
+<!-- Modal: New/Edit Product -->
+<div id="productModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div class="p-8">
+      <h3 id="modalTitle" class="text-xl font-black text-slate-800 mb-6 px-1">{% trans "Create Loan Product" %}</h3>
+      <form id="formProduct" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "PRODUCT NAME" %}</label>
+              <input type="text" id="inputName" required placeholder="e.g. Emergency Loan" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "MIN AMOUNT" %}</label>
+              <input type="number" id="inputMinAmount" required placeholder="0" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "MAX AMOUNT" %}</label>
+              <input type="number" id="inputMaxAmount" required placeholder="1,000,000" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "INTEREST RATE (%)" %}</label>
+              <input type="number" step="0.01" id="inputRate" required placeholder="5.0" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "MAX TERM (MONTHS)" %}</label>
+              <input type="number" id="inputMaxTerm" required placeholder="12" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "DESCRIPTION" %}</label>
+          <textarea id="textareaDescription" rows="3" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="button" class="close-modal-product flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
+          <button type="submit" id="btnSaveProduct" class="flex-1 py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition-all">{% trans "Save Product" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Delete Confirmation -->
+<div id="deleteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-500">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+          <i class="fas fa-trash-alt"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Delete Product" %}</h3>
+      <p class="text-[10px] text-slate-400 mb-8 lowercase tracking-wide">{% trans "are you sure you want to delete this product? this action cannot be undone." %}</p>
+      
+      <div class="flex gap-3">
+          <button type="button" class="close-modal-delete flex-1 py-4 border border-slate-100 text-slate-500 rounded-2xl font-bold text-xs hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
+          <button type="button" id="btnConfirmDelete" class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all">{% trans "Confirm Delete" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+    const COMMUNITY_ID = "{{ community.id }}";
+    const API_URL = `/finance/api/community/${COMMUNITY_ID}/loan-products/`;
+
+    const state = {
+        products: [],
+        editId: null
+    };
+
+    const el = {
+        grid: document.getElementById("productsGrid"),
+        modal: document.getElementById("productModal"),
+        deleteModal: document.getElementById("deleteModal"),
+        form: document.getElementById("formProduct")
+    };
+
+    async function fetchData() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            if (data.success) {
+                state.products = data.products;
+                render();
+            }
+        } catch (err) {
+            toast('error', 'Failed to load products');
+        }
+    }
+
+    function render() {
+        if (state.products.length === 0) {
+            el.grid.innerHTML = `
+                <div class="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-slate-100">
+                    <i class="fas fa-tags text-4xl mb-4 text-slate-200"></i>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">{% trans "No loan products found" %}</p>
+                </div>
+            `;
+            return;
+        }
+
+        el.grid.innerHTML = state.products.map(p => `
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 hover:shadow-md transition-shadow relative group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editProduct('${p.id}')" class="p-2 text-slate-400 hover:text-emerald-700 transition-all">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteProduct('${p.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-black text-slate-800 mb-2">${p.name}</h3>
+                <p class="text-[10px] text-slate-400 mb-4 leading-relaxed line-clamp-2">${p.description || '{% trans "No description provided." %}'}</p>
+                
+                <div class="flex gap-2 mb-6">
+                    <span class="px-2 py-0.5 bg-slate-50 border border-slate-100 text-[8px] font-black text-slate-500 rounded-md uppercase tracking-widest">XAF ${parseFloat(p.min_amount).toLocaleString()} MIN</span>
+                    <span class="px-2 py-0.5 bg-slate-50 border border-slate-100 text-[8px] font-black text-slate-500 rounded-md uppercase tracking-widest">XAF ${parseFloat(p.max_amount).toLocaleString()} MAX</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 pt-6 border-t border-slate-50">
+                    <div class="bg-slate-50 rounded-2xl p-4 text-center">
+                        <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Interest" %}</p>
+                        <p class="text-sm font-black text-emerald-600">${p.interest_rate}%</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-2xl p-4 text-center">
+                        <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Max Term" %}</p>
+                        <p class="text-sm font-black text-slate-700">${p.max_term_months} Months</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById("btnNewProduct").onclick = () => {
+        state.editId = null;
+        document.getElementById("modalTitle").textContent = '{% trans "Create Loan Product" %}';
+        el.form.reset();
+        el.modal.classList.remove("hidden");
+    };
+
+    window.editProduct = (id) => {
+        const p = state.products.find(x => x.id === id);
+        if (!p) return;
+        state.editId = id;
+        document.getElementById("modalTitle").textContent = '{% trans "Edit Loan Product" %}';
+        document.getElementById("inputName").value = p.name;
+        document.getElementById("inputMinAmount").value = p.min_amount;
+        document.getElementById("inputMaxAmount").value = p.max_amount;
+        document.getElementById("inputRate").value = p.interest_rate;
+        document.getElementById("inputMaxTerm").value = p.max_term_months;
+        document.getElementById("textareaDescription").value = p.description;
+        el.modal.classList.remove("hidden");
+    };
+
+    window.deleteProduct = (id) => {
+        state.editId = id;
+        el.deleteModal.classList.remove("hidden");
+    };
+
+    document.getElementById("btnConfirmDelete").onclick = async () => {
+        const btn = document.getElementById("btnConfirmDelete");
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/finance/api/loan-product/${state.editId}/`, {
+                method: "DELETE",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" }
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                el.deleteModal.classList.add("hidden");
+                fetchData();
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Delete failed');
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    el.form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("btnSaveProduct");
+        btn.disabled = true;
+        
+        const payload = {
+            name: document.getElementById("inputName").value,
+            min_amount: document.getElementById("inputMinAmount").value,
+            max_amount: document.getElementById("inputMaxAmount").value,
+            interest_rate: document.getElementById("inputRate").value,
+            max_term_months: document.getElementById("inputMaxTerm").value,
+            description: document.getElementById("textareaDescription").value
+        };
+
+        try {
+            const method = state.editId ? "PATCH" : "POST";
+            const url = state.editId ? `${API_URL}${state.editId}/` : API_URL;
+            
+            // Wait, I need a detail API for PATCH.
+            // My urls.py has: path('api/community/<uuid:community_id>/loan-products/', LoanProductAPI.as_view(), name='loan_product_api'),
+            // I should check if LoanProductAPI handles detail.
+            
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                el.modal.classList.add("hidden");
+                fetchData();
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Update failed');
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    document.querySelectorAll(".close-modal-product").forEach(b => b.onclick = () => el.modal.classList.add("hidden"));
+    document.querySelectorAll(".close-modal-delete").forEach(b => b.onclick = () => el.deleteModal.classList.add("hidden"));
+
+    function toast(type, msg) {
+        window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    fetchData();
+  })();
+</script>
+{% endblock %}

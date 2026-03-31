@@ -12,6 +12,7 @@ from apps.global_data.enum import (
     LoanApplicationStatus,
     LoanStatus,
     CommunityFeatureType,
+    RepaymentFrequency,
 )
 from apps.communities.models import Community, Membership, MembershipApplication
 
@@ -109,11 +110,12 @@ class Contribution(SavingsBaseModel):
         ]
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.cycle.title}"
+        return f"{self.membership.user.fullname} - {self.cycle.title}"
 
     def clean(self):
-        if not self.membership.has_feature(CommunityFeatureType.NJANGI):
-            raise ValidationError("This member is not part of the Njangi system.")
+        feature = self.cycle.feature_type or CommunityFeatureType.NJANGI
+        if not self.membership.has_feature(feature):
+            raise ValidationError(f"This member is not part of the {feature} system.")
 
 class MemberFinanceSnapshot(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="finance_snapshots")
@@ -199,6 +201,11 @@ class LoanApplication(SavingsBaseModel):
 
     amount_requested = models.DecimalField(max_digits=12, decimal_places=2)
     proposed_term_months = models.PositiveIntegerField()
+    repayment_frequency = models.CharField(
+        max_length=20,
+        choices=RepaymentFrequency.choices,
+        default=RepaymentFrequency.MONTHLY
+    )
     purpose = models.TextField()
 
     status = models.CharField(max_length=30, choices=LoanApplicationStatus.choices, default=LoanApplicationStatus.DRAFT)
@@ -217,9 +224,10 @@ class LoanApplication(SavingsBaseModel):
     recommended_score = models.PositiveIntegerField(null=True, blank=True)
     recommended_creditworthiness = models.CharField(max_length=20, blank=True)
     recommended_risk_band = models.CharField(max_length=20, blank=True)
+    signature_data = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.amount_requested}"
+        return f"{self.membership.user.fullname} - {self.amount_requested}"
     def clean(self):
         if not self.membership.has_feature(CommunityFeatureType.LOANS):
             raise ValidationError("Member is not eligible for loans.")
@@ -252,6 +260,11 @@ class Loan(SavingsBaseModel):
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     interest_to_be_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     borrow_date = models.DateField()
+    repayment_frequency = models.CharField(
+        max_length=20,
+        choices=RepaymentFrequency.choices,
+        default=RepaymentFrequency.MONTHLY
+    )
     first_due_date = models.DateField(null=True, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
 
@@ -265,7 +278,7 @@ class Loan(SavingsBaseModel):
         indexes = [models.Index(fields=["status", "borrow_date"])]
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.amount_borrowed}"
+        return f"{self.membership.user.fullname} - {self.amount_borrowed}"
 
     @property
     def total_amount_plus_interest(self):

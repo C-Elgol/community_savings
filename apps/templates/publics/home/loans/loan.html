@@ -1,16 +1,396 @@
-{% extends 'publics/home/base.html' %}
-{% load static %}
-{% load i18n %}
+{% extends 'publics/home/base.html' %} {% load static %} {% load i18n %} {% block content %}
+<div id="userLoansPage" class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-800">{% trans "My Loans" %}</h1>
+      <p class="text-xs text-slate-500">{% trans "Track your active loans and apply for new ones in" %} <span class="font-bold text-slate-700">{{ community.name }}</span></p>
+    </div>
+    <div class="flex items-center gap-3">
+        <button id="btnApply" class="px-5 py-2.5 bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all flex items-center gap-2">
+            <i class="fas fa-plus"></i> {% trans "Apply for Loan" %}
+        </button>
+    </div>
+  </div>
 
-{% block content %}
-<!-- ========== LOANS PAGE ========== -->
-        <div id="loans" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-slate-800">Loans</h2><button class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-2"></i>Apply for loan</button></div>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="border rounded-xl p-5"><h3 class="font-semibold text-lg mb-3">Active loan</h3><div class="space-y-2"><p><span class="text-slate-500">Amount:</span> <span class="font-bold">XAF 85,000</span></p><p><span class="text-slate-500">Paid:</span> XAF 42,500</p><div class="w-full h-2 bg-slate-100 rounded-full"><div class="bg-emerald-600 h-2 rounded-full" style="width:50%"></div></div><p class="text-sm mt-2">Next installment: 15 Apr</p></div></div>
-                    <div class="border rounded-xl p-5"><h3 class="font-semibold text-lg mb-3">Loan history</h3><div class="space-y-3"><div class="flex justify-between"><span>Education loan (2025)</span><span class="font-medium text-emerald-700">Closed</span></div><div class="flex justify-between"><span>Emergency loan (2024)</span><span class="font-medium text-emerald-700">Closed</span></div></div></div>
-                </div>
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Active Loans Cards Container -->
+    <div id="activeLoansGrid" class="lg:col-span-1 space-y-6">
+        <!-- Rendered via JS -->
+        <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+            <div class="py-10 text-center text-slate-300">
+                <i class="fas fa-hand-holding-usd text-4xl mb-4 opacity-20"></i>
+                <p class="text-xs font-medium">{% trans "No active loan found." %}</p>
             </div>
         </div>
+    </div>
+
+    <!-- Loan History -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-fit">
+      <div class="p-8 border-b border-slate-50">
+        <h3 class="text-lg font-black text-slate-800">{% trans "Loan History" %}</h3>
+      </div>
+      <div class="flex-1 overflow-y-auto max-h-[400px]">
+          <table class="w-full">
+              <tbody id="historyBody" class="divide-y divide-slate-50 text-xs">
+                  <!-- JS populated -->
+              </tbody>
+          </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODALS ========== -->
+
+<!-- 1. Application Modal -->
+<div id="applyModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div class="p-8">
+      <h3 class="text-xl font-black text-slate-800 mb-6 px-1">{% trans "New Loan Request" %}</h3>
+      <form id="formLoanApply" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "LOAN PRODUCT" %}</label>
+              <select id="selectProduct" required class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer">
+                 <option value="">{% trans "Select product" %}</option>
+                 {% for p in loan_products %}
+                    <option value="{{ p.id }}" data-rate="{{ p.interest_rate }}" data-term="{{ p.max_term_months }}" data-desc="{{ p.description }}">
+                        {{ p.name }} ({{ p.interest_rate }}%)
+                    </option>
+                 {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "AMOUNT" %}</label>
+              <input type="number" id="inputAmount" required placeholder="0.00" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all" />
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "REPAYMENT FREQUENCY" %}</label>
+            <select id="selectFrequency" required class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer">
+               <option value="weekly">{% trans "Weekly" %}</option>
+               <option value="biweekly">{% trans "Two Weeks" %}</option>
+               <option value="monthly" selected>{% trans "Monthly" %}</option>
+            </select>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "PURPOSE OF LOAN" %}</label>
+          <textarea id="textareaPurpose" required rows="2" class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all resize-none"></textarea>
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center mb-1.5 px-1">
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{% trans "MEMBER SIGNATURE" %}</label>
+                <button type="button" id="btnClearSignature" class="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest">
+                    {% trans "Clear" %}
+                </button>
+            </div>
+            <div class="relative bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden group">
+                <canvas id="signaturePad" class="w-full h-28 cursor-crosshair"></canvas>
+            </div>
+            <p class="text-[9px] text-slate-400 mt-1 ml-1">{% trans "Sign inside the box to authorize this application" %}</p>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="button" class="close-modal-apply flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
+          <button type="button" id="btnContinue" class="flex-1 py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-lg shadow-slate-800/20 hover:bg-slate-900 transition-all">{% trans "Review Terms" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Confirmation Modal (Terms) -->
+<div id="termsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-500">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+          <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Important Attention" %}</h3>
+      <p class="text-[10px] text-slate-400 mb-8 lowercase tracking-wide">{% trans "please review the loan terms before final submission" %}</p>
+      
+      <div class="bg-slate-50 rounded-3xl p-6 text-left space-y-3 mb-8">
+          <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 uppercase tracking-widest font-bold">{% trans "Product" %}</span>
+              <span id="confirmProduct" class="font-black text-slate-700">---</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px]">
+              <span class="text-slate-400 uppercase tracking-widest font-bold">{% trans "Interest Rate" %}</span>
+              <span id="confirmRate" class="font-black text-emerald-600">0%</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="text-slate-400 uppercase tracking-widest font-bold">{% trans "Duration" %}</span>
+            <span id="confirmDuration" class="font-black text-slate-700 text-right">0</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px]">
+            <span class="text-slate-400 uppercase tracking-widest font-bold">{% trans "Date Limit" %}</span>
+            <span id="confirmLimit" class="font-black text-rose-500 text-right">---</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px] font-bold pt-4 border-t border-slate-200">
+              <span class="text-slate-800 uppercase tracking-widest">{% trans "Repayment Est." %}</span>
+              <span id="confirmMonthly" class="text-sm font-black text-slate-800">XAF 0</span>
+          </div>
+      </div>
+
+      <div class="flex gap-3">
+          <button type="button" id="btnBackToForm" class="flex-1 py-4 border border-slate-100 text-slate-500 rounded-2xl font-bold text-xs hover:bg-slate-50 transition-all">{% trans "Edit Data" %}</button>
+          <button type="button" id="btnFinalSubmit" class="flex-1 py-4 bg-emerald-700 text-white rounded-2xl font-bold text-xs shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all">{% trans "Confirm & Apply" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Signature Pad Library -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+  (function () {
+    const COMMUNITY_ID = "{{ community.id }}";
+    const API_URLS = {
+        applications: `/finance/api/community/${COMMUNITY_ID}/loan-applications/`,
+        loans: `/finance/api/community/${COMMUNITY_ID}/loans/`
+    };
+
+    const state = {
+        loans: [],
+        signaturePad: null,
+        formData: {}
+    };
+
+    const el = {
+        historyBody: document.getElementById("historyBody"),
+        activeLoansGrid: document.getElementById("activeLoansGrid"),
+        applyModal: document.getElementById("applyModal"),
+        termsModal: document.getElementById("termsModal"),
+        canvas: document.getElementById("signaturePad"),
+        formApply: document.getElementById("formLoanApply")
+    };
+
+    function resizeCanvas() {
+        if (!el.canvas) return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        el.canvas.width = el.canvas.offsetWidth * ratio;
+        el.canvas.height = el.canvas.offsetHeight * ratio;
+        el.canvas.getContext("2d").scale(ratio, ratio);
+        if (state.signaturePad) state.signaturePad.clear();
+    }
+
+    function init() {
+        if (!COMMUNITY_ID || COMMUNITY_ID === "None") return;
+        
+        // Initialize Signature Pad
+        state.signaturePad = new SignaturePad(el.canvas, {
+            backgroundColor: 'rgba(0,0,0,0)',
+            penColor: '#064e3b'
+        });
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        fetchData();
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch(API_URLS.loans);
+            const data = await res.json();
+            if (data.success) {
+                state.loans = data.loans;
+                renderLoans();
+            }
+        } catch (err) {
+            toast('error', 'Failed to load loan data');
+        }
+    }
+
+    function renderLoans() {
+        const activeLoans = state.loans.filter(l => l.status === 'active');
+        const history = state.loans.filter(l => l.status !== 'active');
+
+        // Render Active Loans
+        if (activeLoans.length > 0) {
+            el.activeLoansGrid.innerHTML = activeLoans.map(active => {
+                const paidPct = (parseFloat(active.amount_paid) / parseFloat(active.total_amount) * 100).toFixed(0);
+                const limitDate = active.maturity_date ? new Date(active.maturity_date).toLocaleDateString() : '---';
+                
+                return `
+                    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-800">${active.product_name}</h3>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{% trans "Active Loan" %}</p>
+                            </div>
+                            <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-widest rounded-lg">{% trans "XAF" %}</span>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-50 rounded-2xl p-4">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Borrowed + Interest" %}</p>
+                                    <p class="text-sm font-black text-slate-800">XAF ${parseFloat(active.total_amount).toLocaleString()}</p>
+                                </div>
+                                <div class="bg-slate-50 rounded-2xl p-4">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Limit Date" %}</p>
+                                    <p class="text-sm font-black text-rose-500">${limitDate}</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center px-1">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{% trans "Repayment Progress" %}</span>
+                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">${paidPct}%</span>
+                                </div>
+                                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-white shadow-inner">
+                                    <div class="h-full bg-emerald-500 shadow-lg shadow-emerald-500/20" style="width: ${paidPct}%"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-calendar-check text-slate-400"></i>
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{% trans "Borrow Date" %}</p>
+                                        <p class="text-xs font-bold text-slate-700">${new Date(active.borrow_date).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{% trans "Paid So Far" %}</p>
+                                    <p class="text-xs font-bold text-emerald-600">XAF ${parseFloat(active.amount_paid).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render History
+        el.historyBody.innerHTML = history.map(l => `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <p class="font-black text-slate-700">${l.product_name}</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${new Date(l.borrow_date).toLocaleDateString()}</p>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="font-black text-slate-800">XAF ${parseFloat(l.total_amount).toLocaleString()}</span>
+                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest rounded-md">${l.status}</span>
+                    </div>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="2" class="py-10 text-center text-slate-300 text-xs">{% trans "No loan history found." %}</td></tr>';
+    }
+
+    /* ═══════════════════════
+       APP FLOW
+    ═══════════════════════ */
+    document.getElementById("btnApply").onclick = () => {
+        el.applyModal.classList.remove("hidden");
+        // We must wait for the modal to be visible before resizing the canvas
+        // otherwise offsetWidth/Height will be 0.
+        setTimeout(() => {
+            resizeCanvas();
+        }, 50);
+    };
+    
+    document.getElementById("btnClearSignature").onclick = () => state.signaturePad.clear();
+
+    document.getElementById("btnContinue").onclick = () => {
+        const productEl = document.getElementById("selectProduct");
+        const amount = document.getElementById("inputAmount").value;
+        const freq = document.getElementById("selectFrequency").value;
+        
+        if (!productEl.value || !amount || state.signaturePad.isEmpty()) {
+            toast('warning', 'Please fill the product, amount and sign before continuing.');
+            return;
+        }
+
+        const rate = parseFloat(productEl.options[productEl.selectedIndex].dataset.rate);
+        const termMonths = parseInt(productEl.options[productEl.selectedIndex].dataset.term);
+        
+        // Calculate limit date
+        const now = new Date();
+        const limitDate = new Date(now.setMonth(now.getMonth() + termMonths));
+        
+        // Calculate approximate repayment based on frequency
+        let installments = termMonths;
+        if (freq === 'weekly') installments = termMonths * 4;
+        else if (freq === 'biweekly') installments = termMonths * 2;
+        
+        const totalPlusInterest = parseFloat(amount) * (1 + rate/100);
+        const installmentAmount = totalPlusInterest / installments;
+
+        state.formData = {
+            product_id: productEl.value,
+            amount_requested: amount,
+            term_months: termMonths,
+            repayment_frequency: freq,
+            purpose: document.getElementById("textareaPurpose").value,
+            signature_data: state.signaturePad.toDataURL()
+        };
+
+        // Populate terms modal
+        document.getElementById("confirmProduct").textContent = productEl.options[productEl.selectedIndex].text;
+        document.getElementById("confirmRate").textContent = `${rate}%`;
+        document.getElementById("confirmDuration").textContent = `${termMonths} Months (${freq})`;
+        document.getElementById("confirmLimit").textContent = limitDate.toLocaleDateString();
+        document.getElementById("confirmMonthly").textContent = `XAF ${installmentAmount.toLocaleString(undefined, {maximumFractionDigits: 0})} / ${freq}`;
+
+        el.termsModal.classList.remove("hidden");
+    };
+
+    document.getElementById("btnBackToForm").onclick = () => el.termsModal.classList.add("hidden");
+
+    document.getElementById("btnFinalSubmit").onclick = async () => {
+        const btn = document.getElementById("btnFinalSubmit");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+
+        try {
+            const res = await fetch(API_URLS.applications, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(state.formData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                el.applyModal.classList.add("hidden");
+                el.termsModal.classList.add("hidden");
+                el.formApply.reset();
+                state.signaturePad.clear();
+                // Optionally refresh listing
+                fetchData();
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Critical failure during submission');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    document.querySelectorAll(".close-modal-apply").forEach(b => b.onclick = () => el.applyModal.classList.add("hidden"));
+
+    function toast(type, msg) {
+        window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    init();
+  })();
+</script>
+<style>
+    .animate-in { animation: fadeIn 0.3s ease-out fill-mode-both; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+</style>
 {% endblock %}

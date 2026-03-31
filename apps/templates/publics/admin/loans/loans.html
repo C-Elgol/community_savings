@@ -1,12 +1,180 @@
-{% extends 'publics/admin/base.html' %}
-{% load static %}
-{% load i18n %}
-{% block content %}
-        <!-- ========== LOANS PAGE ========== -->
-        <div id="loans" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">Active Loans</h2>
-                <div class="grid md:grid-cols-2 gap-4"><div class="border p-4 rounded-xl"><p class="font-medium">John Doe · XAF 85,000</p><div class="w-full bg-slate-100 h-2 rounded-full mt-2"><div class="bg-emerald-600 h-2 rounded-full" style="width:48%"></div></div><p class="text-xs mt-1">48% repaid · due 15 Oct</p></div><div class="border p-4 rounded-xl"><p class="font-medium">Mary J. · XAF 120,000</p><div class="w-full bg-slate-100 h-2 rounded-full mt-2"><div class="bg-emerald-600 h-2 rounded-full" style="width:28%"></div></div><p class="text-xs mt-1">28% repaid · due 22 Dec</p></div></div>
-            </div>
-        </div>
+{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block content %}
+<div id="adminLoansPage" class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-800">{% trans "Community Loans" %}</h1>
+      <p class="text-xs text-slate-500">{% trans "Monitoring active and completed loans for" %} <span class="font-bold text-slate-700">{{ community.name }}</span></p>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Outstanding Balance" %}</p>
+          <h3 id="statOutstanding" class="text-2xl font-black text-slate-800">XAF 0</h3>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">{% trans "Total Repaid" %}</p>
+          <h3 id="statRepaid" class="text-2xl font-black text-emerald-700">XAF 0</h3>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">{% trans "Active Loans" %}</p>
+          <h3 id="statActiveCount" class="text-2xl font-black text-amber-600">0</h3>
+      </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-1.5 flex gap-1 overflow-x-auto">
+    <button onclick="switchLoanStatus('all')" id="tab_all" class="status-tab px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all bg-slate-800 text-white shadow-lg">{% trans "All Loans" %}</button>
+    <button onclick="switchLoanStatus('active')" id="tab_active" class="status-tab px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-slate-400 hover:bg-slate-50">{% trans "Active" %}</button>
+    <button onclick="switchLoanStatus('paid')" id="tab_paid" class="status-tab px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-slate-400 hover:bg-slate-50">{% trans "Paid" %}</button>
+    <button onclick="switchLoanStatus('defaulted')" id="tab_defaulted" class="status-tab px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-slate-400 hover:bg-slate-50">{% trans "Defaulted" %}</button>
+  </div>
+
+  <!-- Main Table -->
+  <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400">
+          <tr>
+            <th class="px-6 py-4 text-left">{% trans "Beneficiary" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Amount" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Repaid" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Interest" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Borrowed On" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
+          </tr>
+        </thead>
+        <tbody id="loansListBody" class="divide-y divide-slate-50">
+           <!-- Populated via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+
+    const COMMUNITY_ID = "{{ community.id }}";
+    const API_URLS = {
+        loans: (status) => `/finance/api/community/${COMMUNITY_ID}/loans/${status ? '?status=' + status : ''}`
+    };
+
+    const state = {
+        currentStatus: 'all',
+        loans: []
+    };
+
+    const el = {
+        loansListBody: document.getElementById("loansListBody"),
+        statOutstanding: document.getElementById("statOutstanding"),
+        statRepaid: document.getElementById("statRepaid"),
+        statActiveCount: document.getElementById("statActiveCount")
+    };
+
+    async function init() {
+        if (!COMMUNITY_ID || COMMUNITY_ID === "None") return;
+        fetchLoans();
+    }
+
+    async function fetchLoans(status = "") {
+        try {
+            const res = await fetch(API_URLS.loans(status));
+            const data = await res.json();
+            if (data.success) {
+                state.loans = data.loans;
+                renderLoans();
+                if (status === "" || status === "all") updateStats();
+            }
+        } catch (err) {
+            toast('error', 'Failed to load loans');
+        }
+    }
+
+    function renderLoans() {
+        el.loansListBody.innerHTML = "";
+        if (state.loans.length === 0) {
+            el.loansListBody.innerHTML = '<tr><td colspan="6" class="py-20 text-center text-slate-400">{% trans "No loans found" %}</td></tr>';
+            return;
+        }
+
+        state.loans.forEach(l => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-slate-50/50 transition-colors";
+            
+            const statusClass = {
+                active: 'bg-amber-100 text-amber-700',
+                paid: 'bg-emerald-100 text-emerald-700',
+                defaulted: 'bg-rose-100 text-rose-700',
+            }[l.status] || 'bg-slate-100 text-slate-500';
+
+            tr.innerHTML = `
+                <td class="px-6 py-5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">${l.member_name.charAt(0)}</div>
+                        <span class="font-bold text-slate-700 text-sm">${l.member_name}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-5 font-black text-slate-800 text-sm">XAF ${parseFloat(l.amount_borrowed).toLocaleString()}</td>
+                <td class="px-6 py-5">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-emerald-600">XAF ${parseFloat(l.amount_paid).toLocaleString()}</span>
+                        <div class="w-24 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-emerald-500" style="width: ${(parseFloat(l.amount_paid) / parseFloat(l.amount_borrowed) * 100)}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-5 text-xs font-bold text-slate-400">XAF ${parseFloat(l.interest).toLocaleString()}</td>
+                <td class="px-6 py-5 text-xs text-slate-500 font-medium">${new Date(l.borrow_date).toLocaleDateString()}</td>
+                <td class="px-6 py-5">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statusClass}">${l.status}</span>
+                </td>
+            `;
+            el.loansListBody.appendChild(tr);
+        });
+    }
+
+    function updateStats() {
+        let outstanding = 0;
+        let repaid = 0;
+        let activeCount = 0;
+
+        state.loans.forEach(l => {
+            repaid += parseFloat(l.amount_paid);
+            if (l.status === 'active') {
+                outstanding += (parseFloat(l.amount_borrowed) + parseFloat(l.interest) - parseFloat(l.amount_paid));
+                activeCount++;
+            }
+        });
+
+        el.statOutstanding.textContent = `XAF ${outstanding.toLocaleString()}`;
+        el.statRepaid.textContent = `XAF ${repaid.toLocaleString()}`;
+        el.statActiveCount.textContent = activeCount;
+    }
+
+    window.switchLoanStatus = function(status) {
+        state.currentStatus = status;
+        document.querySelectorAll(".status-tab").forEach(tab => {
+            tab.classList.remove("bg-slate-800", "text-white", "shadow-lg");
+            tab.classList.add("text-slate-400", "hover:bg-slate-50");
+        });
+        const activeTab = document.getElementById(`tab_${status}`);
+        activeTab.classList.remove("text-slate-400", "hover:bg-slate-50");
+        activeTab.classList.add("bg-slate-800", "text-white", "shadow-lg");
+        
+        fetchLoans(status === 'all' ? '' : status);
+    };
+
+    function toast(type, msg) {
+        window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    init();
+  })();
+</script>
 {% endblock %}
