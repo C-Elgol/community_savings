@@ -210,8 +210,9 @@
     }
 
     function renderLoans() {
-        const activeLoans = state.loans.filter(l => l.status === 'active');
-        const history = state.loans.filter(l => l.status !== 'active');
+        const activeStatuses = ['active', 'unpaid', 'partial'];
+        const activeLoans = state.loans.filter(l => activeStatuses.includes(l.status));
+        const history = state.loans.filter(l => l.status === 'paid');
 
         // Render Active Loans
         if (activeLoans.length > 0) {
@@ -224,7 +225,9 @@
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h3 class="text-sm font-black text-slate-800">${active.product_name}</h3>
-                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{% trans "Active Loan" %}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                    <span class="px-2 py-0.5 rounded-md ${active.status === 'partial' ? 'bg-blue-50 text-blue-600' : (active.status === 'unpaid' ? 'bg-slate-50 text-slate-500' : 'bg-emerald-50 text-emerald-600')}">${active.status}</span>
+                                </p>
                             </div>
                             <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-widest rounded-lg">{% trans "XAF" %}</span>
                         </div>
