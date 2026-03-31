@@ -251,8 +251,8 @@
 
         state.loans.forEach(l => {
             repaid += parseFloat(l.amount_paid);
-            if (l.status === 'active') {
-                outstanding += (parseFloat(l.amount_borrowed) + parseFloat(l.interest) - parseFloat(l.amount_paid));
+            if (l.status !== 'paid') {
+                outstanding += (parseFloat(l.total_amount) - parseFloat(l.amount_paid));
                 activeCount++;
             }
         });

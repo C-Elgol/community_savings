@@ -119,10 +119,17 @@ class LoanAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
         filters = {'membership__community_id': community_id}
-        if status:
+        
+        from django.db.models import Q
+        if status == 'active':
+            loans = Loan.objects.filter(**filters).exclude(status=LoanStatus.PAID)
+        elif status:
             filters['status'] = status
-            
-        loans = Loan.objects.filter(**filters).select_related('membership__user', 'application__loan_product').order_by('-borrow_date')
+            loans = Loan.objects.filter(**filters)
+        else:
+            loans = Loan.objects.filter(**filters)
+        
+        loans = loans.select_related('membership__user', 'application__loan_product').order_by('-borrow_date')
         
         data = []
         for l in loans:
