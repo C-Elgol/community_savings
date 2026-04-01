@@ -87,7 +87,7 @@
     </a>
     <!-- Expenditures -->
     <a
-      href="#"
+      href="{% url 'finance:admin_expenditures' community.id %}"
       data-page="expenditures"
       class="nav-link flex {% if request.resolver_match.url_name == 'admin_expenditures' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
     >

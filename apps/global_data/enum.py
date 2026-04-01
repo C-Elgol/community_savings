@@ -135,4 +135,7 @@ class RepaymentFrequency(models.TextChoices):
     WEEKLY = "weekly", _("Weekly")
     BIWEEKLY = "biweekly", _("Biweekly")
     MONTHLY = "monthly", _("Monthly")
-    
+
+class ExpenditureStatus(models.TextChoices):
+    DRAFT = "draft", _("Draft")
+    POSTED = "posted", _("Posted")

@@ -14,6 +14,7 @@ from apps.global_data.enum import (
     LoanStatus,
     CommunityFeatureType,
     RepaymentFrequency,
+    ExpenditureStatus,
 )
 from apps.communities.models import Community, Membership, MembershipApplication
 
@@ -407,3 +408,79 @@ class Transaction(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.get_full_name} - {self.amount}"
+
+
+class Expenditure(SavingsBaseModel):
+    """
+    Records a money outflow from a specific community fund/category.
+    Balance = SUM(Contributions by feature_type) - SUM(Expenditures by source_fund) per community.
+    """
+    SPENDABLE_FUNDS = [
+        CommunityFeatureType.ENTERTAINMENT,
+        CommunityFeatureType.PROJECT,
+        CommunityFeatureType.SINKING_FUND,
+        CommunityFeatureType.EVENTS,
+        CommunityFeatureType.SAVINGS,
+    ]
+
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name="expenditures"
+    )
+    season = models.ForeignKey(
+        FinancialSeason,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenditures"
+    )
+    source_fund = models.CharField(
+        max_length=30,
+        choices=CommunityFeatureType.choices,
+        db_index=True,
+        help_text="The fund/category from which money is spent."
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    expenditure_date = models.DateField()
+    description = models.TextField(help_text="Mandatory justification for the expenditure.")
+    signature = models.TextField(blank=True)
+    reference_number = models.CharField(max_length=30, unique=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=ExpenditureStatus.choices,
+        default=ExpenditureStatus.POSTED,
+        db_index=True
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenditures_created"
+    )
+
+    class Meta:
+        ordering = ["-expenditure_date", "-created"]
+        indexes = [
+            models.Index(fields=["community", "source_fund"]),
+            models.Index(fields=["community", "expenditure_date"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            from django.utils import timezone as tz
+            import uuid
+            ts = tz.now().strftime("%Y%m%d")
+            short = str(uuid.uuid4()).upper()[:6]
+            self.reference_number = f"EXP-{ts}-{short}"
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.amount is not None and self.amount <= 0:
+            raise ValidationError("Expenditure amount must be a positive value.")
+        if not self.description or not self.description.strip():
+            raise ValidationError("Description is required for every expenditure.")
+
+    def __str__(self):
+        return f"{self.reference_number} — {self.source_fund} — XAF {self.amount}"

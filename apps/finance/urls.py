@@ -16,6 +16,8 @@ from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingB
 
 from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView, AdminLoanProductView
 from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
+from apps.finance.views.admin_expenditure_view import AdminExpenditureView
+from apps.finance.views.expenditure_api_view import ExpenditureAPI, ExpenditureBalanceAPI
 
 app_name = "finance"
     
@@ -29,6 +31,7 @@ urlpatterns = [
     path('admin-loan-applications/<uuid:community_id>/', AdminLoanApplicationView.as_view(), name='admin_loan_applications'),
     path('admin-loans/<uuid:community_id>/', AdminLoanListView.as_view(), name='admin_loans'),
     path('admin-loan-products/<uuid:community_id>/', AdminLoanProductView.as_view(), name='admin_loan_products'),
+    path('admin-expenditures/<uuid:community_id>/', AdminExpenditureView.as_view(), name='admin_expenditures'),
     # APIs
     path('api/community/<uuid:community_id>/seasons/', SeasonAPI.as_view(), name='season_api'),
     path('api/season/<uuid:season_id>/cycles/', CycleAPI.as_view(), name='cycle_api'),
@@ -55,5 +58,7 @@ urlpatterns = [
     path('api/cycle/<uuid:cycle_id>/bulk-record/', BulkContributionRecordAPI.as_view(), name='bulk_contribution_record_api'),
     path('api/cycle/<uuid:cycle_id>/membership/<uuid:membership_id>/all-features/', MembershipCycleContributionsAPI.as_view(), name='membership_cycle_contributions_all_api'),
     path('api/season/<uuid:season_id>/membership/<uuid:membership_id>/contributions/', MemberSeasonContributionsAPI.as_view(), name='member_season_contributions_api'),
+    path('api/community/<uuid:community_id>/expenditures/', ExpenditureAPI.as_view(), name='expenditure_api'),
+    path('api/community/<uuid:community_id>/expenditure-balances/', ExpenditureBalanceAPI.as_view(), name='expenditure_balance_api'),
 ]
 
