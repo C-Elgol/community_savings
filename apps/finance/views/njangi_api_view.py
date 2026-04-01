@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 class NjangiRotationAPI(View):
     def get(self, request, season_id):
         season = get_object_or_404(FinancialSeason, id=season_id)
-        rotations = NjangiRotation.objects.filter(season=season).select_related('membership__user')
+        # Hide members who already benefited in this season
+        benefited_ids = NjangiBenefit.objects.filter(season=season).values_list('membership_id', flat=True)
+        rotations = NjangiRotation.objects.filter(season=season).exclude(
+            membership_id__in=benefited_ids
+        ).select_related('membership__user')
         
         data = [
             {

@@ -703,11 +703,9 @@
       <form id="formAddRotation" class="space-y-4">
         <div>
           <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{% trans "MEMBER" %}</label>
-          <select name="membership_id" required class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+          <select name="membership_id" id="rotationMemberSelect" required class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
             <option value="">{% trans "Select Member" %}</option>
-            {% for membership in eligible_members %}
-                <option value="{{ membership.id }}">{{ membership.user.get_full_name }}</option>
-            {% endfor %}
+            <!-- Dynamically populated via JS -->
           </select>
         </div>
         <div>
@@ -934,7 +932,14 @@
       btnConfirmDeleteRotation: document.getElementById("btnConfirmDeleteRotation"),
       recordBeneficiaryModal: document.getElementById("recordBeneficiaryModal"),
       formRecordBeneficiary: document.getElementById("formRecordBeneficiary"),
+      rotationMemberSelect: document.getElementById("rotationMemberSelect"),
     };
+
+    const allNjangiMembers = [
+      {% for m in eligible_members %}
+        { id: "{{ m.id }}", name: "{{ m.user.get_full_name }}" },
+      {% endfor %}
+    ];
 
     const tableLoader = new SectionLoaderManager(
       "contributionTableContainer",
@@ -1069,6 +1074,18 @@
     }
 
     window.openAddRotationModal = () => {
+        // Filter members who already have a position
+        const rotatedIds = state.rotations.map(r => r.membership_id.toString());
+        const available = allNjangiMembers.filter(m => !rotatedIds.includes(m.id.toString()));
+        
+        el.rotationMemberSelect.innerHTML = '<option value="">{% trans "Select Member" %}</option>';
+        available.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.name;
+            el.rotationMemberSelect.appendChild(opt);
+        });
+
         el.addRotationModal.classList.remove('hidden');
         setTimeout(() => el.addRotationModal.querySelector('.bg-white')?.classList.add('active-modal'), 10);
     }
@@ -1260,6 +1277,7 @@
             if (result.success) {
                 toast('success', result.message);
                 fetchMeetingBeneficiary(state.currentCycle);
+                fetchRotation();
                 closeRecordBeneficiaryModal();
             } else {
                 toast('error', result.message);
