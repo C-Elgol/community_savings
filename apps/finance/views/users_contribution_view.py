@@ -22,14 +22,9 @@ class UsersContributionView(LoginRequiredMixin, ListView):
 
         # If no season_id provided, find the latest one for this feature
         if not self.active_season_id:
-            seasons = FinancialSeason.objects.filter(
+            latest_season = FinancialSeason.objects.filter(
                 community__memberships__in=memberships
-            ).distinct()
-            
-            if self.active_feature == 'njangi':
-                latest_season = seasons.filter(Q(feature_type='njangi') | Q(feature_type__isnull=True)).order_by('-season_date').first()
-            else:
-                latest_season = seasons.filter(feature_type=self.active_feature).order_by('-season_date').first()
+            ).order_by('-season_date').first()
             
             if latest_season:
                 self.active_season_id = str(latest_season.id)
@@ -44,9 +39,9 @@ class UsersContributionView(LoginRequiredMixin, ListView):
         )
 
         if self.active_feature == 'njangi':
-            queryset = queryset.filter(Q(cycle__feature_type='njangi') | Q(cycle__feature_type__isnull=True))
+            queryset = queryset.filter(Q(feature_type='njangi') | Q(feature_type__isnull=True))
         else:
-            queryset = queryset.filter(cycle__feature_type=self.active_feature)
+            queryset = queryset.filter(feature_type=self.active_feature)
 
         if self.active_season_id:
             queryset = queryset.filter(cycle__season_id=self.active_season_id)
@@ -66,15 +61,10 @@ class UsersContributionView(LoginRequiredMixin, ListView):
             enabled = membership.community.features.filter(is_active=True).values_list('feature_type', flat=True)
             user_features.update(enabled)
         
-        # Available seasons for the active feature
-        seasons = FinancialSeason.objects.filter(
+        # Available seasons for the active feature (seasons are now shared)
+        active_seasons = FinancialSeason.objects.filter(
             community__memberships__in=user_memberships
         ).distinct()
-        
-        if self.active_feature == 'njangi':
-            active_seasons = seasons.filter(Q(feature_type='njangi') | Q(feature_type__isnull=True))
-        else:
-            active_seasons = seasons.filter(feature_type=self.active_feature)
 
         # Totals and counts based on current filters
         all_filtered = self.get_queryset()
