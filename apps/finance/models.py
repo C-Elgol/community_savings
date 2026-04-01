@@ -150,7 +150,7 @@ class NjangiRotation(SavingsBaseModel):
 class NjangiBenefit(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_benefits")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="njangi_benefits")
-    cycle = models.OneToOneField(ContributionCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name="njangi_benefit")
+    cycle = models.ForeignKey(ContributionCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name="njangi_benefits")
     transaction_id = models.CharField(max_length=100, unique=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     benefited_date = models.DateField()

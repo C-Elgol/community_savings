@@ -740,19 +740,103 @@
   </div>
 </div>
 
-<!-- Confirm Benefit Modal -->
-<div id="confirmBenefitModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
-  <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden">
-    <div class="p-8 text-center">
-      <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 text-xl">
-        <i class="fas fa-hand-holding-usd"></i>
-      </div>
-      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Record Benefit?" %}</h3>
-      <p class="text-sm text-slate-500 mb-8">{% trans "Mark this member as having received the Njangi pot for this meeting?" %}</p>
-      <div class="flex gap-3">
-        <button type="button" onclick="closeConfirmBenefitModal()" class="flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all">{% trans "Cancel" %}</button>
-        <button type="button" id="btnConfirmBenefit" class="flex-1 py-3.5 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all">{% trans "Confirm" %}</button>
-      </div>
+<!-- 6. Record Beneficiary Modal (With Signature Pad) -->
+<div
+  id="recordBeneficiaryModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden"
+  >
+    <div class="p-8">
+      <h3
+        class="text-xl font-black text-slate-800 mb-6 flex items-center gap-3"
+      >
+        <i class="fas fa-hand-holding-usd text-amber-500"></i>
+        <span id="beneficiaryModalTitle">{% trans "Record Njangi Benefit" %}</span>
+      </h3>
+
+      <form id="formRecordBeneficiary" class="space-y-6">
+        <input type="hidden" name="membership_id" id="beneficiaryModalMembershipId" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "AMOUNT BENEFITED" %}</label
+            >
+            <input
+              type="number"
+              step="0.01"
+              name="amount"
+              id="beneficiaryModalAmount"
+              required
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "DATE" %}</label
+            >
+            <input
+              type="date"
+              id="beneficiaryModalDate"
+              readonly
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm text-slate-400 outline-none transition-all cursor-not-allowed"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
+            >{% trans "COMMENT (optional)" %}</label
+            >
+            <textarea
+              name="comment"
+              id="beneficiaryModalComment"
+              rows="1"
+              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-amber-500/20 outline-none transition-all resize-none"
+            ></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label
+              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1 flex justify-between"
+            >
+              <span>{% trans "BENEFICIARY SIGNATURE" %}</span>
+              <button
+                type="button"
+                id="clear-beneficiary-signature"
+                class="text-amber-600 hover:text-amber-700"
+              >
+                {% trans "Clear" %}
+              </button>
+            </label>
+            <div
+              class="relative bg-slate-50 rounded-2xl border border-dashed border-slate-200 overflow-hidden"
+            >
+              <canvas
+                id="beneficiary-signature-pad"
+                class="w-full h-40 cursor-crosshair"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="button"
+            onclick="closeRecordBeneficiaryModal()"
+            class="flex-1 py-3.5 border border-slate-100 text-slate-500 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3.5 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all active:scale-95"
+          >
+            {% trans "Save Benefit Record" %}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -848,8 +932,8 @@
       formAddRotation: document.getElementById("formAddRotation"),
       confirmDeleteRotationModal: document.getElementById("confirmDeleteRotationModal"),
       btnConfirmDeleteRotation: document.getElementById("btnConfirmDeleteRotation"),
-      confirmBenefitModal: document.getElementById("confirmBenefitModal"),
-      btnConfirmBenefit: document.getElementById("btnConfirmBenefit"),
+      recordBeneficiaryModal: document.getElementById("recordBeneficiaryModal"),
+      formRecordBeneficiary: document.getElementById("formRecordBeneficiary"),
     };
 
     const tableLoader = new SectionLoaderManager(
@@ -970,9 +1054,15 @@
                 </td>
                 <td class="px-6 py-4 font-bold text-slate-700">${r.full_name}</td>
                 <td class="px-6 py-4 text-center">
-                    <button onclick="deleteRotation('${r.id}')" class="w-8 h-8 rounded-full hover:bg-rose-50 text-rose-400 transition-all">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="openRecordBeneficiaryModal('${r.membership_id}', '${r.full_name}')" 
+                            class="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-amber-600 transition-all flex items-center gap-2">
+                            <i class="fas fa-hand-holding-usd"></i> {% trans "Benefited" %}
+                        </button>
+                        <button onclick="deleteRotation('${r.id}')" class="w-8 h-8 rounded-full hover:bg-rose-50 text-rose-400 transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </td>`;
             el.rotationListBody.appendChild(tr);
         });
@@ -1063,56 +1153,100 @@
     }
 
     function renderMeetingBeneficiary() {
-        const b = state.meetingBeneficiary;
-        if (!b || !b.beneficiary) {
+        const d = state.meetingBeneficiary;
+        if (!d || !d.beneficiaries || d.beneficiaries.length === 0) {
             el.meetingBeneficiaryCard.innerHTML = `
                 <div class="py-10 text-slate-300">
                     <i class="fas fa-user-slash text-4xl mb-4"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest">{% trans "No beneficiary assigned for pos" %} ${b ? b.position : '?'}</p>
-                    <p class="text-[10px] mt-2">{% trans "Add members to the rotation list to assign them." %}</p>
+                    <p class="text-xs font-bold uppercase tracking-widest">{% trans "No beneficiary recorded" %}</p>
+                    <p class="text-[10px] mt-2">{% trans "Suggested" %}: ${d && d.beneficiary_suggested ? d.beneficiary_suggested.full_name : '?'}</p>
                 </div>`;
             return;
         }
 
-        const isBenefited = b.is_benefited;
         el.meetingBeneficiaryCard.innerHTML = `
-            <div class="flex flex-col items-center">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-700 font-black text-xl mb-4 border-2 border-white shadow-sm">
-                    ${b.beneficiary.full_name.charAt(0)}
-                </div>
-                <h4 class="font-black text-slate-800 mb-1">${b.beneficiary.full_name}</h4>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">{% trans "Position" %}: ${b.position}</p>
-                
-                ${isBenefited ? `
-                    <div class="w-full bg-emerald-50 text-emerald-700 py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest">
-                        <i class="fas fa-check-circle"></i> {% trans "Benefited" %}
+            <div class="space-y-4">
+                ${d.beneficiaries.map(b => `
+                    <div class="bg-slate-50 rounded-3xl p-4 border border-slate-100 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-black text-sm">
+                            ${b.full_name.charAt(0)}
+                        </div>
+                        <div class="flex-1 text-left">
+                            <p class="text-sm font-black text-slate-800">${b.full_name}</p>
+                            <p class="text-[10px] font-bold text-emerald-600">XAF ${parseFloat(b.amount).toLocaleString()}</p>
+                        </div>
+                        <div class="text-right">
+                           <p class="text-[9px] text-slate-400 italic">${b.date}</p>
+                           <p class="text-[9px] font-mono font-bold text-slate-400">${b.transaction_id}</p>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-2 italic">${b.benefit_details.date} • ${b.benefit_details.transaction_id}</p>
-                ` : `
-                    <button 
-                        onclick="recordBenefit('${b.beneficiary.id}')"
-                        class="w-full py-4 bg-amber-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-amber-500/20 hover:bg-amber-600 hover:shadow-amber-500/40 transition-all active:scale-95"
-                    >
-                        {% trans "Record as Benefited" %}
-                    </button>
-                `}
+                `).join('')}
             </div>`;
     }
 
-    window.recordBenefit = (membershipId) => {
-        state.benefitMemberId = membershipId;
-        el.confirmBenefitModal.classList.remove('hidden');
-        setTimeout(() => el.confirmBenefitModal.querySelector('.bg-white')?.classList.add('active-modal'), 10);
+    // Beneficiary Record Logic
+    const beneficiaryCanvas = document.getElementById("beneficiary-signature-pad");
+    let beneficiarySignaturePad = null;
+    
+    if (beneficiaryCanvas) {
+        beneficiarySignaturePad = new SignaturePad(beneficiaryCanvas, {
+            backgroundColor: "rgba(255, 255, 255, 0)",
+            penColor: "rgb(180, 83, 9)", // amber-700
+        });
     }
 
-    window.closeConfirmBenefitModal = () => {
-        el.confirmBenefitModal.querySelector('.bg-white')?.classList.remove('active-modal');
-        setTimeout(() => el.confirmBenefitModal.classList.add('hidden'), 300);
-        state.benefitMemberId = null;
+    function resizeBeneficiaryCanvas() {
+        if (!beneficiaryCanvas) return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        beneficiaryCanvas.width = beneficiaryCanvas.offsetWidth * ratio;
+        beneficiaryCanvas.height = beneficiaryCanvas.offsetHeight * ratio;
+        beneficiaryCanvas.getContext("2d").scale(ratio, ratio);
+        beneficiarySignaturePad.clear();
     }
 
-    el.btnConfirmBenefit.onclick = async () => {
-        if (!state.currentCycle || !state.benefitMemberId) return;
+    window.openRecordBeneficiaryModal = (membershipId, fullName) => {
+        if (!state.currentCycle) {
+            toast('warning', 'Please select a meeting cycle first');
+            return;
+        }
+        document.getElementById("beneficiaryModalMembershipId").value = membershipId;
+        document.getElementById("beneficiaryModalTitle").innerHTML = 
+            `Record Njangi Benefit for <span class="text-amber-600">${fullName}</span>`;
+        
+        // Find current cycle to get expected amount
+        const currentCycleOpt = el.cycleSelector.options[el.cycleSelector.selectedIndex];
+        // We might need to fetch the amount from state if not in option text
+        // For now let's assume we can get it or use a default
+        document.getElementById("beneficiaryModalAmount").value = ""; 
+        document.getElementById("beneficiaryModalDate").value = new Date().toISOString().split('T')[0];
+        document.getElementById("beneficiaryModalComment").value = "";
+        beneficiarySignaturePad.clear();
+
+        el.recordBeneficiaryModal.classList.remove('hidden');
+        setTimeout(resizeBeneficiaryCanvas, 10);
+    }
+
+    window.closeRecordBeneficiaryModal = () => {
+        el.recordBeneficiaryModal.classList.add('hidden');
+    }
+
+    document.getElementById("clear-beneficiary-signature").onclick = () => beneficiarySignaturePad.clear();
+
+    el.formRecordBeneficiary.onsubmit = async (e) => {
+        e.preventDefault();
+        if (beneficiarySignaturePad.isEmpty()) {
+            toast('warning', 'Beneficiary signature is required');
+            return;
+        }
+
+        const formData = new FormData(el.formRecordBeneficiary);
+        const payload = {
+            membership_id: formData.get('membership_id'),
+            amount: formData.get('amount'),
+            comment: formData.get('comment'),
+            signature: beneficiarySignaturePad.toDataURL()
+        };
+
         try {
             const res = await fetch(API_URLS.njangiBeneficiary(state.currentCycle), {
                 method: 'POST',
@@ -1120,20 +1254,20 @@
                     'X-CSRFToken': '{{ csrf_token }}',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ membership_id: state.benefitMemberId })
+                body: JSON.stringify(payload)
             });
             const result = await res.json();
             if (result.success) {
                 toast('success', result.message);
                 fetchMeetingBeneficiary(state.currentCycle);
-                closeConfirmBenefitModal();
+                closeRecordBeneficiaryModal();
             } else {
                 toast('error', result.message);
             }
         } catch (err) {
-            toast('error', 'Record failed');
+            toast('error', 'Failed to record benefit');
         }
-    }
+    };
 
     function updateFineButtonsVisibility() {
         const hasCycle = !!state.currentCycle;
