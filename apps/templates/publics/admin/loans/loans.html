@@ -9,7 +9,7 @@
   </div>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Outstanding Balance" %}</p>
           <h3 id="statOutstanding" class="text-2xl font-black text-slate-800">XAF 0</h3>
@@ -17,6 +17,10 @@
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">{% trans "Total Repaid" %}</p>
           <h3 id="statRepaid" class="text-2xl font-black text-emerald-700">XAF 0</h3>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">{% trans "Total Interest" %}</p>
+          <h3 id="statInterest" class="text-2xl font-black text-emerald-800">XAF 0</h3>
       </div>
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">{% trans "Active Loans" %}</p>
@@ -41,7 +45,7 @@
         <thead class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400">
           <tr>
             <th class="px-6 py-4 text-left">{% trans "Beneficiary" %}</th>
-            <th class="px-6 py-4 text-left">{% trans "Borrowed" %}</th>
+            <th class="px-6 py-4 text-left">{% trans "Borrowed + Interest" %}</th>
             <th class="px-6 py-4 text-left">{% trans "Repaid" %}</th>
             <th class="px-6 py-4 text-left">{% trans "Remaining" %}</th>
             <th class="px-6 py-4 text-left">{% trans "Maturity" %}</th>
@@ -113,6 +117,7 @@
         loansListBody: document.getElementById("loansListBody"),
         statOutstanding: document.getElementById("statOutstanding"),
         statRepaid: document.getElementById("statRepaid"),
+        statInterest: document.getElementById("statInterest"),
         statActiveCount: document.getElementById("statActiveCount"),
         payModal: document.getElementById("payLoanModal"),
         formPayment: document.getElementById("formPayment")
@@ -247,18 +252,21 @@
     function updateStats() {
         let outstanding = 0;
         let repaid = 0;
+        let totalInterest = 0;
         let activeCount = 0;
-
+ 
         state.loans.forEach(l => {
             repaid += parseFloat(l.amount_paid);
+            totalInterest += parseFloat(l.interest || 0);
             if (l.status !== 'paid') {
                 outstanding += (parseFloat(l.total_amount) - parseFloat(l.amount_paid));
                 activeCount++;
             }
         });
-
+ 
         el.statOutstanding.textContent = `XAF ${outstanding.toLocaleString()}`;
         el.statRepaid.textContent = `XAF ${repaid.toLocaleString()}`;
+        el.statInterest.textContent = `XAF ${totalInterest.toLocaleString()}`;
         el.statActiveCount.textContent = activeCount;
     }
 
