@@ -85,6 +85,14 @@
     >
       <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i><span>Fines</span>
     </a>
+    <!-- Expenditures -->
+    <a
+      href="#"
+      data-page="expenditures"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_expenditures' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
+    >
+      <i class="fas fa-hand-holding-usd w-5 text-slate-400"></i><span>Expenditures</span>
+    </a>
     <!-- Meetings -->
     <a
       href="#"

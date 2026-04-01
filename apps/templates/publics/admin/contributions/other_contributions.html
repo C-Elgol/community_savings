@@ -114,18 +114,6 @@
         class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
       >
         <p
-          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
-        >
-          {% trans "Expected Total" %}
-        </p>
-        <h3 id="statExpected" class="text-xl font-black text-slate-800">
-          XAF 0
-        </h3>
-      </div>
-      <div
-        class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm card-hover"
-      >
-        <p
           class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1"
         >
           {% trans "Collected" %}
@@ -206,7 +194,6 @@
             <tr>
               <th class="px-6 py-4 text-left">{% trans "Member" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Ref" %}</th>
-              <th class="px-6 py-4 text-left">{% trans "Expected" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Amount Paid" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Total Season" %}</th>
               <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
@@ -236,7 +223,6 @@
               <tr>
                 <th class="px-6 py-4 text-left">{% trans "Cycle Title" %}</th>
                 <th class="px-6 py-4 text-left">{% trans "Due Date" %}</th>
-                <th class="px-6 py-4 text-left">{% trans "Expected Total" %}</th>
                 <th class="px-6 py-4 text-right">{% trans "Total Collected" %}</th>
               </tr>
             </thead>
@@ -449,19 +435,10 @@
       <form id="formRecordContribution" class="space-y-6">
         <input type="hidden" name="membership_id" id="modalMembershipId" />
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label
-              class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-              >{% trans "AMOUNT PAID" %}</label
-            >
-            <input
-              type="number"
-              step="0.01"
-              name="amount_paid"
-              id="modalAmountPaid"
-              required
-              class="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-            />
+          <div class="md:col-span-2 space-y-4">
+             <div id="featureInputsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <!-- Dynamic inputs will be injected here -->
+             </div>
           </div>
           <div>
             <label
@@ -686,30 +663,38 @@
     const ENABLED_FEATURES = {{ enabled_features|safe }};
 
     const FEATURE_LABELS = {
+      savings: "Savings",
+      entertainment: "Entertainment",
       sinking_fund: "Sinking Fund",
       project: "Project",
       events: "Events",
     };
 
     const FEATURE_ICONS = {
+      savings: "fa-piggy-bank",
+      entertainment: "fa-glass-cheers",
       sinking_fund: "fa-shield-alt",
       project: "fa-project-diagram",
       events: "fa-calendar-alt",
     };
 
     const API_URLS = {
-      seasons: (featureType) => `/finance/api/community/${COMMUNITY_ID}/seasons/?feature_type=${featureType}`,
+      seasons: () => `/finance/api/community/${COMMUNITY_ID}/seasons/`,
       seasonCreate: `/finance/api/community/${COMMUNITY_ID}/seasons/`,
       featureCycles: (seasonId, featureType) =>
         `/finance/api/season/${seasonId}/feature-cycles/?feature_type=${featureType}`,
       featureCycleCreate: (seasonId) =>
         `/finance/api/season/${seasonId}/feature-cycles/`,
-      featureContributions: (cycleId) =>
-        `/finance/api/cycle/${cycleId}/feature-contributions/`,
+      featureContributions: (cycleId, featureType) =>
+        `/finance/api/cycle/${cycleId}/feature-contributions/?feature_type=${featureType}`,
       featureRecord: (cycleId) =>
         `/finance/api/cycle/${cycleId}/feature-contributions/`,
-      memberSeasonContributions: (seasonId, membershipId) =>
-        `/finance/api/season/${seasonId}/membership/${membershipId}/contributions/`,
+      bulkRecord: (cycleId) =>
+        `/finance/api/cycle/${cycleId}/bulk-record/`,
+      membershipCycleAllFeatures: (cycleId, membershipId) =>
+        `/finance/api/cycle/${cycleId}/membership/${membershipId}/all-features/`,
+      memberSeasonContributions: (seasonId, membershipId, featureType) =>
+        `/finance/api/season/${seasonId}/membership/${membershipId}/contributions/?feature_type=${featureType}`,
     };
 
     // State
@@ -762,7 +747,7 @@
       updateFeatureLabel();
 
       const savedSeason = localStorage.getItem(
-        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`
+        `contrib_season_global_${COMMUNITY_ID}`
       );
       if (savedSeason) {
         state.currentSeason = JSON.parse(savedSeason);
@@ -812,7 +797,7 @@
 
       // Try loading saved season for this feature type
       const savedSeason = localStorage.getItem(
-        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`
+        `contrib_season_global_${COMMUNITY_ID}`
       );
       if (savedSeason) {
         state.currentSeason = JSON.parse(savedSeason);
@@ -837,7 +822,7 @@
     ═══════════════════════ */
     async function fetchSeasons() {
       try {
-        const res = await fetch(API_URLS.seasons(state.currentFeatureType));
+        const res = await fetch(API_URLS.seasons());
         const data = await res.json();
         if (data.success) {
           renderSeasonList(data.seasons);
@@ -873,7 +858,7 @@
           }
         } else if (res.status === 404) {
           // Stale season ID in localStorage
-          localStorage.removeItem(`contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`);
+          localStorage.removeItem(`contrib_season_global_${COMMUNITY_ID}`);
           state.currentSeason = null;
           el.managementState.classList.add("hidden");
           el.selectionState.classList.remove("hidden");
@@ -887,7 +872,7 @@
     async function fetchContributions(cycleId) {
       tableLoader.showLoader();
       try {
-        const res = await fetch(API_URLS.featureContributions(cycleId));
+        const res = await fetch(API_URLS.featureContributions(cycleId, state.currentFeatureType));
         const data = await res.json();
         if (data.success) {
           state.members = data.contributions;
@@ -901,15 +886,15 @@
       }
     }
 
-    async function saveContribution(
+    async function saveBulkContribution(
       membershipId,
-      amount,
+      amounts,
       comment = "",
       signature = ""
     ) {
       if (!state.currentCycle) return;
       try {
-        const res = await fetch(API_URLS.featureRecord(state.currentCycle), {
+        const res = await fetch(API_URLS.bulkRecord(state.currentCycle), {
           method: "POST",
           headers: {
             "X-CSRFToken": "{{ csrf_token }}",
@@ -917,7 +902,7 @@
           },
           body: JSON.stringify({
             membership_id: membershipId,
-            amount_paid: amount,
+            amounts: amounts,
             comment: comment,
             signature: signature,
           }),
@@ -926,21 +911,21 @@
         if (data.success) {
           toast(
             "success",
-            `Recorded successfully. Ref: ${data.payment_reference}`
+            `Recorded successfully.`
           );
-          const m = state.members.find((x) => x.membership_id === membershipId);
-          if (m) {
-            const oldAmount = parseFloat(m.amount_paid || 0);
-            m.amount_paid = amount;
-            m.total_season_amount = (parseFloat(m.total_season_amount || 0) - oldAmount + parseFloat(amount)).toFixed(2);
-            m.payment_reference = data.payment_reference;
-            m.status =
-              parseFloat(amount) >= parseFloat(m.expected_amount)
-                ? "paid"
-                : parseFloat(amount)
-                  ? "partial"
-                  : "pending";
+          
+          // Update local state if the recorded feature matches current view
+          const currentAmount = amounts[state.currentFeatureType];
+          if (currentAmount !== undefined) {
+             const m = state.members.find((x) => x.membership_id === membershipId);
+             if (m) {
+                const oldAmount = parseFloat(m.amount_paid || 0);
+                m.amount_paid = currentAmount;
+                // Note: total_season_amount might be slightly off until refresh, but we update simple stats
+                m.status = parseFloat(currentAmount) >= parseFloat(m.expected_amount) ? "paid" : parseFloat(currentAmount) ? "partial" : "pending";
+             }
           }
+          
           updateStats();
           renderMembers(document.getElementById("memberSearch").value);
         } else {
@@ -949,6 +934,38 @@
       } catch (err) {
         toast("error", "Sync failed");
       }
+    }
+
+    function populateFeatureInputs(existingAmounts = {}, enrolledFeatures = []) {
+      const container = document.getElementById("featureInputsContainer");
+      container.innerHTML = "";
+      
+      // Only show features the member is enrolled in
+      const featuresToShow = enrolledFeatures;
+
+      if (featuresToShow.length === 0) {
+        container.innerHTML = '<div class="col-span-2 py-4 text-center text-slate-400 text-xs">{% trans "This member is not enrolled in any active features." %}</div>';
+        return;
+      }
+
+      featuresToShow.forEach(ft => {
+        const val = existingAmounts[ft] !== undefined ? existingAmounts[ft] : "";
+        const label = FEATURE_LABELS[ft] || ft;
+        
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">${label}</label>
+          <input
+            type="number"
+            step="0.01"
+            name="amount_${ft}"
+            data-feature="${ft}"
+            value="${val}"
+            class="feature-amount-input w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+          />
+        `;
+        container.appendChild(div);
+      });
     }
 
     /* ═══════════════════════
@@ -995,9 +1012,7 @@
         const statusClass =
           m.status === "paid"
             ? "bg-emerald-100 text-emerald-700"
-            : m.status === "partial"
-              ? "bg-amber-100 text-amber-700"
-              : "bg-slate-100 text-slate-400";
+            : "bg-slate-100 text-slate-400";
 
         tr.innerHTML = `
           <td class="px-6 py-4">
@@ -1009,14 +1024,8 @@
           <td class="px-6 py-4">
             <span class="text-[10px] font-black font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">${m.payment_reference || "---"}</span>
           </td>
-          <td class="px-6 py-4 font-mono font-bold text-slate-400 text-xs">${m.expected_amount}</td>
           <td class="px-6 py-4">
-            <div class="flex items-center gap-2">
               <span class="text-sm font-bold text-slate-700">${m.amount_paid}</span>
-              <button class="btn-pay-full p-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" data-mid="${m.membership_id}" data-full="${m.expected_amount}" title="{% trans 'Pay Full' %}">
-                <i class="fas fa-bolt"></i>
-              </button>
-            </div>
           </td>
           <td class="px-6 py-4">
             <button class="btn-view-season-total p-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-black hover:bg-emerald-100 transition-all flex items-center gap-1.5"
@@ -1036,11 +1045,10 @@
                 title="{% trans 'View Details' %}">
                 <i class="fas fa-eye text-lg"></i>
               </button>
-              <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2"
+               <button class="btn-open-record px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 transition-all flex items-center gap-2"
                 data-mid="${m.membership_id}"
                 data-name="${m.member_name}"
-                data-amount="${m.amount_paid}"
-                data-expected="${m.expected_amount}">
+                data-amount="${m.amount_paid}">
                 <i class="fas fa-signature"></i> {% trans "Record" %}
               </button>
             </div>
@@ -1051,8 +1059,6 @@
     }
 
     function updateStats() {
-      const expectedPerMember = state.members[0]?.expected_amount || 0;
-      const totalExpected = state.members.length * expectedPerMember;
       const totalCollected = state.members.reduce(
         (sum, m) => sum + parseFloat(m.amount_paid),
         0
@@ -1065,8 +1071,6 @@
         ? Math.round((contributedCount / state.members.length) * 100)
         : 0;
 
-      document.getElementById("statExpected").textContent =
-        `XAF ${totalExpected.toLocaleString()}`;
       document.getElementById("statCollected").textContent =
         `XAF ${totalCollected.toLocaleString()}`;
       document.getElementById("statPending").textContent =
@@ -1075,7 +1079,6 @@
     }
 
     function resetStats() {
-      document.getElementById("statExpected").textContent = "XAF 0";
       document.getElementById("statCollected").textContent = "XAF 0";
       document.getElementById("statPending").textContent = '0 {% trans "Members" %}';
       document.getElementById("statEfficiency").textContent = "0%";
@@ -1164,7 +1167,7 @@
       state.currentSeason = s;
       state.currentCycle = null;
       localStorage.setItem(
-        `contrib_season_${COMMUNITY_ID}_${state.currentFeatureType}`,
+        `contrib_season_global_${COMMUNITY_ID}`,
         JSON.stringify(s)
       );
       closeAllModals();
@@ -1219,7 +1222,6 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const payload = Object.fromEntries(fd);
-      payload.feature_type = state.currentFeatureType;
       try {
         const res = await fetch(API_URLS.seasonCreate, {
           method: "POST",
@@ -1248,7 +1250,6 @@
       const fd = new FormData(e.target);
       const payload = Object.fromEntries(fd);
       payload.is_special = e.target.is_special.checked;
-      payload.feature_type = state.currentFeatureType;
 
       try {
         const res = await fetch(
@@ -1313,16 +1314,7 @@
       .addEventListener("click", () => signaturePad.clear());
 
     // Table event delegation
-    el.memberListBody.addEventListener("click", (e) => {
-      // Quick pay full
-      const fullBtn = e.target.closest(".btn-pay-full");
-      if (fullBtn) {
-        const mid = fullBtn.dataset.mid;
-        const fullAmount = fullBtn.dataset.full;
-        saveContribution(mid, fullAmount);
-        return;
-      }
-
+    el.memberListBody.addEventListener("click", async (e) => {
       // View detail
       const viewBtn = e.target.closest(".btn-view-detail");
       if (viewBtn) {
@@ -1355,14 +1347,14 @@
       if (recordBtn) {
         const mid = recordBtn.dataset.mid;
         const name = recordBtn.dataset.name;
-        const amount = recordBtn.dataset.amount;
-        const expected = recordBtn.dataset.expected;
 
         document.getElementById("modalMembershipId").value = mid;
         document.getElementById("modalMemberName").innerHTML =
           `{% trans "Record Contribution for" %} <span class="text-emerald-600">${name}</span>`;
-        document.getElementById("modalAmountPaid").value =
-          amount === "0.00" ? expected : amount;
+        
+        // Show loading state in inputs container
+        document.getElementById("featureInputsContainer").innerHTML = '<div class="col-span-2 py-4 text-center text-slate-400 text-xs"><i class="fas fa-spinner fa-spin mr-2"></i>Loading contributions...</div>';
+        
         document.getElementById("modalComment").value = "";
         signaturePad.clear();
 
@@ -1370,6 +1362,27 @@
           .getElementById("recordContributionModal")
           .classList.remove("hidden");
         resizeCanvas();
+
+        const member = state.members.find(x => x.membership_id === mid);
+        const initialFeatures = member ? member.features || [] : [];
+        
+        // Show initial inputs based on member list features
+        populateFeatureInputs({}, initialFeatures);
+
+        // Fetch all feature contributions for this cycle to get amounts
+        try {
+            const res = await fetch(API_URLS.membershipCycleAllFeatures(state.currentCycle, mid));
+            const data = await res.json();
+            if (data.success) {
+                // Use features from API if available, else fallback to initial
+                const features = (data.enrolled_features && data.enrolled_features.length > 0) 
+                    ? data.enrolled_features 
+                    : initialFeatures;
+                populateFeatureInputs(data.contributions, features);
+            }
+        } catch (err) {
+            console.error("Error fetching feature contributions:", err);
+        }
       }
 
       // View Season Total / History
@@ -1395,7 +1408,7 @@
         modal.classList.remove("hidden");
         
         try {
-            const res = await fetch(API_URLS.memberSeasonContributions(state.currentSeason.id, membershipId));
+            const res = await fetch(API_URLS.memberSeasonContributions(state.currentSeason.id, membershipId, state.currentFeatureType));
             const data = await res.json();
             if (data.success) {
                 if (data.history.length === 0) {
@@ -1431,11 +1444,19 @@
       }
 
       const mid = document.getElementById("modalMembershipId").value;
-      const amount = document.getElementById("modalAmountPaid").value;
       const comment = document.getElementById("modalComment").value;
       const signature = signaturePad.toDataURL();
 
-      await saveContribution(mid, amount, comment, signature);
+      const amounts = {};
+      document.querySelectorAll(".feature-amount-input").forEach(input => {
+        const ft = input.dataset.feature;
+        const val = input.value;
+        if (val !== "") {
+            amounts[ft] = val;
+        }
+      });
+
+      await saveBulkContribution(mid, amounts, comment, signature);
       closeAllModals();
     };
 

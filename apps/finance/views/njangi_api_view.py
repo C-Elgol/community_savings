@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 class NjangiRotationAPI(View):
     def get(self, request, season_id):
         season = get_object_or_404(FinancialSeason, id=season_id)
-        rotations = NjangiRotation.objects.filter(season=season).select_related('membership__user')
+        # Hide members who already benefited in this season
+        benefited_ids = NjangiBenefit.objects.filter(season=season).values_list('membership_id', flat=True)
+        rotations = NjangiRotation.objects.filter(season=season).exclude(
+            membership_id__in=benefited_ids
+        ).select_related('membership__user')
         
         data = [
             {
@@ -77,22 +81,28 @@ class NjangiMeetingBeneficiaryAPI(View):
             
         rotation = NjangiRotation.objects.filter(season=season, position=index).select_related('membership__user').first()
         
-        # Check if already benefited
-        benefit = NjangiBenefit.objects.filter(cycle=cycle).first()
+        benefits = NjangiBenefit.objects.filter(cycle=cycle).select_related('membership__user')
         
         data = {
             'position': index,
-            'beneficiary': {
+            'beneficiary_suggested': {
                 'id': rotation.membership.id,
                 'full_name': rotation.membership.user.get_full_name,
                 'email': rotation.membership.user.email,
             } if rotation else None,
-            'is_benefited': benefit is not None,
-            'benefit_details': {
-                'amount': float(benefit.amount),
-                'date': benefit.benefited_date.isoformat(),
-                'transaction_id': benefit.transaction_id
-            } if benefit else None
+            'is_benefited': benefits.exists(),
+            'beneficiaries': [
+                {
+                    'id': b.membership.id,
+                    'full_name': b.membership.user.get_full_name,
+                    'amount': float(b.amount),
+                    'date': b.benefited_date.isoformat(),
+                    'transaction_id': b.transaction_id,
+                    'comment': b.comment,
+                    'signature': b.signature
+                }
+                for b in benefits
+            ]
         }
         return JsonResponse({'success': True, 'data': data})
 
@@ -103,11 +113,15 @@ class NjangiMeetingBeneficiaryAPI(View):
             data = json.loads(request.body)
             membership_id = data.get('membership_id')
             amount = Decimal(str(data.get('amount', cycle.expected_amount)))
+            comment = data.get('comment', '')
+            signature = data.get('signature', '')
             
             membership = get_object_or_404(Membership, id=membership_id)
             
-            if NjangiBenefit.objects.filter(cycle=cycle).exists():
-                return JsonResponse({'success': False, 'message': _("This meeting already has a recorded beneficiary.")}, status=400)
+            # We allow multiple beneficiaries per cycle now.
+            # But we might want to check if THIS member already benefited in THIS cycle.
+            if NjangiBenefit.objects.filter(cycle=cycle, membership=membership).exists():
+                return JsonResponse({'success': False, 'message': _("This member has already benefited in this meeting.")}, status=400)
             
             import uuid
             NjangiBenefit.objects.create(
@@ -115,6 +129,8 @@ class NjangiMeetingBeneficiaryAPI(View):
                 season=cycle.season,
                 cycle=cycle,
                 amount=amount,
+                comment=comment,
+                signature=signature,
                 benefited_date=timezone.now().date(),
                 transaction_id=f"NJ-{uuid.uuid4().hex[:8].upper()}"
             )

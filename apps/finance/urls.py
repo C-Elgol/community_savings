@@ -5,13 +5,17 @@ from apps.finance.views.member_loan_view import MemberLoanView
 from apps.finance.views.members_fine_view import MemberFineView
 from apps.finance.views.admin_contribution_and_cycle_views import AdminContributionAndCycleView
 from apps.finance.views.admin_contributions_view import AdminContributionsView
-from apps.finance.views.contribution_api_view import SeasonAPI, CycleAPI, ContributionAPI, ContributionCycleAPI, ContributionRecordAPI, MemberSeasonContributionsAPI
+from apps.finance.views.contribution_api_view import (
+    SeasonAPI, CycleAPI, ContributionAPI, ContributionCycleAPI, 
+    ContributionRecordAPI, MemberSeasonContributionsAPI, 
+    BulkContributionRecordAPI, MembershipCycleContributionsAPI
+)
 from apps.finance.views.fine_api_view import FineEligibleMembersAPI, LaunchFinesAPI, FineListAPI, PayFineAPI, MemberFineListAPI
 from apps.finance.views.fine_list_view import AdminFineListView
 from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingBeneficiaryAPI
 
 from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView, AdminLoanProductView
-from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI
+from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
 
 app_name = "finance"
     
@@ -37,6 +41,7 @@ urlpatterns = [
     path('api/community/<uuid:community_id>/loan-applications/', LoanApplicationAPI.as_view(), name='loan_application_api'),
     path('api/loan-application/<uuid:application_id>/', LoanApplicationAPI.as_view(), name='loan_application_detail_api'),
     path('api/community/<uuid:community_id>/loans/', LoanAPI.as_view(), name='loan_api'),
+    path('api/loan/<uuid:loan_id>/payment/', LoanPaymentAPI.as_view(), name='loan_payment_api'),
     path('api/community/<uuid:community_id>/loan-products/', LoanProductAPI.as_view(), name='loan_product_api'),
     path('api/loan-product/<uuid:product_id>/', LoanProductAPI.as_view(), name='loan_product_detail_api'),
     path('api/community/<uuid:community_id>/memberships/', MembershipAPI.as_view(), name='membership_api'),
@@ -47,6 +52,8 @@ urlpatterns = [
     # Feature-type Contribution APIs (Savings, Entertainment, Sinking Fund, Project)
     path('api/season/<uuid:season_id>/feature-cycles/', ContributionCycleAPI.as_view(), name='feature_cycle_api'),
     path('api/cycle/<uuid:cycle_id>/feature-contributions/', ContributionRecordAPI.as_view(), name='feature_contribution_api'),
+    path('api/cycle/<uuid:cycle_id>/bulk-record/', BulkContributionRecordAPI.as_view(), name='bulk_contribution_record_api'),
+    path('api/cycle/<uuid:cycle_id>/membership/<uuid:membership_id>/all-features/', MembershipCycleContributionsAPI.as_view(), name='membership_cycle_contributions_all_api'),
     path('api/season/<uuid:season_id>/membership/<uuid:membership_id>/contributions/', MemberSeasonContributionsAPI.as_view(), name='member_season_contributions_api'),
 ]
 

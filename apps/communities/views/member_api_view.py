@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 import json
 import logging
 
-from apps.communities.models import Community, Membership
+from apps.communities.models import Community, Membership, MemberFeatureParticipation
 from apps.users.models import User
 from apps.global_data.enum import MembershipRole, MembershipStatus
 
@@ -156,15 +156,17 @@ class MemberDeleteAPI(View):
 class EligibleFeatureMemberAPI(View):
     def get(self, request, community_id, feature_type):
         community = get_object_or_404(Community, id=community_id)
-        # Members of this community who are NOT in the feature_type
-        # or whose participation is not active
+        # Members of this community who are NOT currently active in the feature_type
+        active_ids = MemberFeatureParticipation.objects.filter(
+            feature__feature_type=feature_type,
+            is_active=True,
+            membership__community=community
+        ).values_list('membership_id', flat=True)
+
         members = Membership.objects.filter(
             community=community, 
             is_deleted=False
-        ).exclude(
-            feature_participations__feature__feature_type=feature_type,
-            feature_participations__is_active=True
-        ).select_related('user')
+        ).exclude(id__in=active_ids).select_related('user')
         
         data = [{
             'id': str(m.id),

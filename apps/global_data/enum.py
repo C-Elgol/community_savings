@@ -76,6 +76,7 @@ class LoanStatus(models.TextChoices):
     ACTIVE = "active", _("Active")
     PARTIAL = "partial", _("Partially Paid")
     PAID = "paid", _("Paid")
+    UNPAID = "unpaid", _("Unpaid")
     DEFAULTED = "defaulted", _("Defaulted")
     CANCELLED = "cancelled", _("Cancelled")
 

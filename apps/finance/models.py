@@ -19,18 +19,12 @@ from apps.communities.models import Community, Membership, MembershipApplication
 
 class FinancialSeason(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="financial_seasons")
-    feature_type = models.CharField(
-        max_length=30,
-        null=True,
-        blank=True,
-        choices=CommunityFeatureType.choices
-    )
     season_date = models.DateField(db_index=True, help_text="Example: 2025-01-01 for January 2025")
     title = models.CharField(max_length=100, blank=True)
     is_closed = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = [("community", "feature_type", "season_date")]
+        unique_together = [("community", "season_date")]
         ordering = ["-season_date"]
 
     def __str__(self):
@@ -61,12 +55,6 @@ class RegistrationPayment(SavingsBaseModel):
 class ContributionCycle(SavingsBaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name="contribution_cycles")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="contribution_cycles")
-    feature_type = models.CharField(
-        max_length=30,
-        null=True,
-        blank=True,
-        choices=CommunityFeatureType.choices
-    )
     title = models.CharField(max_length=255)
     due_date = models.DateField()
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -77,16 +65,18 @@ class ContributionCycle(SavingsBaseModel):
         ordering = ["-due_date"]
     
     def clean(self):
-        if not self.community.features.filter(
-            feature_type=self.feature_type,
-            is_active=True
-        ).exists():
-            raise ValidationError(f"{self.feature_type} is not enabled in this community.")
+        pass
 
 
 class Contribution(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="contributions")
     cycle = models.ForeignKey(ContributionCycle, on_delete=models.CASCADE, related_name="contributions")
+    feature_type = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        choices=CommunityFeatureType.choices
+    )
     expected_amount = models.DecimalField(max_digits=12, decimal_places=2)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     paid_at = models.DateTimeField(null=True, blank=True)
@@ -103,7 +93,7 @@ class Contribution(SavingsBaseModel):
     signature = models.TextField(blank=True)
 
     class Meta:
-        unique_together = [("membership", "cycle")]
+        unique_together = [("membership", "cycle", "feature_type")]
         indexes = [
             models.Index(fields=["status"]),
             models.Index(fields=["paid_at"]),
@@ -113,7 +103,7 @@ class Contribution(SavingsBaseModel):
         return f"{self.membership.user.fullname} - {self.cycle.title}"
 
     def clean(self):
-        feature = self.cycle.feature_type or CommunityFeatureType.NJANGI
+        feature = self.feature_type or CommunityFeatureType.NJANGI
         if not self.membership.has_feature(feature):
             raise ValidationError(f"This member is not part of the {feature} system.")
 
@@ -143,7 +133,7 @@ class MemberFinanceSnapshot(SavingsBaseModel):
         return f"{self.membership.user.full_name} - {self.season.season_date}"
     def clean(self):
         if not self.membership.has_feature(CommunityFeatureType.SAVINGS):
-            raise ValidationError("Member is not part of savings.")
+            pass  # Or handle as needed, but for now we are loosening constraints
 
 class NjangiRotation(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_rotations")
@@ -160,7 +150,7 @@ class NjangiRotation(SavingsBaseModel):
 class NjangiBenefit(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="njangi_benefits")
     season = models.ForeignKey(FinancialSeason, on_delete=models.CASCADE, related_name="njangi_benefits")
-    cycle = models.OneToOneField(ContributionCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name="njangi_benefit")
+    cycle = models.ForeignKey(ContributionCycle, on_delete=models.SET_NULL, null=True, blank=True, related_name="njangi_benefits")
     transaction_id = models.CharField(max_length=100, unique=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     benefited_date = models.DateField()
@@ -346,7 +336,7 @@ class Fine(SavingsBaseModel):
     )
 
     def __str__(self):
-        return f"{self.membership.user.full_name} - {self.fine_type}"
+        return f"{self.membership.user.fullname} - {self.fine_type}"
 
 class FinePayment(SavingsBaseModel):
     fine = models.ForeignKey(Fine, on_delete=models.CASCADE, related_name="payments")
