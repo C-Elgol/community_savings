@@ -34,8 +34,7 @@ class UsersContributionView(LoginRequiredMixin, ListView):
         ).select_related(
             'cycle', 
             'membership__community', 
-            'cycle__season',
-            'cycle__njangi_benefit__membership__user'
+            'cycle__season'
         )
 
         if self.active_feature == 'njangi':
