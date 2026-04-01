@@ -153,8 +153,8 @@
   (function () {
     const COMMUNITY_ID = "{{ community.id }}";
     const API_URLS = {
-        applications: `/finance/api/community/${COMMUNITY_ID}/loan-applications/`,
-        loans: `/finance/api/community/${COMMUNITY_ID}/loans/`
+        applications: `/finance/api/community/${COMMUNITY_ID}/loan-applications/?mine=true`,
+        loans: `/finance/api/community/${COMMUNITY_ID}/loans/?mine=true`
     };
 
     const state = {
@@ -235,7 +235,15 @@
                         <div class="space-y-6">
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-slate-50 rounded-2xl p-4">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Borrowed + Interest" %}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Borrowed Amount" %}</p>
+                                    <p class="text-sm font-black text-slate-800">XAF ${parseFloat(active.amount_borrowed).toLocaleString()}</p>
+                                </div>
+                                <div class="bg-slate-50 rounded-2xl p-4">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Interest" %}</p>
+                                    <p class="text-sm font-black text-emerald-600">XAF ${parseFloat(active.interest).toLocaleString()}</p>
+                                </div>
+                                <div class="bg-slate-50 rounded-2xl p-4">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Total to Repay" %}</p>
                                     <p class="text-sm font-black text-slate-800">XAF ${parseFloat(active.total_amount).toLocaleString()}</p>
                                 </div>
                                 <div class="bg-slate-50 rounded-2xl p-4">
@@ -280,7 +288,8 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex flex-col items-end gap-1">
-                        <span class="font-black text-slate-800">XAF ${parseFloat(l.total_amount).toLocaleString()}</span>
+                        <span class="font-black text-slate-800">XAF ${parseFloat(l.amount_borrowed).toLocaleString()} + XAF ${parseFloat(l.interest).toLocaleString()}</span>
+                        <span class="text-[9px] text-slate-400 font-bold">Total: XAF ${parseFloat(l.total_amount).toLocaleString()}</span>
                         <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest rounded-md">${l.status}</span>
                     </div>
                 </td>

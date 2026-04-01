@@ -11,7 +11,10 @@ from django.utils import timezone
 class LoanApplicationAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
+        mine = request.GET.get('mine') == 'true'
         filters = {'membership__community_id': community_id}
+        if mine:
+            filters['membership__user'] = request.user
         if status:
             filters['status'] = status
         
@@ -118,7 +121,10 @@ class LoanApplicationAPI(View):
 class LoanAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
+        mine = request.GET.get('mine') == 'true'
         filters = {'membership__community_id': community_id}
+        if mine:
+            filters['membership__user'] = request.user
         
         from django.db.models import Q
         if status == 'active':
