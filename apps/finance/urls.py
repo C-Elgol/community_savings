@@ -17,7 +17,7 @@ from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingB
 from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView, AdminLoanProductView
 from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
 from apps.finance.views.admin_expenditure_view import AdminExpenditureView
-from apps.finance.views.expenditure_api_view import ExpenditureAPI, ExpenditureBalanceAPI
+from apps.finance.views.expenditure_api_view import ExpenditureAPI, ExpenditureBalanceAPI, ExpenditureDetailAPI
 
 app_name = "finance"
     
@@ -60,5 +60,6 @@ urlpatterns = [
     path('api/season/<uuid:season_id>/membership/<uuid:membership_id>/contributions/', MemberSeasonContributionsAPI.as_view(), name='member_season_contributions_api'),
     path('api/community/<uuid:community_id>/expenditures/', ExpenditureAPI.as_view(), name='expenditure_api'),
     path('api/community/<uuid:community_id>/expenditure-balances/', ExpenditureBalanceAPI.as_view(), name='expenditure_balance_api'),
+    path('api/community/<uuid:community_id>/expenditures/<uuid:expenditure_id>/', ExpenditureDetailAPI.as_view(), name='expenditure_detail_api'),
 ]
 

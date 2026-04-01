@@ -155,3 +155,19 @@ class ExpenditureAPI(View):
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+class ExpenditureDetailAPI(View):
+    """Handles operations on a single Expenditure (DELETE)."""
+
+    def delete(self, request, community_id, expenditure_id):
+        try:
+            expenditure = Expenditure.objects.get(id=expenditure_id, community_id=community_id)
+            ref = expenditure.reference_number
+            expenditure.delete()
+            return JsonResponse({'success': True, 'message': f'Expenditure {ref} deleted successfully.'})
+        except Expenditure.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Expenditure not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
