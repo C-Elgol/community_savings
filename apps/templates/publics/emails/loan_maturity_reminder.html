@@ -1,0 +1,38 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% load humanize %} {% block content %}
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto;">
+
+  <h2 style="color: #c05621;">⚠️ {% trans "Loan Maturity Reminder" %}</h2>
+
+  <p>{% trans "Hello" %} {{ member_name }},</p>
+
+  <p>
+    {% blocktranslate with community=community_name %}This is a friendly reminder from <strong>{{ community }}</strong> regarding your outstanding loan.{% endblocktranslate %}
+  </p>
+
+  <p>
+    {% blocktranslate with days=days_remaining %}Your loan is due in <strong>{{ days }} day(s)</strong>. If the outstanding balance is not settled by the maturity date, a <strong>monthly overdue penalty</strong> will be automatically applied.{% endblocktranslate %}
+  </p>
+
+  <div style="background-color: #fff7ed; border-left: 4px solid #c05621; padding: 16px; border-radius: 5px; margin: 20px 0;">
+    <h4 style="margin-top: 0; color: #9a3412;">{% trans "Loan Summary" %}</h4>
+    <ul style="list-style: none; padding-left: 0; margin: 0;">
+      <li><strong>{% trans "Product:" %}</strong> {{ product_name }}</li>
+      <li><strong>{% trans "Principal Borrowed:" %}</strong> XAF {{ amount_borrowed|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Interest:" %}</strong> XAF {{ interest|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Outstanding Balance:" %}</strong> XAF {{ outstanding_balance|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Maturity Date:" %}</strong> <span style="color:#c05621; font-weight:bold;">{{ maturity_date }}</span></li>
+    </ul>
+  </div>
+
+  <p style="font-size: 0.95em; color: #c05621;">
+    <strong>{% trans "Note:" %}</strong>
+    {% blocktranslate with rate=penalty_rate %}After the maturity date, a penalty of <strong>{{ rate }}% per month</strong> will be applied to your outstanding balance, starting from the first full month after maturity.{% endblocktranslate %}
+  </p>
+
+  <p>{% trans "Please contact your administrator or make a payment as soon as possible to avoid these charges." %}</p>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px;">
+    {% trans "Best regards," %}<br/><strong>{{ community_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}

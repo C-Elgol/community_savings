@@ -210,45 +210,58 @@
     }
 
     function renderLoans() {
-        const activeStatuses = ['active', 'unpaid', 'partial'];
+        const activeStatuses = ['active', 'unpaid', 'partial', 'overdue'];
         const activeLoans = state.loans.filter(l => activeStatuses.includes(l.status));
         const history = state.loans.filter(l => l.status === 'paid');
 
         // Render Active Loans
         if (activeLoans.length > 0) {
             el.activeLoansGrid.innerHTML = activeLoans.map(active => {
-                const paidPct = (parseFloat(active.amount_paid) / parseFloat(active.total_amount) * 100).toFixed(0);
+                const totalRepayable = parseFloat(active.total_amount);
+                const amountPaid = parseFloat(active.amount_paid);
+                const paidPct = Math.min(100, (amountPaid / totalRepayable * 100)).toFixed(0);
                 const limitDate = active.maturity_date ? new Date(active.maturity_date).toLocaleDateString() : '---';
-                
+                const hasPenalties = parseFloat(active.total_penalties || 0) > 0;
+                const isOverdue = active.status === 'overdue';
+                const statusColor = isOverdue
+                    ? 'bg-rose-50 text-rose-600'
+                    : active.status === 'partial' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600';
+
                 return `
-                    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                    <div class="bg-white rounded-[2.5rem] border ${isOverdue ? 'border-rose-200' : 'border-slate-100'} shadow-sm p-8">
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h3 class="text-sm font-black text-slate-800">${active.product_name}</h3>
                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                                    <span class="px-2 py-0.5 rounded-md ${active.status === 'partial' ? 'bg-blue-50 text-blue-600' : (active.status === 'unpaid' ? 'bg-slate-50 text-slate-500' : 'bg-emerald-50 text-emerald-600')}">${active.status}</span>
+                                    <span class="px-2 py-0.5 rounded-md ${statusColor}">${active.status}</span>
                                 </p>
                             </div>
                             <span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-widest rounded-lg">{% trans "XAF" %}</span>
                         </div>
-                        
+
                         <div class="space-y-6">
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-slate-50 rounded-2xl p-4">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Borrowed Amount" %}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Borrowed" %}</p>
                                     <p class="text-sm font-black text-slate-800">XAF ${parseFloat(active.amount_borrowed).toLocaleString()}</p>
                                 </div>
                                 <div class="bg-slate-50 rounded-2xl p-4">
                                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Interest" %}</p>
                                     <p class="text-sm font-black text-emerald-600">XAF ${parseFloat(active.interest).toLocaleString()}</p>
                                 </div>
+                                ${hasPenalties ? `
+                                <div class="bg-rose-50 rounded-2xl p-4 col-span-2">
+                                    <p class="text-[9px] font-bold text-rose-400 uppercase tracking-widest mb-1.5">🔴 {% trans "Overdue Penalties" %}</p>
+                                    <p class="text-sm font-black text-rose-600">XAF ${parseFloat(active.total_penalties).toLocaleString()}</p>
+                                </div>
+                                ` : ''}
                                 <div class="bg-slate-50 rounded-2xl p-4">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Total to Repay" %}</p>
-                                    <p class="text-sm font-black text-slate-800">XAF ${parseFloat(active.total_amount).toLocaleString()}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Net Balance" %}</p>
+                                    <p class="text-sm font-black ${isOverdue ? 'text-rose-600' : 'text-slate-800'}">XAF ${parseFloat(active.amount_left).toLocaleString()}</p>
                                 </div>
                                 <div class="bg-slate-50 rounded-2xl p-4">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Limit Date" %}</p>
-                                    <p class="text-sm font-black text-rose-500">${limitDate}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{% trans "Due Date" %}</p>
+                                    <p class="text-sm font-black ${isOverdue ? 'text-rose-500' : 'text-slate-700'}">${limitDate}</p>
                                 </div>
                             </div>
                             <div class="space-y-2">
@@ -289,8 +302,9 @@
                 <td class="px-6 py-4 text-right">
                     <div class="flex flex-col items-end gap-1">
                         <span class="font-black text-slate-800">XAF ${parseFloat(l.amount_borrowed).toLocaleString()} + XAF ${parseFloat(l.interest).toLocaleString()}</span>
-                        <span class="text-[9px] text-slate-400 font-bold">Total: XAF ${parseFloat(l.total_amount).toLocaleString()}</span>
-                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest rounded-md">${l.status}</span>
+                        ${parseFloat(l.total_penalties || 0) > 0 ? `<span class="text-[9px] text-rose-500 font-bold">Penalties: XAF ${parseFloat(l.total_penalties).toLocaleString()}</span>` : ''}
+                        <span class="text-[9px] text-slate-400 font-bold">Total Paid: XAF ${parseFloat(l.amount_paid).toLocaleString()}</span>
+                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest rounded-md">${l.status}</span>
                     </div>
                 </td>
             </tr>
