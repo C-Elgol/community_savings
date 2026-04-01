@@ -145,8 +145,10 @@ class LoanAPI(View):
                 'amount_borrowed': str(l.amount_borrowed),
                 'amount_paid': str(l.amount_paid),
                 'interest': str(l.interest_to_be_paid),
-                'total_amount': str(l.total_amount_plus_interest),
-                'amount_left': str(l.amount_left_to_pay),
+                'total_penalties': str(l.total_penalty_charges),
+                'total_repayable': str(l.total_repayable_amount),
+                'total_amount': str(l.total_repayable_amount), # Keep for backward compatibility
+                'amount_left': str(l.outstanding_balance),
                 'borrow_date': l.borrow_date.isoformat(),
                 'maturity_date': l.maturity_date.isoformat() if l.maturity_date else None,
                 'status': l.status,

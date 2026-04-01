@@ -45,10 +45,10 @@
         <thead class="bg-slate-50 text-[10px] uppercase font-black tracking-widest text-slate-400">
           <tr>
             <th class="px-6 py-4 text-left">{% trans "Beneficiary" %}</th>
-            <th class="px-6 py-4 text-left">{% trans "Borrowed + Interest" %}</th>
-            <th class="px-6 py-4 text-left">{% trans "Repaid" %}</th>
-            <th class="px-6 py-4 text-left">{% trans "Remaining" %}</th>
-            <th class="px-6 py-4 text-left">{% trans "Maturity" %}</th>
+            <th class="px-6 py-4 text-right">{% trans "Principal + Int." %}</th>
+            <th class="px-6 py-4 text-right">{% trans "Penalties" %}</th>
+            <th class="px-6 py-4 text-right">{% trans "Repaid" %}</th>
+            <th class="px-6 py-4 text-right">{% trans "Balance" %}</th>
             <th class="px-6 py-4 text-left">{% trans "Status" %}</th>
             <th class="px-6 py-4 text-right">{% trans "Actions" %}</th>
           </tr>
@@ -145,56 +145,49 @@
     function renderLoans() {
         el.loansListBody.innerHTML = "";
         if (state.loans.length === 0) {
-            el.loansListBody.innerHTML = '<tr><td colspan="6" class="py-20 text-center text-slate-400">{% trans "No loans found" %}</td></tr>';
+            el.loansListBody.innerHTML = '<tr><td colspan="7" class="py-20 text-center text-slate-400">{% trans "No loans found" %}</td></tr>';
             return;
         }
 
         state.loans.forEach(l => {
             const tr = document.createElement("tr");
-            tr.className = "hover:bg-slate-50/50 transition-colors";
-            
-            const statusClass = {
-                active: 'bg-amber-100 text-amber-700 border border-amber-200',
-                partial: 'bg-blue-100 text-blue-700 border border-blue-200',
-                unpaid: 'bg-slate-100 text-slate-600 border border-slate-200',
-                paid: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
-                defaulted: 'bg-rose-100 text-rose-700 border border-rose-200',
-            }[l.status] || 'bg-slate-100 text-slate-500 border border-slate-200';
-
+            tr.className = "hover:bg-slate-50/50 transition-all";
             tr.innerHTML = `
-                <td class="px-6 py-5">
+                <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">${l.member_name.charAt(0)}</div>
-                        <span class="font-bold text-slate-700 text-sm">${l.member_name}</span>
-                    </div>
-                </td>
-                <td class="px-6 py-5 font-bold text-slate-800 text-sm">XAF ${parseFloat(l.total_amount).toLocaleString()}</td>
-                <td class="px-6 py-5">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold text-emerald-600">XAF ${parseFloat(l.amount_paid).toLocaleString()}</span>
-                        <div class="w-full max-w-[100px] h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
-                            <div class="h-full bg-emerald-500" style="width: ${Math.min(100, (parseFloat(l.amount_paid) / parseFloat(l.total_amount) * 100))}%"></div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-black text-slate-800">${l.member_name}</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${l.product_name} • ${new Date(l.borrow_date).toLocaleDateString()}</span>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-5 text-sm font-black text-rose-600">XAF ${parseFloat(l.amount_left).toLocaleString()}</td>
-                <td class="px-6 py-5 text-xs text-slate-500 font-medium">
+                <td class="px-6 py-4 text-right">
                     <div class="flex flex-col">
-                        <span>${l.maturity_date ? new Date(l.maturity_date).toLocaleDateString() : '---'}</span>
-                        <span class="text-[8px] uppercase text-slate-300 font-bold tracking-tighter">${l.product_name}</span>
+                        <span class="text-xs font-black text-slate-700">XAF ${parseFloat(l.amount_borrowed).toLocaleString()}</span>
+                        <span class="text-[9px] text-slate-400 font-bold">+ XAF ${parseFloat(l.interest).toLocaleString()} Int.</span>
                     </div>
                 </td>
-                <td class="px-6 py-5">
-                    <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${statusClass}">${l.status}</span>
+                <td class="px-6 py-4 text-right font-black text-rose-500 text-xs text-right">
+                    XAF ${parseFloat(l.total_penalties || 0).toLocaleString()}
                 </td>
-                <td class="px-6 py-5 text-right">
-                    ${(l.status !== 'paid') ? `
-                        <button onclick="openPayModal('${l.id}')" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-md active:scale-95">
-                            {% trans "Pay" %}
-                        </button>
-                    ` : `
-                        <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
-                    `}
+                <td class="px-6 py-4 text-right font-black text-emerald-600 text-xs text-right">
+                    XAF ${parseFloat(l.amount_paid).toLocaleString()}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex flex-col">
+                        <span class="text-xs font-black text-slate-800">XAF ${parseFloat(l.amount_left).toLocaleString()}</span>
+                        <span class="text-[8px] text-slate-400 font-bold uppercase">Due: ${l.maturity_date ? new Date(l.maturity_date).toLocaleDateString() : '---'}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full">${l.status}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    ${l.status !== 'paid' ? `
+                    <button onclick="openPayModal('${l.id}')" class="p-2 hover:bg-emerald-50 text-emerald-600 rounded-xl transition-all" title="Record Payment">
+                        <i class="fas fa-hand-holding-usd text-lg"></i>
+                    </button>` : '<i class="fas fa-check-circle text-emerald-500"></i>'}
                 </td>
             `;
             el.loansListBody.appendChild(tr);
@@ -206,8 +199,9 @@
         if (!l) return;
         state.currentLoan = l;
         document.getElementById("payMemberName").textContent = l.member_name;
-        document.getElementById("payAmountHint").textContent = `Balance: XAF ${parseFloat(l.amount_left).toLocaleString()}`;
+        document.getElementById("payAmountHint").textContent = `Amount left: XAF ${parseFloat(l.amount_left).toLocaleString()}`;
         document.getElementById("inputPayAmount").value = l.amount_left;
+        document.getElementById("inputPayAmount").max = l.amount_left;
         document.getElementById("inputPayDate").value = new Date().toISOString().split('T')[0];
         el.payModal.classList.remove("hidden");
     };
@@ -216,32 +210,27 @@
         e.preventDefault();
         const btn = document.getElementById("btnSubmitPayment");
         btn.disabled = true;
-
-        const payload = {
-            amount: document.getElementById("inputPayAmount").value,
-            payment_date: document.getElementById("inputPayDate").value,
-            comment: document.getElementById("textareaPayComment").value
-        };
-
         try {
+            const formData = {
+                amount: document.getElementById("inputPayAmount").value,
+                payment_date: document.getElementById("inputPayDate").value,
+                comment: document.getElementById("textareaPayComment").value
+            };
             const res = await fetch(`/finance/api/loan/${state.currentLoan.id}/payment/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify(formData)
             });
             const data = await res.json();
             if (data.success) {
-                toast('success', data.message);
+                toast('success', 'Payment recorded');
                 el.payModal.classList.add("hidden");
-                fetchLoans(state.currentStatus === 'all' ? '' : state.currentStatus);
+                fetchLoans(state.currentStatus);
             } else {
                 toast('error', data.message);
             }
         } catch (err) {
-            toast('error', 'Payment failed');
+            toast('error', 'Error recording payment');
         } finally {
             btn.disabled = false;
         }
@@ -257,9 +246,9 @@
  
         state.loans.forEach(l => {
             repaid += parseFloat(l.amount_paid);
-            totalInterest += parseFloat(l.interest || 0);
+            totalInterest += parseFloat(l.interest || 0) + parseFloat(l.total_penalties || 0);
             if (l.status !== 'paid') {
-                outstanding += (parseFloat(l.total_amount) - parseFloat(l.amount_paid));
+                outstanding += parseFloat(l.amount_left);
                 activeCount++;
             }
         });

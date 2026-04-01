@@ -206,6 +206,12 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Douala'
 CELERY_ENABLE_UTC = False
+CELERY_BEAT_SCHEDULE = {
+    'apply-monthly-loan-penalties': {
+        'task': 'apps.finance.tasks.apply_monthly_loan_penalties',
+        'schedule': crontab(hour=0, minute=0), # Run every day at midnight
+    },
+}
 
 LOGGING = {
     'version': 1,

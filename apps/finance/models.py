@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from apps.global_data.enum import CommunityFeatureType
 
@@ -276,7 +277,19 @@ class Loan(SavingsBaseModel):
 
     @property
     def amount_left_to_pay(self):
-        return self.total_amount_plus_interest - self.amount_paid
+        return self.total_repayable_amount - self.amount_paid
+
+    @property
+    def total_penalty_charges(self):
+        return self.penalties.aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
+
+    @property
+    def total_repayable_amount(self):
+        return self.amount_borrowed + self.interest_to_be_paid + self.total_penalty_charges
+
+    @property
+    def outstanding_balance(self):
+        return self.total_repayable_amount - self.amount_paid
 
 class LoanRepaymentSchedule(SavingsBaseModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="repayment_schedule")
@@ -309,6 +322,21 @@ class LoanPayment(SavingsBaseModel):
 
     def __str__(self):
         return f"Payment {self.amount} - {self.loan_id}"
+
+class LoanPenalty(SavingsBaseModel):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="penalties")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    penalty_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    base_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    period_marker = models.CharField(max_length=7, db_index=True) # YYYY-MM
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('loan', 'period_marker')
+        verbose_name_plural = "Loan Penalties"
+
+    def __str__(self):
+        return f"Penalty {self.period_marker} - {self.loan.membership.user.fullname}"
 
 class Fine(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="fines")

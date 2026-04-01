@@ -77,6 +77,7 @@ class LoanStatus(models.TextChoices):
     PARTIAL = "partial", _("Partially Paid")
     PAID = "paid", _("Paid")
     UNPAID = "unpaid", _("Unpaid")
+    OVERDUE = "overdue", _("Overdue")
     DEFAULTED = "defaulted", _("Defaulted")
     CANCELLED = "cancelled", _("Cancelled")
 
