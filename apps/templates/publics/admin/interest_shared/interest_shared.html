@@ -1,0 +1,345 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-black text-slate-800">{% trans "Interest Sharing" %}</h2>
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{% trans "Fair distribution based on time-weighted savings" %}</p>
+</div>
+
+<!-- ── Configuration Card ── -->
+<div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Select Season" %}</label>
+            <select id="seasonSelect" class="w-full bg-slate-50 border-none rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none">
+                <option value="">-- {% trans "Choose a Season" %} --</option>
+                {% for season in seasons %}
+                <option value="{{ season.id }}">{{ season.title }} ({{ season.season_date }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Total Interest Pool (XAF)" %}</label>
+            <input type="number" id="interestPool" value="{{ suggested_interest }}" placeholder="e.g. 500000" class="w-full bg-slate-50 border-none rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none">
+        </div>
+        <div>
+            <button id="btnCalculate" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black py-4 px-6 rounded-2xl shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-widest text-xs">
+                <i class="fas fa-calculator"></i> {% trans "Calculate Shares" %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Summary Cards ── -->
+<div id="summarySection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 hidden">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 border-l-4 border-l-emerald-500">
+        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{% trans "Total Season Savings" %}</span>
+        <p id="summarySavings" class="text-2xl font-black text-slate-800 mt-1">—</p>
+    </div>
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 border-l-4 border-l-amber-500">
+        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{% trans "Available Interest" %}</span>
+        <p id="summaryInterest" class="text-2xl font-black text-amber-600 mt-1">—</p>
+    </div>
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
+        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{% trans "Weighted Total" %}</span>
+        <p id="summaryWeighted" class="text-2xl font-black text-blue-700 mt-1">—</p>
+    </div>
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 border-l-4 border-l-indigo-500">
+        <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{% trans "Mode" %}</span>
+        <p class="text-xl font-black text-indigo-700 mt-1 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> <span id="modeBadge">{% trans "Preview" %}</span>
+        </p>
+    </div>
+</div>
+
+<!-- ── Member Breakdown Table ── -->
+<div id="resultsCard" class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden mb-8 hidden">
+    <div class="px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+        <h3 class="font-black text-slate-800 uppercase tracking-widest text-sm">{% trans "Member Share Breakdown" %}</h3>
+        <button id="btnInitializeDist" class="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-2.5 px-5 rounded-xl transition-all shadow-md active:scale-95">
+            <i class="fas fa-check-double mr-2"></i> {% trans "Initialize Distribution" %}
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-[10px] uppercase tracking-widest text-slate-400 border-b border-slate-50">
+                    <th class="px-8 py-5 font-black">{% trans "Member" %}</th>
+                    <th class="px-8 py-5 font-black">{% trans "Total Savings" %}</th>
+                    <th class="px-8 py-5 font-black text-blue-600">{% trans "Weighted Value" %}</th>
+                    <th class="px-8 py-5 font-black">{% trans "Share %" %}</th>
+                    <th class="px-8 py-5 font-black text-emerald-600">{% trans "Interest Earned" %}</th>
+                    <th class="px-8 py-5 font-black text-center">{% trans "Action" %}</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody" class="divide-y divide-slate-50">
+                <!-- Rows injected by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── Empty State ── -->
+<div id="emptyState" class="bg-white rounded-[2.5rem] p-16 shadow-sm border border-slate-100 text-center">
+    <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mx-auto mb-6">
+        <i class="fas fa-chart-pie text-4xl"></i>
+    </div>
+    <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "No Distribution Preview" %}</h3>
+    <p class="text-slate-400 text-sm max-w-sm mx-auto font-medium">{% trans "Select a season and enter an interest amount above to see the calculation breakdown." %}</p>
+</div>
+
+<!-- ── Loading Overlay ── -->
+<div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white p-10 rounded-[3rem] shadow-2xl text-center">
+        <div class="w-14 h-14 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+        <p class="text-slate-800 font-black uppercase tracking-widest text-xs">{% trans "Crunching Financial Data..." %}</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    "use strict";
+
+    const COMMUNITY_ID = "{{ community.id }}";
+    const API_URL = `/finance/api/community/${COMMUNITY_ID}/interest-sharing/`;
+    
+    // UI Elements
+    const seasonSelect = document.getElementById('seasonSelect');
+    const interestPoolInput = document.getElementById('interestPool');
+    const btnCalculate = document.getElementById('btnCalculate');
+    const btnInitializeDist = document.getElementById('btnInitializeDist');
+    const summarySection = document.getElementById('summarySection');
+    const resultsCard = document.getElementById('resultsCard');
+    const emptyState = document.getElementById('emptyState');
+    const resultsBody = document.getElementById('resultsBody');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const modeBadge = document.getElementById('modeBadge');
+
+    const fmt = v => `XAF ${Number(v || 0).toLocaleString()}`;
+
+    btnCalculate.addEventListener('click', async () => {
+        const seasonId = seasonSelect.value;
+        const totalInterest = interestPoolInput.value;
+
+        if (!seasonId || !totalInterest) {
+            alert('Please select a season and enter interest amount.');
+            return;
+        }
+
+        loadingOverlay.classList.remove('hidden');
+        
+        try {
+            const res = await fetch(`${API_URL}?season_id=${seasonId}&total_interest=${totalInterest}`);
+            const data = await res.json();
+            
+            if (data.success) {
+                renderResults(data);
+            } else {
+                alert(data.error || 'Failed to calculate distribution.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred during calculation.');
+        } finally {
+            loadingOverlay.classList.add('hidden');
+        }
+    });
+
+    function renderResults(data) {
+        summarySection.classList.remove('hidden');
+        resultsCard.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+        
+        let totalSavings = 0;
+        data.member_breakdown.forEach(m => totalSavings += Number(m.total_savings));
+        
+        const savingsEl = document.getElementById('summarySavings');
+        const interestEl = document.getElementById('summaryInterest');
+        const weightedEl = document.getElementById('summaryWeighted');
+        
+        if (savingsEl) savingsEl.textContent = fmt(totalSavings);
+        if (interestEl) interestEl.textContent = fmt(data.total_interest_pool);
+        if (weightedEl) weightedEl.textContent = Number(data.total_weighted_savings).toLocaleString();
+
+        const isInit = data.is_initialized;
+        if (modeBadge) {
+            if (isInit) {
+                modeBadge.textContent = 'Distribution';
+                modeBadge.className = 'px-3 py-1 rounded-full text-[10px] font-black bg-green-100 text-green-800 uppercase tracking-widest';
+                btnInitializeDist.textContent = '{% trans "Distribution Active" %}';
+                btnInitializeDist.disabled = true;
+                btnInitializeDist.classList.replace('bg-slate-800', 'bg-emerald-100');
+                btnInitializeDist.classList.add('text-emerald-800');
+            } else {
+                modeBadge.textContent = 'Preview';
+                modeBadge.parentElement.querySelector('span').className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+                btnInitializeDist.disabled = false;
+                btnInitializeDist.classList.replace('bg-slate-400', 'bg-slate-800');
+                btnInitializeDist.textContent = '{% trans "Initialize Distribution" %}';
+            }
+        }
+
+        resultsBody.innerHTML = '';
+        data.member_breakdown.forEach(m => {
+            const row = document.createElement('tr');
+            row.className = "hover:bg-slate-50 transition-all group";
+            
+            let actionBtn = '';
+            if (isInit) {
+                if (m.is_paid) {
+                    actionBtn = `
+                        <span class="inline-flex items-center gap-1.5 py-2 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <i class="fas fa-check-circle"></i> Paid
+                        </span>
+                    `;
+                } else {
+                    actionBtn = `
+                        <button class="btn-pay bg-emerald-50 text-emerald-700 hover:bg-emerald-700 hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 cursor-pointer"
+                                data-mid="${m.membership_id}" data-payout-id="${m.payout_id}" data-amount="${m.interest_amount}">
+                            <i class="fas fa-paper-plane mr-1"></i> Pay Now
+                        </button>
+                    `;
+                }
+            } else {
+                actionBtn = `
+                    <button class="btn-pay bg-slate-50 text-slate-400 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-100 cursor-not-allowed"
+                            data-mid="${m.membership_id}" data-amount="${m.interest_amount}" disabled>
+                        {% trans "Init Required" %}
+                    </button>
+                `;
+            }
+
+            row.innerHTML = `
+                <td class="px-8 py-5 font-bold text-slate-700">${m.member_name}</td>
+                <td class="px-8 py-5 text-slate-500 font-bold text-sm">${fmt(m.total_savings)}</td>
+                <td class="px-8 py-5 text-blue-600 font-mono text-xs font-bold">${Number(m.weighted_savings).toLocaleString()}</td>
+                <td class="px-8 py-5">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-600 uppercase tracking-widest">
+                        ${m.share_percentage}%
+                    </span>
+                </td>
+                <td class="px-8 py-5 font-black text-emerald-700 text-sm">${fmt(m.interest_amount)}</td>
+                <td class="px-8 py-5 text-center">
+                    ${actionBtn}
+                </td>
+            `;
+            resultsBody.appendChild(row);
+
+            // Attach listener to Pay button if it exists
+            const payBtn = row.querySelector('.btn-pay[data-payout-id]');
+            if (payBtn) {
+                payBtn.onclick = () => handleRecordPayout(payBtn);
+            }
+        });
+    }
+
+    btnInitializeDist.addEventListener('click', async () => {
+        const seasonId = seasonSelect.value;
+        const totalInterest = interestPoolInput.value;
+
+        if (!confirm('This will lock in the distribution shares for this season. Are you sure?')) return;
+
+        loadingOverlay.classList.remove('hidden');
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ 
+                    action: 'distribute', 
+                    season_id: seasonId, 
+                    total_interest: totalInterest 
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Store payout IDs on buttons and enable them
+                data.payouts.forEach(p => {
+                    const btn = document.querySelector(`.btn-pay[data-mid="${p.membership_id}"]`);
+                    if (btn) {
+                        btn.dataset.payoutId = p.payout_id;
+                        btn.classList.remove('bg-slate-50', 'text-slate-400', 'cursor-not-allowed');
+                        btn.classList.add('bg-emerald-50', 'text-emerald-700', 'hover:bg-emerald-700', 'hover:text-white', 'cursor-pointer');
+                        btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Pay Now';
+                        btn.disabled = false;
+                        btn.onclick = () => handleRecordPayout(btn);
+                    }
+                });
+                btnInitializeDist.textContent = '{% trans "Distribution Active" %}';
+                btnInitializeDist.disabled = true;
+                btnInitializeDist.classList.replace('bg-slate-800', 'bg-emerald-100');
+                btnInitializeDist.classList.add('text-emerald-800');
+                alert('Distribution initialized! You can now record individual member payouts.');
+            } else {
+                alert(data.error || 'Failed to initialize distribution.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred.');
+        } finally {
+            loadingOverlay.classList.add('hidden');
+        }
+    });
+
+    async function handleRecordPayout(btn) {
+        const payoutId = btn.dataset.payoutId;
+        const amount = btn.dataset.amount;
+
+        if (!confirm(`Confirm payout of ${fmt(amount)} to this member?`)) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i>';
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ 
+                    action: 'pay', 
+                    payout_id: payoutId
+                })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                btn.parentElement.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 py-2 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <i class="fas fa-check-circle"></i> Paid
+                    </span>
+                `;
+                toast('success', 'Payout recorded successfully.');
+            } else {
+                alert(data.error || 'Failed to record payout.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Pay Now';
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i> Pay Now';
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+})();
+</script>
+{% endblock %}
