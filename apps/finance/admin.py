@@ -3,7 +3,8 @@ from .models import (
     FinancialSeason, RegistrationPayment, ContributionCycle,
     Contribution, MemberFinanceSnapshot, NjangiBenefit,
     LoanProduct, LoanApplication, LoanGuarantor, Loan,
-    LoanRepaymentSchedule, LoanPayment, Fine, FinePayment
+    LoanRepaymentSchedule, LoanPayment, Fine, FinePayment,
+    InterestDistribution, InterestPayout
 )
 
 
@@ -108,3 +109,15 @@ class FinePaymentAdmin(admin.ModelAdmin):
     list_display = ('fine', 'amount', 'paid_at', 'received_by')
     list_filter = ('paid_at',)
     raw_id_fields = ('fine', 'received_by')
+
+@admin.register(InterestDistribution)
+class InterestDistributionAdmin(admin.ModelAdmin):
+    list_display = ('season', 'community', 'total_interest_pool', 'distributed_at', 'status')
+    list_filter = ('community', 'season', 'status')
+    search_fields = ('season__title', 'community__name')
+
+@admin.register(InterestPayout)
+class InterestPayoutAdmin(admin.ModelAdmin):
+    list_display = ('membership', 'interest_amount', 'is_paid', 'paid_at', 'distribution')
+    list_filter = ('is_paid', 'distribution__season')
+    search_fields = ('membership__user__email', 'membership__user__first_name', 'membership__user__last_name')

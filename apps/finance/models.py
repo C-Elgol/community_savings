@@ -484,3 +484,75 @@ class Expenditure(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.reference_number} — {self.source_fund} — XAF {self.amount}"
+
+
+class InterestDistribution(SavingsBaseModel):
+    """
+    Records a distribution of interest to members for a specific season.
+    """
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name="interest_distributions"
+    )
+    season = models.ForeignKey(
+        FinancialSeason,
+        on_delete=models.CASCADE,
+        related_name="interest_distributions"
+    )
+    total_interest_pool = models.DecimalField(max_digits=15, decimal_places=2)
+    total_weighted_savings = models.DecimalField(max_digits=18, decimal_places=2)
+    distributed_at = models.DateTimeField(auto_now_add=True)
+    distributed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="interest_distributions_made"
+    )
+    status = models.CharField(max_length=20, default="active") # active, reversed
+
+    class Meta:
+        ordering = ["-distributed_at"]
+        unique_together = [("community", "season")]
+
+    def __str__(self):
+        return f"Distribution for {self.season.title} - {self.total_interest_pool}"
+
+
+class InterestPayout(SavingsBaseModel):
+    """
+    Records the individual payout for a member from a distribution.
+    """
+    distribution = models.ForeignKey(
+        InterestDistribution,
+        on_delete=models.CASCADE,
+        related_name="payouts"
+    )
+    membership = models.ForeignKey(
+        Membership,
+        on_delete=models.CASCADE,
+        related_name="interest_payouts"
+    )
+    total_savings = models.DecimalField(max_digits=15, decimal_places=2)
+    weighted_savings = models.DecimalField(max_digits=18, decimal_places=2)
+    share_percentage = models.DecimalField(max_digits=7, decimal_places=4)
+    interest_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    
+    is_paid = models.BooleanField(default=False)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="interest_payouts_recorded"
+    )
+    expenditure_reference = models.CharField(max_length=100, blank=True)
+    transaction_reference = models.CharField(max_length=100, blank=True) # Link to member Transaction
+
+    class Meta:
+        unique_together = [("distribution", "membership")]
+
+    def __str__(self):
+        return f"Payout {self.interest_amount} to {self.membership.user.fullname}"
