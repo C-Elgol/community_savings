@@ -13,6 +13,7 @@ from apps.finance.views.contribution_api_view import (
 from apps.finance.views.fine_api_view import FineEligibleMembersAPI, LaunchFinesAPI, FineListAPI, PayFineAPI, MemberFineListAPI
 from apps.finance.views.fine_list_view import AdminFineListView
 from apps.finance.views.njangi_api_view import NjangiRotationAPI, NjangiMeetingBeneficiaryAPI
+from apps.finance.views.season_views import SetActiveSeasonView
 
 from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminLoanListView, AdminLoanProductView
 from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
@@ -36,6 +37,7 @@ urlpatterns = [
     path('admin-expenditures/<uuid:community_id>/', AdminExpenditureView.as_view(), name='admin_expenditures'),
     # APIs
     path('api/community/<uuid:community_id>/seasons/', SeasonAPI.as_view(), name='season_api'),
+    path('api/set-active-season/', SetActiveSeasonView.as_view(), name='set_active_season'),
     path('api/season/<uuid:season_id>/cycles/', CycleAPI.as_view(), name='cycle_api'),
     path('api/cycle/<uuid:cycle_id>/contributions/', ContributionAPI.as_view(), name='contribution_api'),
     path('api/cycle/<uuid:cycle_id>/fine-eligible/<str:fine_type>/', FineEligibleMembersAPI.as_view(), name='fine_eligible_api'),

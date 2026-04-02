@@ -1,29 +1,30 @@
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from apps.communities.models import Community
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
 
-class AdminLoanApplicationView(LoginRequiredMixin, TemplateView):
+
+class AdminLoanApplicationView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loan_applications/loan_applications.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from apps.communities.models import Community
-        context['community'] = Community.objects.get(id=self.kwargs['community_id'])
+        context['community'] = get_object_or_404(Community, id=self.kwargs['community_id'])
         return context
 
-class AdminLoanListView(LoginRequiredMixin, TemplateView):
+class AdminLoanListView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loans/loans.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from apps.communities.models import Community
-        context['community'] = Community.objects.get(id=self.kwargs['community_id'])
+        context['community'] = get_object_or_404(Community, id=self.kwargs['community_id'])
         return context
 
-class AdminLoanProductView(LoginRequiredMixin, TemplateView):
+class AdminLoanProductView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loan_applications/loan_products.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from apps.communities.models import Community
-        context['community'] = Community.objects.get(id=self.kwargs['community_id'])
+        context['community'] = get_object_or_404(Community, id=self.kwargs['community_id'])
         return context

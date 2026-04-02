@@ -343,13 +343,12 @@
                     </button>
                   </div>
                 </div>
-                <a href="{% url 'users:admin_dashboard' community.id %}">
-                  <button
-                    class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
-                  >
-                    {% trans "View Community" %}
-                  </button>
-                </a>
+                <button
+                  onclick="openSeasonModal('{{ community.id }}', '{{ community.name|escapejs }}')"
+                  class="w-full mt-6 py-3 bg-emerald-700 text-white rounded-xl text-sm font-black hover:bg-emerald-800 transition shadow-lg shadow-emerald-700/10"
+                >
+                  {% trans "View Community" %}
+                </button>
               </div>
             </div>
             {% empty %}
@@ -577,42 +576,84 @@
     {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
 
     <!-- ════════════════════════════════════════════
-         DELETE MODAL
+         SEASON SELECTION MODAL
          ════════════════════════════════════════════ -->
     <div
-      id="deleteModal"
+      id="seasonModal"
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4"
     >
       <div
-        class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 text-center animate-in fade-in zoom-in duration-300"
+        class="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-300"
       >
-        <div
-          class="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 text-3xl mx-auto mb-6"
-        >
-          <i class="fas fa-trash-alt"></i>
+        <div class="p-8 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="text-2xl font-black text-slate-800" id="seasonModalTitle">
+              {% trans "Select Season" %}
+            </h3>
+            <p class="text-sm text-slate-400 font-medium" id="seasonModalCommunityName"></p>
+          </div>
+          <button
+            onclick="closeSeasonModal()"
+            class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <h3 class="text-2xl font-black text-slate-800 mb-2">
-          Delete Community?
+        
+        <div class="p-8 max-h-[400px] overflow-y-auto custom-scrollbar space-y-3" id="seasonList">
+          <!-- Seasons will be loaded here -->
+        </div>
+
+        <div class="p-8 bg-slate-50 border-t border-slate-100 space-y-4">
+          <button
+            id="btnShowCreateSeason"
+            class="w-full py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-black text-sm hover:border-emerald-500 hover:text-emerald-700 transition-all flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-plus-circle text-emerald-500"></i> {% trans "Create New Season" %}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         CREATE SEASON MODAL
+         ════════════════════════════════════════════ -->
+    <div
+      id="createSeasonModal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 animate-in fade-in zoom-in duration-300"
+      >
+        <h3 class="text-2xl font-black text-slate-800 mb-6">
+          {% trans "New Season" %}
         </h3>
-        <p class="text-slate-500 text-sm mb-8">
-          This will dismantle
-          <strong id="deleteCommunityName"></strong> forever. All data will be
-          lost.
-        </p>
-        <div class="flex gap-4">
-          <button
-            id="cancelDeleteBtn"
-            class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black transition-all"
-          >
-            No, Keep
-          </button>
-          <button
-            id="confirmDeleteBtn"
-            class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black transition-all hover:bg-rose-700 shadow-xl shadow-rose-900/20"
-          >
-            Yes, Delete
-          </button>
-        </div>
+        <form id="createSeasonForm" class="space-y-6">
+          <div class="space-y-1">
+            <label class="form-label">{% trans "Season Title" %}</label>
+            <input type="text" name="title" id="s_title" placeholder="e.g. 2025/2026 Cycle" class="form-input" required>
+          </div>
+          <div class="space-y-1">
+            <label class="form-label">{% trans "Start Date" %}</label>
+            <input type="date" name="season_date" id="s_date" class="form-input" required>
+          </div>
+          <div class="flex gap-4 pt-4">
+            <button
+              type="button"
+              onclick="closeCreateSeasonModal()"
+              class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black transition-all"
+            >
+              {% trans "Cancel" %}
+            </button>
+            <button
+              type="submit"
+              id="submitCreateSeasonBtn"
+              class="flex-1 py-4 gradient-bg text-white rounded-2xl font-black transition-all hover:opacity-95 shadow-xl shadow-emerald-900/20"
+            >
+              {% trans "Create" %}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -636,133 +677,191 @@
     </footer>
 
     {% include 'publics/home/includes/_js.html' %}
-    <script src="{% static 'js/common/loader_manager.js' %}"></script>
 
     <script>
       (function () {
         "use strict";
 
         /* --- CONFIG --- */
+        const CSRF = document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
         const CREATE_URL = "{% url 'communities:community_create' %}";
         const DETAIL_URL = (id) => `/communities/communities/${id}/`;
         const UPDATE_URL = (id) => `/communities/communities/${id}/update/`;
         const DELETE_URL = (id) => `/communities/communities/${id}/delete/`;
-        const POLICY_DETAIL_URL = (id) =>
-          `/communities/communities/${id}/policy/`;
-        const POLICY_UPDATE_URL = (id) =>
-          `/communities/communities/${id}/policy/update/`;
-        const CSRF = document.querySelector("[name=csrfmiddlewaretoken]").value;
+        const POLICY_DETAIL_URL = (id) => `/communities/communities/${id}/policy/`;
+        const POLICY_UPDATE_URL = (id) => `/communities/communities/${id}/policy/update/`;
+
+        /* --- GLOBAL ASSIGNMENTS --- */
+        window.openSeasonModal = async function(cid, name) {
+            currentSeasonCommunityId = cid;
+            const nm = document.getElementById('seasonModalCommunityName');
+            if (nm) nm.textContent = name;
+            document.getElementById('seasonModal')?.classList.replace('hidden', 'flex');
+            loadSeasons(cid);
+        };
+
+        window.closeSeasonModal = function() {
+            document.getElementById('seasonModal')?.classList.replace('flex', 'hidden');
+        };
+
+        window.setActiveSeason = async function(sid) {
+            try {
+                const res = await fetch(`/finance/api/set-active-season/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF
+                    },
+                    body: JSON.stringify({
+                        community_id: currentSeasonCommunityId,
+                        season_id: sid
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = `/admin-dashboard/${currentSeasonCommunityId}/`;
+                } else if (window.toast) {
+                    toast('danger', data.message);
+                }
+            } catch {
+                if (window.toast) toast('danger', 'Error setting active season');
+            }
+        };
+
+        window.closeCreateSeasonModal = function() {
+            document.getElementById('createSeasonModal')?.classList.replace('flex', 'hidden');
+        };
+
+        window.resetLogoPreview = function () {
+          const logoInput = document.getElementById("f_logo");
+          if (logoInput) logoInput.value = "";
+          document.getElementById("logoPlaceholder")?.classList.remove("hidden");
+          document.getElementById("logoPreview")?.classList.add("hidden");
+          document.getElementById("logoPreview")?.classList.remove("flex");
+        };
+
+        window.showExistingLogo = function(url) {
+          const logoImg = document.getElementById("logoImg");
+          if (logoImg) logoImg.src = url;
+          document.getElementById("logoPlaceholder")?.classList.add("hidden");
+          document.getElementById("logoPreview")?.classList.remove("hidden");
+          document.getElementById("logoPreview")?.classList.add("flex");
+        };
 
         /* --- LOADERS --- */
-        const drawerLoader = new SectionLoaderManager(
+        const drawerLoader = typeof SectionLoaderManager !== 'undefined' ? new SectionLoaderManager(
           "communityDrawer",
           "fill-emerald-500",
           0.3,
-        );
-        const policyDrawerLoader = new SectionLoaderManager(
+        ) : null;
+        const policyDrawerLoader = typeof SectionLoaderManager !== 'undefined' ? new SectionLoaderManager(
           "policyDrawer",
           "fill-emerald-500",
           0.3,
-        );
+        ) : null;
 
         /* --- STATE --- */
         let editMode = false;
         let currentDeleteId = null;
         let currentPolicyCommunityId = null;
+        let currentSeasonCommunityId = null;
 
         /* --- DRAWER LOGIC --- */
-        function openDrawer(mode = "create") {
+        window.openDrawer = function(mode = "create") {
           editMode = mode === "edit";
-          document.getElementById("drawerTitle").textContent = editMode
-            ? "Edit Community"
-            : "New Community";
-          document.getElementById("drawerSubmitLabel").textContent = editMode
-            ? "Save Changes"
-            : "Launch Community";
+          const title = document.getElementById("drawerTitle");
+          if (title) title.textContent = editMode ? "Edit Community" : "New Community";
+          
+          const label = document.getElementById("drawerSubmitLabel");
+          if (label) label.textContent = editMode ? "Save Changes" : "Launch Community";
 
           const overlay = document.getElementById("drawerOverlay");
           const drawer = document.getElementById("communityDrawer");
-          overlay.classList.remove("hidden");
-          setTimeout(
-            () => overlay.classList.replace("opacity-0", "opacity-100"),
-            10,
-          );
-          drawer.classList.remove("translate-x-full");
-          document.body.style.overflow = "hidden";
+          if (overlay && drawer) {
+              overlay.classList.remove("hidden");
+              setTimeout(() => overlay.classList.replace("opacity-0", "opacity-100"), 10);
+              drawer.classList.remove("translate-x-full");
+              document.body.style.overflow = "hidden";
+          }
         }
 
-        function closeDrawer() {
+        window.closeDrawer = function() {
           const overlay = document.getElementById("drawerOverlay");
           const drawer = document.getElementById("communityDrawer");
-          overlay.classList.replace("opacity-100", "opacity-0");
-          setTimeout(() => overlay.classList.add("hidden"), 300);
-          drawer.classList.add("translate-x-full");
-          document.body.style.overflow = "";
-          clearErrors();
-          resetLogoPreview();
-          document.getElementById("communityForm").reset();
-          document.getElementById("communityId").value = "";
+          if (overlay && drawer) {
+              overlay.classList.replace("opacity-100", "opacity-0");
+              setTimeout(() => overlay.classList.add("hidden"), 300);
+              drawer.classList.add("translate-x-full");
+              document.body.style.overflow = "";
+              if (typeof clearErrors === 'function') clearErrors();
+              resetLogoPreview();
+              document.getElementById("communityForm")?.reset();
+              const cid = document.getElementById("communityId");
+              if (cid) cid.value = "";
+          }
         }
 
         /* --- POLICY DRAWER --- */
-        function openPolicyDrawer() {
+        window.openPolicyDrawer = function() {
           const overlay = document.getElementById("policyDrawerOverlay");
           const drawer = document.getElementById("policyDrawer");
-          overlay.classList.remove("hidden");
-          setTimeout(
-            () => overlay.classList.replace("opacity-0", "opacity-100"),
-            10,
-          );
-          drawer.classList.remove("translate-x-full");
-          document.body.style.overflow = "hidden";
+          if (overlay && drawer) {
+              overlay.classList.remove("hidden");
+              setTimeout(() => overlay.classList.replace("opacity-0", "opacity-100"), 10);
+              drawer.classList.remove("translate-x-full");
+              document.body.style.overflow = "hidden";
+          }
         }
 
-        function closePolicyDrawer() {
+        window.closePolicyDrawer = function() {
           const overlay = document.getElementById("policyDrawerOverlay");
           const drawer = document.getElementById("policyDrawer");
-          overlay.classList.replace("opacity-100", "opacity-0");
-          setTimeout(() => overlay.classList.add("hidden"), 300);
-          drawer.classList.add("translate-x-full");
-          document.body.style.overflow = "";
-          document.getElementById("policyForm").reset();
+          if (overlay && drawer) {
+              overlay.classList.replace("opacity-100", "opacity-0");
+              setTimeout(() => overlay.classList.add("hidden"), 300);
+              drawer.classList.add("translate-x-full");
+              document.body.style.overflow = "";
+              if (typeof clearErrors === 'function') clearErrors();
+          }
         }
 
         /* --- POLICY MODAL --- */
-        function openPolicyModal() {
+        window.openPolicyModal = function() {
           const modal = document.getElementById("policyModal");
-          const content = document.getElementById("policyModalContent");
-          modal.classList.replace("hidden", "flex");
-          setTimeout(() => {
-            content.classList.replace("scale-95", "scale-100");
-            content.classList.replace("opacity-0", "opacity-100");
-          }, 10);
+          if (modal) {
+              modal.classList.replace("hidden", "flex");
+              setTimeout(() => {
+                const content = document.getElementById("policyModalContent");
+                if (content) {
+                    content.classList.replace("scale-95", "scale-100");
+                    content.classList.replace("opacity-0", "opacity-100");
+                }
+              }, 10);
+              document.body.style.overflow = "hidden";
+          }
         }
 
-        function closePolicyModal() {
+        window.closePolicyModal = function() {
           const modal = document.getElementById("policyModal");
           const content = document.getElementById("policyModalContent");
-          content.classList.replace("scale-100", "scale-95");
-          content.classList.replace("opacity-100", "opacity-0");
-          setTimeout(() => modal.classList.replace("flex", "hidden"), 300);
-          document.body.style.overflow = "";
+          if (modal && content) {
+              content.classList.replace("scale-100", "scale-95");
+              content.classList.replace("opacity-100", "opacity-0");
+              setTimeout(() => modal.classList.replace("flex", "hidden"), 300);
+              document.body.style.overflow = "";
+          }
         }
 
         /* --- SEARCH --- */
-        const searchInput = document.getElementById("searchInput");
-        const grid = document.getElementById("communitiesGrid");
-
-        searchInput.addEventListener("input", (e) => {
+        const searchInput = document.getElementById("communitySearch");
+        searchInput?.addEventListener("input", (e) => {
           const q = e.target.value.toLowerCase().trim();
-          const cards = document.querySelectorAll(
-            '#communitiesGrid [id^="card-"]',
-          );
+          const cards = document.querySelectorAll('#communitiesGrid [id^="card-"]');
           let found = 0;
 
           cards.forEach((card) => {
-            const name = card.querySelector("h3").textContent.toLowerCase();
-            const code = card
-              .querySelector("p.font-mono")
-              .textContent.toLowerCase();
+            const name = card.querySelector("h3")?.textContent.toLowerCase() || "";
+            const code = card.querySelector("p.font-mono")?.textContent.toLowerCase() || "";
             if (name.includes(q) || code.includes(q)) {
               card.classList.remove("hidden");
               found++;
@@ -771,34 +870,31 @@
             }
           });
 
-          const emptyState = document.getElementById("emptyState");
+          const grid = document.getElementById("communitiesGrid");
+          const existingEmpty = document.getElementById("searchEmpty");
           if (found === 0) {
-            if (!emptyState) {
+            if (!existingEmpty && grid) {
               grid.insertAdjacentHTML(
                 "beforeend",
                 `<div class="col-span-full py-20 text-center" id="searchEmpty"><p class="text-slate-400 font-bold">No matches for "${q}"</p></div>`,
               );
-            } else {
-              emptyState.classList.remove("hidden");
             }
           } else {
-            document.getElementById("searchEmpty")?.remove();
-            emptyState?.classList.add("hidden");
+            existingEmpty?.remove();
           }
         });
 
         /* --- EVENT DELEGATION --- */
         document.addEventListener("click", async (e) => {
-          const editBtn = e.target.closest(".edit-btn");
-          const deleteBtn = e.target.closest(".delete-btn");
+          const editBtn = e.target.closest(".edit-community-btn");
+          const deleteBtn = e.target.closest(".delete-community-btn");
           const setupBtn = e.target.closest(".setup-policy-btn");
           const viewBtn = e.target.closest(".view-policy-btn");
 
           if (editBtn) {
-            const id = editBtn.dataset.editId;
-            document.getElementById("communityId").value = id;
+            const id = editBtn.dataset.compId;
             openDrawer("edit");
-            drawerLoader.showLoader();
+            drawerLoader?.showLoader();
             try {
               const res = await fetch(DETAIL_URL(id), {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -806,31 +902,33 @@
               const data = await res.json();
               if (data.success) {
                 const c = data.community;
-                setValue("f_name", c.name);
-                setValue("f_code", c.code);
-                setValue("f_description", c.description);
-                setValue("f_community_type", c.community_type);
-                setValue("f_country", c.country);
-                setValue("f_currency", c.currency);
-                setValue("f_start_date", c.start_date);
-                setValue("f_end_date", c.end_date);
+                const cid = document.getElementById("communityId");
+                if (cid) cid.value = c.id;
+                const fName = document.getElementById("f_name");
+                if (fName) fName.value = c.name;
+                const fDesc = document.getElementById("f_description");
+                if (fDesc) fDesc.value = c.description;
+                const fCurr = document.getElementById("f_currency");
+                if (fCurr) fCurr.value = c.currency;
+                const fSDate = document.getElementById("f_start_date");
+                if (fSDate) fSDate.value = c.start_date;
+                const fEDate = document.getElementById("f_end_date");
+                if (fEDate) fEDate.value = c.end_date;
                 if (c.logo_url) showExistingLogo(c.logo_url);
               }
             } finally {
-              drawerLoader.hideLoader();
+              drawerLoader?.hideLoader();
             }
           } else if (deleteBtn) {
             currentDeleteId = deleteBtn.dataset.deleteId;
-            document.getElementById("deleteCommunityName").textContent =
-              deleteBtn.dataset.deleteName;
-            document
-              .getElementById("deleteModal")
-              .classList.replace("hidden", "flex");
+            const delName = document.getElementById("deleteCommunityName");
+            if (delName) delName.textContent = deleteBtn.dataset.deleteName;
+            document.getElementById("deleteModal")?.classList.replace("hidden", "flex");
           } else if (setupBtn) {
             const id = setupBtn.dataset.compId;
             currentPolicyCommunityId = id;
             openPolicyDrawer();
-            policyDrawerLoader.showLoader();
+            policyDrawerLoader?.showLoader();
             try {
               const res = await fetch(POLICY_DETAIL_URL(id), {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -838,53 +936,39 @@
               const data = await res.json();
               if (data.success) {
                 const p = data.policy;
-                document.getElementById("policyDrawerTitle").textContent =
-                  `${data.community_name} Policy`;
+                const pTitle = document.getElementById("policyDrawerTitle");
+                if (pTitle) pTitle.textContent = `${data.community_name} Policy`;
+                
+                const setValue = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val;
+                };
+
+                setValue("policyId", p.id);
                 setValue("p_registration_fee_mode", p.registration_fee_mode);
-                setValue(
-                  "p_registration_fee_amount",
-                  p.registration_fee_amount,
-                );
+                setValue("p_registration_fee_amount", p.registration_fee_amount);
                 setValue("p_contribution_frequency", p.contribution_frequency);
-                setValue(
-                  "p_default_contribution_amount",
-                  p.default_contribution_amount,
-                );
-                setValue(
-                  "p_late_contribution_fine_amount",
-                  p.late_contribution_fine_amount,
-                );
+                setValue("p_default_contribution_amount", p.default_contribution_amount);
+                setValue("p_late_contribution_fine_amount", p.late_contribution_fine_amount);
                 setValue("p_absence_fine_amount", p.absence_fine_amount);
-                setValue(
-                  "p_minimum_membership_days_before_loan",
-                  p.minimum_membership_days_before_loan,
-                );
-                setValue(
-                  "p_max_active_loans_per_member",
-                  p.max_active_loans_per_member,
-                );
-                setValue(
-                  "p_max_loan_multiple_of_savings",
-                  p.max_loan_multiple_of_savings,
-                );
+                setValue("p_minimum_membership_days_before_loan", p.minimum_membership_days_before_loan);
+                setValue("p_max_active_loans_per_member", p.max_active_loans_per_member);
+                setValue("p_max_loan_multiple_of_savings", p.max_loan_multiple_of_savings);
                 setValue("p_default_interest_rate", p.default_interest_rate);
                 setValue("p_minimum_guarantors", p.minimum_guarantors);
-                document.getElementById("p_requires_guarantor").checked =
-                  p.requires_guarantor;
+                
+                const reqGuar = document.getElementById("p_requires_guarantor");
+                if (reqGuar) reqGuar.checked = p.requires_guarantor;
 
-                document
-                  .querySelectorAll(".community-currency")
-                  .forEach((el) => (el.textContent = data.community_currency));
+                document.querySelectorAll(".community-currency").forEach((el) => (el.textContent = data.community_currency));
               }
             } finally {
-              policyDrawerLoader.hideLoader();
+              policyDrawerLoader?.hideLoader();
             }
           } else if (viewBtn) {
             const id = viewBtn.dataset.compId;
-            document.getElementById("policyDisplay").classList.add("hidden");
-            document
-              .getElementById("policyModalLoader")
-              .classList.remove("hidden");
+            document.getElementById("policyDisplay")?.classList.add("hidden");
+            document.getElementById("policyModalLoader")?.classList.remove("hidden");
             openPolicyModal();
             try {
               const res = await fetch(POLICY_DETAIL_URL(id), {
@@ -893,176 +977,54 @@
               const data = await res.json();
               if (data.success) {
                 const p = data.policy;
-                document.getElementById("modalCommunityName").textContent =
-                  `${data.community_name} Policy`;
+                const mName = document.getElementById("modalCommunityName");
+                if (mName) mName.textContent = `${data.community_name} Policy`;
                 const curr = data.community_currency;
-                document.getElementById("view_registration_mode").textContent =
-                  p.registration_fee_mode_display;
-                document.getElementById(
-                  "view_registration_amount",
-                ).textContent = `${p.registration_fee_amount} ${curr}`;
-                document.getElementById(
-                  "view_contribution_frequency",
-                ).textContent = p.contribution_frequency_display;
-                document.getElementById(
-                  "view_contribution_amount",
-                ).textContent = `${p.default_contribution_amount} ${curr}`;
-                document.getElementById("view_late_fine").textContent =
-                  `${p.late_contribution_fine_amount} ${curr}`;
-                document.getElementById("view_absence_fine").textContent =
-                  `${p.absence_fine_amount} ${curr}`;
-                document.getElementById("view_interest_rate").textContent =
-                  `${p.default_interest_rate}%`;
-                document.getElementById("view_max_loans").textContent =
-                  p.max_active_loans_per_member;
-                document.getElementById("view_wait_time").textContent =
-                  `${p.minimum_membership_days_before_loan} Days`;
-                document.getElementById("view_guarantor_req").textContent =
-                  p.requires_guarantor ? "Yes" : "No";
+                
+                const setViewText = (id, text) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = text;
+                };
+
+                setViewText("view_registration_mode", p.registration_fee_mode_display);
+                setViewText("view_registration_amount", `${p.registration_fee_amount} ${curr}`);
+                setViewText("view_contribution_frequency", p.contribution_frequency_display);
+                setViewText("view_contribution_amount", `${p.default_contribution_amount} ${curr}`);
+                setViewText("view_late_fine", `${p.late_contribution_fine_amount} ${curr}`);
+                setViewText("view_absence_fine", `${p.absence_fine_amount} ${curr}`);
+                setViewText("view_interest_rate", `${p.default_interest_rate}%`);
+                setViewText("view_max_loans", p.max_active_loans_per_member);
+                setViewText("view_wait_time", `${p.minimum_membership_days_before_loan} Days`);
+                setViewText("view_guarantor_req", p.requires_guarantor ? "Yes" : "No");
               }
             } finally {
-              document
-                .getElementById("policyModalLoader")
-                .classList.add("hidden");
-              document
-                .getElementById("policyDisplay")
-                .classList.remove("hidden");
+              document.getElementById("policyModalLoader")?.classList.add("hidden");
+              document.getElementById("policyDisplay")?.classList.remove("hidden");
             }
           }
         });
 
-        /* --- FORM SUBMISSIONS --- */
-        document
-          .getElementById("drawerSubmitBtn")
-          .addEventListener("click", async () => {
-            const btn = document.getElementById("drawerSubmitBtn");
-            const label = document.getElementById("drawerSubmitLabel");
-            const icon = document.getElementById("drawerSubmitIcon");
-            setLoading(btn, label, icon, true);
-
-            const formEl = document.getElementById("communityForm");
-            const formData = new FormData(formEl);
-            const url = editMode
-              ? UPDATE_URL(document.getElementById("communityId").value)
-              : CREATE_URL;
-
-            try {
-              const res = await fetch(url, {
-                method: "POST",
-                headers: {
-                  "X-CSRFToken": CSRF,
-                  "X-Requested-With": "XMLHttpRequest",
-                },
-                body: formData,
-              });
-              const data = await res.json();
-              if (data.success) {
-                toast("success", data.message);
-                closeDrawer();
-                setTimeout(() => window.location.reload(), 800);
-              } else {
-                if (data.errors) displayErrors(data.errors);
-                toast("warning", "Missing fields.");
-              }
-            } catch {
-              toast("danger", "Network error.");
-            } finally {
-              setLoading(
-                btn,
-                label,
-                icon,
-                false,
-                editMode ? "Save Changes" : "Launch Community",
-              );
-            }
-          });
-
-        document
-          .getElementById("savePolicyBtn")
-          .addEventListener("click", async () => {
-            const btn = document.getElementById("savePolicyBtn");
-            const label = document.getElementById("policySaveLabel");
-            const icon = document.getElementById("policySaveIcon");
-            setLoading(btn, label, icon, true, "Saving...");
-
-            const formData = new FormData(
-              document.getElementById("policyForm"),
-            );
-            try {
-              const res = await fetch(
-                POLICY_UPDATE_URL(currentPolicyCommunityId),
-                {
-                  method: "POST",
-                  headers: {
-                    "X-CSRFToken": CSRF,
-                    "X-Requested-With": "XMLHttpRequest",
-                  },
-                  body: formData,
-                },
-              );
-              const data = await res.json();
-              if (data.success) {
-                toast("success", data.message);
-                closePolicyDrawer();
-              }
-            } finally {
-              setLoading(btn, label, icon, false, "Save Policy");
-            }
-          });
-
-        document
-          .getElementById("confirmDeleteBtn")
-          .addEventListener("click", async () => {
-            const btn = document.getElementById("confirmDeleteBtn");
-            btn.disabled = true;
-            btn.textContent = "Deleting...";
-            try {
-              const res = await fetch(DELETE_URL(currentDeleteId), {
-                method: "POST",
-                headers: {
-                  "X-CSRFToken": CSRF,
-                  "X-Requested-With": "XMLHttpRequest",
-                },
-              });
-              const data = await res.json();
-              if (data.success) {
-                window.location.reload();
-              }
-            } finally {
-              btn.disabled = false;
-            }
-          });
-
         /* --- HELPERS --- */
-        function toast(type, msg) {
-          window.toastManager
-            ?.buildToast()
-            .setMessage(msg)
-            .setType(type)
-            .show();
-        }
-        function setValue(id, val) {
-          const el = document.getElementById(id);
-          if (el) el.value = val || "";
-        }
-        function setLoading(btn, label, icon, isLoading, resetText = "") {
+        function setLoading(btn, label, icon, isLoading) {
+          if (!btn) return;
           btn.disabled = isLoading;
           if (isLoading) {
-            icon.className = "fas fa-spinner fa-spin";
-            label.textContent = "Processing...";
+            btn.dataset.originalText = label?.textContent || "";
+            if (label) label.textContent = "Processing...";
+            icon?.classList.replace("fa-check-circle", "fa-circle-notch");
+            icon?.classList.add("fa-spin");
           } else {
-            icon.className = "fas fa-check-circle";
-            label.textContent = resetText;
+            if (label) label.textContent = btn.dataset.originalText || "Submit";
+            icon?.classList.replace("fa-circle-notch", "fa-check-circle");
+            icon?.classList.remove("fa-spin");
           }
         }
+
         function clearErrors() {
-          document
-            .querySelectorAll(".form-error")
-            .forEach((el) => el.classList.add("hidden"));
-          document
-            .querySelectorAll(".form-input")
-            .forEach((el) => el.classList.remove("error"));
+          document.querySelectorAll(".form-error").forEach((el) => el.classList.add("hidden"));
+          document.querySelectorAll(".form-input").forEach((el) => el.classList.remove("error"));
         }
+
         function displayErrors(errors) {
           Object.entries(errors).forEach(([key, msgs]) => {
             const errEl = document.getElementById(`err_${key}`);
@@ -1076,63 +1038,116 @@
         }
 
         /* --- UI TRIGGERS --- */
-        document
-          .getElementById("openCreateDrawerBtn")
-          ?.addEventListener("click", () => openDrawer("create"));
-        document
-          .getElementById("closeDrawerBtn")
-          .addEventListener("click", closeDrawer);
-        document
-          .getElementById("cancelDrawerBtn")
-          .addEventListener("click", closeDrawer);
-        document
-          .getElementById("drawerOverlay")
-          .addEventListener("click", closeDrawer);
-        document
-          .getElementById("cancelDeleteBtn")
-          .addEventListener("click", () =>
-            document
-              .getElementById("deleteModal")
-              .classList.replace("flex", "hidden"),
-          );
-        document
-          .getElementById("closePolicyDrawerBtn")
-          .addEventListener("click", closePolicyDrawer);
-        document
-          .getElementById("cancelPolicyBtn")
-          .addEventListener("click", closePolicyDrawer);
-        document
-          .getElementById("policyDrawerOverlay")
-          .addEventListener("click", closePolicyDrawer);
-        document
-          .getElementById("closePolicyModalBtn")
-          .addEventListener("click", closePolicyModal);
-        document
-          .getElementById("closePolicyModalBtn2")
-          .addEventListener("click", closePolicyModal);
+        document.getElementById("openCreateDrawerBtn")?.addEventListener("click", () => openDrawer("create"));
+        document.getElementById("closeDrawerBtn")?.addEventListener("click", closeDrawer);
+        document.getElementById("cancelDrawerBtn")?.addEventListener("click", closeDrawer);
+        document.getElementById("drawerOverlay")?.addEventListener("click", closeDrawer);
+        document.getElementById("cancelDeleteBtn")?.addEventListener("click", () => document.getElementById("deleteModal")?.classList.replace("flex", "hidden"));
+        document.getElementById("closePolicyDrawerBtn")?.addEventListener("click", closePolicyDrawer);
+        document.getElementById("cancelPolicyBtn")?.addEventListener("click", closePolicyDrawer);
+        document.getElementById("policyDrawerOverlay")?.addEventListener("click", closePolicyDrawer);
+        document.getElementById("closePolicyModalBtn")?.addEventListener("click", closePolicyModal);
+        document.getElementById("closePolicyModalBtn2")?.addEventListener("click", closePolicyModal);
+
+        /* --- SEASON LOGIC --- */
+        async function loadSeasons(cid) {
+            const listContainer = document.getElementById('seasonList');
+            if (listContainer) {
+                listContainer.innerHTML = `<div class="py-10 text-center"><i class="fas fa-circle-notch fa-spin text-emerald-500 text-2xl"></i></div>`;
+                try {
+                    const res = await fetch(`/finance/api/community/${cid}/seasons/`);
+                    const data = await res.json();
+                    if (data.success && data.seasons.length > 0) {
+                        listContainer.innerHTML = data.seasons.map(s => `
+                            <button onclick="setActiveSeason('${s.id}')" class="w-full p-5 bg-slate-50 hover:bg-emerald-50 border-2 border-transparent hover:border-emerald-200 rounded-2xl text-left transition-all group">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-black text-slate-800 group-hover:text-emerald-700">${s.title || 'Untitled Season'}</p>
+                                        <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">${s.season_date}</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-emerald-400 transition-transform group-hover:translate-x-1"></i>
+                                </div>
+                            </button>
+                        `).join('');
+                    } else {
+                        listContainer.innerHTML = `
+                            <div class="py-10 text-center">
+                                <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200 text-2xl">
+                                    <i class="fas fa-calendar-times"></i>
+                                </div>
+                                <p class="text-slate-400 font-bold">No seasons found</p>
+                                <p class="text-[10px] text-slate-300 uppercase tracking-widest">Create one to get started</p>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    listContainer.innerHTML = `<p class="text-rose-500 text-center font-bold">Failed to load seasons</p>`;
+                }
+            }
+        }
+
+        document.getElementById('btnShowCreateSeason')?.addEventListener('click', () => {
+            document.getElementById('createSeasonModal')?.classList.replace('hidden', 'flex');
+        });
+
+        document.getElementById('createSeasonForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitCreateSeasonBtn');
+            const originalText = btn?.textContent || 'Create';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Creating...';
+            }
+
+            const titleVal = document.getElementById('s_title')?.value;
+            const dateVal = document.getElementById('s_date')?.value;
+
+            try {
+                const res = await fetch(`/finance/api/community/${currentSeasonCommunityId}/seasons/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF
+                    },
+                    body: JSON.stringify({ title: titleVal, season_date: dateVal })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (window.toast) toast('success', 'Season created!');
+                    closeCreateSeasonModal();
+                    setActiveSeason(data.season_id);
+                } else {
+                    if (window.toast) toast('danger', data.message);
+                }
+            } catch {
+                if (window.toast) toast('danger', 'Network error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            }
+        });
 
         /* --- LOGO --- */
         const dropzone = document.getElementById("logoDropzone");
         const logoInput = document.getElementById("f_logo");
-        dropzone.addEventListener("click", () => logoInput.click());
-        logoInput.addEventListener("change", (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const r = new FileReader();
-          r.onload = () => {
-            document.getElementById("logoImg").src = r.result;
-            document.getElementById("logoPlaceholder").classList.add("hidden");
-            document.getElementById("logoPreview").classList.remove("hidden");
-            document.getElementById("logoPreview").classList.add("flex");
-          };
-          r.readAsDataURL(file);
-        });
-        window.resetLogoPreview = function () {
-          logoInput.value = "";
-          document.getElementById("logoPlaceholder").classList.remove("hidden");
-          document.getElementById("logoPreview").classList.add("hidden");
-          document.getElementById("logoPreview").classList.remove("flex");
-        };
+        if (dropzone && logoInput) {
+            dropzone.addEventListener("click", () => logoInput.click());
+            logoInput.addEventListener("change", (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const r = new FileReader();
+              r.onload = () => {
+                const img = document.getElementById("logoImg");
+                if (img) img.src = r.result;
+                document.getElementById("logoPlaceholder")?.classList.add("hidden");
+                document.getElementById("logoPreview")?.classList.remove("hidden");
+                document.getElementById("logoPreview")?.classList.add("flex");
+              };
+              r.readAsDataURL(file);
+            });
+        }
         function showExistingLogo(url) {
           document.getElementById("logoImg").src = url;
           document.getElementById("logoPlaceholder").classList.add("hidden");
