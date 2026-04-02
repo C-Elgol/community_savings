@@ -1,249 +1,289 @@
-{% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} 
-{% block content %} {% block page_header %}
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+{% block page_header %}
 <h2 class="text-xl font-semibold text-slate-800">Dashboard</h2>
 <p class="text-xs text-slate-500">Community overview &amp; key metrics</p>
 {% endblock %}
+
 <!-- ========== DASHBOARD PAGE ========== -->
-<!-- KPI cards row -->
+
+<!-- ── KPI cards row ── -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-  <div
-    class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"
-  >
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
     <div class="flex justify-between">
-      <span class="text-xs font-medium uppercase text-slate-400"
-        >Total members</span
-      >
-      <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700">
-        <i class="fas fa-users"></i>
-      </div>
+      <span class="text-xs font-medium uppercase text-slate-400">Total members</span>
+      <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700"><i class="fas fa-users"></i></div>
     </div>
-    <p class="text-2xl font-bold text-slate-800 mt-2">1,482</p>
-    <p class="text-xs text-emerald-600 mt-1">↑ 24 new this month</p>
+    <p id="kpiMembers" class="text-2xl font-bold text-slate-800 mt-2">—</p>
+    <p class="text-xs text-slate-400 mt-1">active members</p>
   </div>
-  <div
-    class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"
-  >
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
     <div class="flex justify-between">
-      <span class="text-xs font-medium uppercase text-slate-400"
-        >Total contributions</span
-      >
-      <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600">
-        <i class="fas fa-coins"></i>
-      </div>
+      <span class="text-xs font-medium uppercase text-emerald-500">Total Inflows</span>
+      <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700"><i class="fas fa-arrow-down"></i></div>
     </div>
-    <p class="text-2xl font-bold text-slate-800 mt-2">XAF 4.28M</p>
-    <p class="text-xs text-emerald-600">↑ 8.3% vs last quarter</p>
+    <p id="kpiInflows" class="text-2xl font-bold text-emerald-700 mt-2">—</p>
+    <p class="text-xs text-slate-400 mt-1">all money received</p>
   </div>
-  <div
-    class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"
-  >
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
     <div class="flex justify-between">
-      <span class="text-xs font-medium uppercase text-slate-400"
-        >Active loans</span
-      >
-      <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700">
-        <i class="fas fa-hand-holding-usd"></i>
-      </div>
+      <span class="text-xs font-medium uppercase text-rose-500">Total Outflows</span>
+      <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-700"><i class="fas fa-arrow-up"></i></div>
     </div>
-    <p class="text-2xl font-bold text-slate-800 mt-2">XAF 1.92M</p>
-    <p class="text-xs text-amber-600">42 active loans</p>
+    <p id="kpiOutflows" class="text-2xl font-bold text-rose-700 mt-2">—</p>
+    <p class="text-xs text-slate-400 mt-1">loans + expenditures</p>
   </div>
-  <div
-    class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"
-  >
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
     <div class="flex justify-between">
-      <span class="text-xs font-medium uppercase text-slate-400"
-        >Net Balance</span
-      >
-      <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-700">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
+      <span class="text-xs font-medium uppercase text-indigo-500">Net Balance</span>
+      <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700"><i class="fas fa-wallet"></i></div>
     </div>
-    <p class="text-2xl font-bold text-slate-800 mt-2">XAF 3.92M</p>
-    <p class="text-xs text-rose-600">↑ 8.3% vs last quarter</p>
+    <p id="kpiNetBalance" class="text-2xl font-bold text-indigo-700 mt-2">—</p>
+    <p class="text-xs text-slate-400 mt-1">inflows − outflows</p>
   </div>
 </div>
 
-<!-- second row: additional metrics -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-  <!-- Upcoming contributions & financial summary combined -->
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-    <h3 class="font-semibold text-slate-800 mb-3 flex items-center">
-      <i class="fas fa-calendar-alt text-emerald-600 mr-2"></i>Upcoming
-      contributions (next 7d)
-    </h3>
-    <div class="space-y-3">
-      <div class="flex justify-between items-center">
-        <span
-          ><span class="font-medium">Njangi A</span>
-          <span class="text-slate-500 text-sm">(12 members)</span></span
-        ><span class="font-semibold">XAF 180,000</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span
-          ><span class="font-medium">Women's group</span>
-          <span class="text-slate-500 text-sm">(8 members)</span></span
-        ><span class="font-semibold">XAF 96,000</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span
-          ><span class="font-medium">Youth fund</span>
-          <span class="text-slate-500 text-sm">(15 members)</span></span
-        ><span class="font-semibold">XAF 225,000</span>
-      </div>
-      <div class="border-t pt-2 mt-2 flex justify-between font-bold">
-        <span>Total due</span><span>XAF 501,000</span>
-      </div>
-    </div>
+<!-- ── Fund Balance cards ── -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Savings</p>
+    <p id="fundSavings" class="text-lg font-black text-emerald-700">—</p>
   </div>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">Entertainment</p>
+    <p id="fundEntertainment" class="text-lg font-black text-amber-700">—</p>
+  </div>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Project</p>
+    <p id="fundProject" class="text-lg font-black text-blue-700">—</p>
+  </div>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">Sinking Fund</p>
+    <p id="fundSinkingFund" class="text-lg font-black text-purple-700">—</p>
+  </div>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-1">Events</p>
+    <p id="fundEvents" class="text-lg font-black text-teal-700">—</p>
+  </div>
+</div>
+
+<!-- ── Loan + Financial summary row ── -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+  <!-- Loan stats -->
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
     <h3 class="font-semibold text-slate-800 mb-3 flex items-center">
-      <i class="fas fa-chart-simple text-indigo-600 mr-2"></i>Financial summary
+      <i class="fas fa-hand-holding-usd text-amber-600 mr-2"></i>Loan Overview
     </h3>
     <div class="grid grid-cols-2 gap-3">
       <div class="bg-slate-50 p-3 rounded-xl">
-        <span class="text-xs text-slate-500">Total savings</span>
-        <p class="text-lg font-bold">XAF 6.2M</p>
+        <span class="text-xs text-slate-500">Total Disbursed</span>
+        <p id="loanDisbursed" class="text-lg font-bold">—</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl">
-        <span class="text-xs text-slate-500">Outstanding loans</span>
-        <p class="text-lg font-bold">XAF 1.92M</p>
+        <span class="text-xs text-slate-500">Outstanding Loans</span>
+        <p id="loanOutstanding" class="text-lg font-bold">—</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl">
-        <span class="text-xs text-slate-500">Fines collected</span>
-        <p class="text-lg font-bold">XAF 87K</p>
+        <span class="text-xs text-slate-500">Total Repaid</span>
+        <p id="loanRepaid" class="text-lg font-bold">—</p>
       </div>
       <div class="bg-slate-50 p-3 rounded-xl">
-        <span class="text-xs text-slate-500">Interest earned</span>
-        <p class="text-lg font-bold">XAF 94K</p>
+        <span class="text-xs text-slate-500">Interest Earned</span>
+        <p id="loanInterest" class="text-lg font-bold">—</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Penalties Earned</span>
+        <p id="loanPenalties" class="text-lg font-bold">—</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Active Loans</span>
+        <p id="loanActiveCount" class="text-lg font-bold">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial summary -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="font-semibold text-slate-800 mb-3 flex items-center">
+      <i class="fas fa-chart-simple text-indigo-600 mr-2"></i>Financial Summary
+    </h3>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Total Contributions</span>
+        <p id="summaryContributions" class="text-lg font-bold">—</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Total Expenditures</span>
+        <p id="summaryExpenditures" class="text-lg font-bold">—</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Fines Collected</span>
+        <p id="summaryFines" class="text-lg font-bold">—</p>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl">
+        <span class="text-xs text-slate-500">Net Balance</span>
+        <p id="summaryNetBalance" class="text-lg font-bold text-indigo-700">—</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- charts section (mock chart blocks) -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<!-- ── Recent Activity ── -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+  <!-- Recent Contributions -->
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="font-semibold">Contribution trends (last 6 months)</h3>
-      <span class="text-xs bg-slate-100 px-2 py-1 rounded">Monthly</span>
-    </div>
-    <div class="h-40 flex items-end justify-between gap-1 px-2">
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-100 h-24 rounded-t-lg"
-          style="height: 80px"
-        ></div>
-        <span class="text-xs mt-1">Oct</span>
-      </div>
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-200 h-28 rounded-t-lg"
-          style="height: 96px"
-        ></div>
-        <span class="text-xs mt-1">Nov</span>
-      </div>
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-300 h-32 rounded-t-lg"
-          style="height: 112px"
-        ></div>
-        <span class="text-xs mt-1">Dec</span>
-      </div>
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-400 h-36 rounded-t-lg"
-          style="height: 128px"
-        ></div>
-        <span class="text-xs mt-1">Jan</span>
-      </div>
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-500 h-40 rounded-t-lg"
-          style="height: 144px"
-        ></div>
-        <span class="text-xs mt-1">Feb</span>
-      </div>
-      <div class="w-full flex flex-col items-center">
-        <div
-          class="w-full bg-emerald-600 h-44 rounded-t-lg"
-          style="height: 160px"
-        ></div>
-        <span class="text-xs mt-1">Mar</span>
-      </div>
+    <h3 class="font-semibold mb-3 flex items-center text-sm">
+      <i class="fas fa-coins text-emerald-600 mr-2"></i>Recent Contributions
+    </h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-[10px] text-slate-400 border-b uppercase tracking-widest">
+          <tr><th class="pb-2">Member</th><th class="pb-2">Amount</th><th class="pb-2">Date</th></tr>
+        </thead>
+        <tbody id="recentContributions" class="divide-y">
+          <tr><td colspan="3" class="py-4 text-center text-slate-300 text-xs">Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <!-- Recent Repayments -->
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="font-semibold">Loan risk distribution</h3>
-      <span class="text-xs bg-slate-100 px-2 py-1 rounded">by amount</span>
-    </div>
-    <div class="space-y-3">
-      <div>
-        <div class="flex justify-between text-sm">
-          <span>Low risk</span><span class="font-medium">XAF 1.2M (62%)</span>
-        </div>
-        <div class="w-full h-2 bg-slate-100 rounded-full">
-          <div class="bg-emerald-500 h-2 rounded-full" style="width: 62%"></div>
-        </div>
-      </div>
-      <div>
-        <div class="flex justify-between text-sm">
-          <span>Moderate risk</span
-          ><span class="font-medium">XAF 520k (27%)</span>
-        </div>
-        <div class="w-full h-2 bg-slate-100 rounded-full">
-          <div class="bg-amber-500 h-2 rounded-full" style="width: 27%"></div>
-        </div>
-      </div>
-      <div>
-        <div class="flex justify-between text-sm">
-          <span>High risk</span><span class="font-medium">XAF 210k (11%)</span>
-        </div>
-        <div class="w-full h-2 bg-slate-100 rounded-full">
-          <div class="bg-rose-500 h-2 rounded-full" style="width: 11%"></div>
-        </div>
-      </div>
+    <h3 class="font-semibold mb-3 flex items-center text-sm">
+      <i class="fas fa-receipt text-blue-600 mr-2"></i>Recent Repayments
+    </h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-[10px] text-slate-400 border-b uppercase tracking-widest">
+          <tr><th class="pb-2">Member</th><th class="pb-2">Amount</th><th class="pb-2">Date</th></tr>
+        </thead>
+        <tbody id="recentRepayments" class="divide-y">
+          <tr><td colspan="3" class="py-4 text-center text-slate-300 text-xs">Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <!-- Recent Expenditures -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="font-semibold mb-3 flex items-center text-sm">
+      <i class="fas fa-hand-holding-usd text-rose-600 mr-2"></i>Recent Expenditures
+    </h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-[10px] text-slate-400 border-b uppercase tracking-widest">
+          <tr><th class="pb-2">Ref</th><th class="pb-2">Fund</th><th class="pb-2">Amount</th></tr>
+        </thead>
+        <tbody id="recentExpenditures" class="divide-y">
+          <tr><td colspan="3" class="py-4 text-center text-slate-300 text-xs">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
-<!-- recent transactions / quick table -->
-<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-  <h3 class="font-semibold mb-3 flex items-center">
-    <i class="fas fa-clock text-emerald-600 mr-2"></i>Recent contributions
-  </h3>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-slate-400 border-b">
-        <tr>
-          <th class="pb-2">Member</th>
-          <th class="pb-2">Group</th>
-          <th class="pb-2">Amount</th>
-          <th class="pb-2">Date</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y">
-        <tr>
-          <td class="py-2">Martha N.</td>
-          <td>Njangi A</td>
-          <td>XAF 15,000</td>
-          <td>Today</td>
-        </tr>
-        <tr>
-          <td class="py-2">John D.</td>
-          <td>Youth fund</td>
-          <td>XAF 12,000</td>
-          <td>Yesterday</td>
-        </tr>
-        <tr>
-          <td class="py-2">Esther K.</td>
-          <td>Women's group</td>
-          <td>XAF 10,000</td>
-          <td>23 Mar</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    "use strict";
+
+    const COMMUNITY_ID = "{{ community.id }}";
+    const ENDPOINT = `/finance/api/community/${COMMUNITY_ID}/dashboard/`;
+
+    const fmt = v => `XAF ${Number(v || 0).toLocaleString()}`;
+
+    async function loadDashboard() {
+        try {
+            const res = await fetch(ENDPOINT);
+            const d = await res.json();
+            if (!d.success) return;
+
+            const s = d.summary;
+            const f = d.fund_balances;
+            const l = d.loan_stats;
+            const r = d.recent;
+
+            // ── KPI cards ──
+            document.getElementById('kpiMembers').textContent = s.total_members.toLocaleString();
+            document.getElementById('kpiInflows').textContent = fmt(s.total_inflows);
+            document.getElementById('kpiOutflows').textContent = fmt(s.total_outflows);
+            document.getElementById('kpiNetBalance').textContent = fmt(s.net_balance);
+
+            // ── Fund balances ──
+            document.getElementById('fundSavings').textContent = fmt(f.savings);
+            document.getElementById('fundEntertainment').textContent = fmt(f.entertainment);
+            document.getElementById('fundProject').textContent = fmt(f.project);
+            document.getElementById('fundSinkingFund').textContent = fmt(f.sinking_fund);
+            document.getElementById('fundEvents').textContent = fmt(f.events);
+
+            // ── Loan stats ──
+            document.getElementById('loanDisbursed').textContent = fmt(l.total_disbursed);
+            document.getElementById('loanOutstanding').textContent = fmt(l.outstanding);
+            document.getElementById('loanRepaid').textContent = fmt(l.total_repaid);
+            document.getElementById('loanInterest').textContent = fmt(l.interest_earned);
+            document.getElementById('loanPenalties').textContent = fmt(l.penalties_earned);
+            document.getElementById('loanActiveCount').textContent = l.active_count;
+
+            // ── Financial summary ──
+            document.getElementById('summaryContributions').textContent = fmt(s.total_contributions);
+            document.getElementById('summaryExpenditures').textContent = fmt(s.total_expenditures);
+            document.getElementById('summaryFines').textContent = fmt(s.total_fines_collected);
+            document.getElementById('summaryNetBalance').textContent = fmt(s.net_balance);
+
+            // ── Recent contributions ──
+            renderRecent('recentContributions', r.contributions, c => `
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="py-2 text-xs font-medium text-slate-700">${c.member}</td>
+                    <td class="py-2 text-xs font-bold text-emerald-700">${fmt(c.amount)}</td>
+                    <td class="py-2 text-xs text-slate-400">${fmtDate(c.date)}</td>
+                </tr>
+            `);
+
+            // ── Recent repayments ──
+            renderRecent('recentRepayments', r.repayments, p => `
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="py-2 text-xs font-medium text-slate-700">${p.member}</td>
+                    <td class="py-2 text-xs font-bold text-blue-700">${fmt(p.amount)}</td>
+                    <td class="py-2 text-xs text-slate-400">${fmtDate(p.date)}</td>
+                </tr>
+            `);
+
+            // ── Recent expenditures ──
+            renderRecent('recentExpenditures', r.expenditures, e => `
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="py-2 text-[10px] font-mono font-bold text-slate-500">${e.reference}</td>
+                    <td class="py-2 text-xs text-slate-600">${e.source_fund}</td>
+                    <td class="py-2 text-xs font-bold text-rose-600">${fmt(e.amount)}</td>
+                </tr>
+            `);
+
+        } catch (err) {
+            console.error('Dashboard load failed', err);
+        }
+    }
+
+    function renderRecent(id, items, rowFn) {
+        const el = document.getElementById(id);
+        if (!items || !items.length) {
+            el.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-300 text-xs">No data yet</td></tr>`;
+            return;
+        }
+        el.innerHTML = items.map(rowFn).join('');
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleDateString();
+    }
+
+    loadDashboard();
+})();
+</script>
 {% endblock %}

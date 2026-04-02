@@ -18,6 +18,7 @@ from apps.finance.views.admin_loan_views import AdminLoanApplicationView, AdminL
 from apps.finance.views.loan_api_view import LoanApplicationAPI, LoanAPI, LoanProductAPI, MembershipAPI, LoanPaymentAPI
 from apps.finance.views.admin_expenditure_view import AdminExpenditureView
 from apps.finance.views.expenditure_api_view import ExpenditureAPI, ExpenditureBalanceAPI, ExpenditureDetailAPI
+from apps.finance.views.dashboard_api_view import DashboardAPI
 
 app_name = "finance"
     
@@ -61,5 +62,6 @@ urlpatterns = [
     path('api/community/<uuid:community_id>/expenditures/', ExpenditureAPI.as_view(), name='expenditure_api'),
     path('api/community/<uuid:community_id>/expenditure-balances/', ExpenditureBalanceAPI.as_view(), name='expenditure_balance_api'),
     path('api/community/<uuid:community_id>/expenditures/<uuid:expenditure_id>/', ExpenditureDetailAPI.as_view(), name='expenditure_detail_api'),
+    path('api/community/<uuid:community_id>/dashboard/', DashboardAPI.as_view(), name='dashboard_api'),
 ]
 
