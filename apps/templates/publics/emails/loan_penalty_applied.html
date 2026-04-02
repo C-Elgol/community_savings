@@ -1,0 +1,41 @@
+{% extends 'publics/emails/base.html' %} {% load i18n %} {% load humanize %} {% block content %}
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto;">
+
+  <h2 style="color: #b91c1c;">🔴 {% trans "Overdue Loan Penalty Applied" %}</h2>
+
+  <p>{% trans "Hello" %} {{ member_name }},</p>
+
+  <p>
+    {% blocktranslate with community=community_name period=penalty_period %}Please be informed that a monthly overdue penalty has been automatically applied to your loan account with <strong>{{ community }}</strong> for the period of <strong>{{ period }}</strong>.{% endblocktranslate %}
+  </p>
+
+  <div style="background-color: #fff1f2; border-left: 4px solid #b91c1c; padding: 16px; border-radius: 5px; margin: 20px 0;">
+    <h4 style="margin-top: 0; color: #991b1b;">{% trans "Penalty Details" %}</h4>
+    <ul style="list-style: none; padding-left: 0; margin: 0;">
+      <li><strong>{% trans "Period:" %}</strong> {{ penalty_period }}</li>
+      <li><strong>{% trans "Penalty Rate:" %}</strong> {{ penalty_rate }}% (2× monthly interest)</li>
+      <li><strong>{% trans "Base Balance Used:" %}</strong> XAF {{ base_amount|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Penalty Charge:" %}</strong> <span style="color: #b91c1c; font-weight: bold;">XAF {{ penalty_amount|floatformat:0|intcomma }}</span></li>
+    </ul>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <h4 style="margin-top: 0; color: #555;">{% trans "Updated Loan Balance" %}</h4>
+    <ul style="list-style: none; padding-left: 0; margin: 0;">
+      <li><strong>{% trans "Principal:" %}</strong> XAF {{ amount_borrowed|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Interest:" %}</strong> XAF {{ interest|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Total Penalties So Far:" %}</strong> XAF {{ total_penalties|floatformat:0|intcomma }}</li>
+      <li><strong>{% trans "Amount Repaid:" %}</strong> XAF {{ amount_paid|floatformat:0|intcomma }}</li>
+      <li style="margin-top: 8px; font-size: 1.1em;"><strong>{% trans "Net Outstanding Balance:" %}</strong> <span style="color: #b91c1c; font-weight: bold;">XAF {{ outstanding_balance|floatformat:0|intcomma }}</span></li>
+    </ul>
+  </div>
+
+  <p>
+    {% trans "Please make a payment as soon as possible to prevent additional penalty charges from accruing next month." %}
+  </p>
+
+  <p style="font-size: 0.9em; color: #888; margin-top: 30px;">
+    {% trans "Best regards," %}<br/><strong>{{ community_name }} Team</strong>
+  </p>
+</div>
+{% endblock %}

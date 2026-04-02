@@ -18,6 +18,7 @@ app.autodiscover_tasks([
     'apps.users.tasks',
     'apps.log.tasks',
     'apps.communities.tasks',
+    'apps.finance.tasks',
 ])
 
 @app.task(bind=True, ignore_result=True)

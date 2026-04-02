@@ -1,0 +1,558 @@
+{% extends 'publics/admin/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div id="expenditurePage" class="space-y-6">
+
+    <!-- ── Header ── -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">{% trans "Expenditures" %}</h1>
+            <p class="text-xs text-slate-500">
+                {% trans "Manage fund outflows for" %}:
+                <span class="font-bold text-slate-700">{{ community.name }}</span>
+            </p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                <input type="text" id="searchInput" placeholder="{% trans 'Search...' %}"
+                    class="pl-12 pr-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none w-52 transition-all">
+            </div>
+            <select id="fundFilter" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                <option value="">{% trans "All Funds" %}</option>
+                <option value="entertainment">{% trans "Entertainment" %}</option>
+                <option value="project">{% trans "Project" %}</option>
+                <option value="sinking_fund">{% trans "Sinking Fund" %}</option>
+                <option value="events">{% trans "Events" %}</option>
+                <option value="savings">{% trans "Savings" %}</option>
+            </select>
+            <button id="btnRecord"
+                class="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-rose-600/20 hover:bg-rose-700 active:scale-95 transition-all">
+                <i class="fas fa-plus-circle"></i>{% trans "Record Expenditure" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm col-span-2 sm:col-span-3 lg:col-span-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Total Spent" %}</p>
+            <h3 id="statTotal" class="text-xl font-black text-rose-700">XAF 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">{% trans "Entertainment" %}</p>
+            <h3 id="statEntertainment" class="text-xl font-black text-amber-700">XAF 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">{% trans "Project" %}</p>
+            <h3 id="statProject" class="text-xl font-black text-blue-700">XAF 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">{% trans "Sinking Fund" %}</p>
+            <h3 id="statSinkingFund" class="text-xl font-black text-purple-700">XAF 0</h3>
+        </div>
+        <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
+            <p class="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-1">{% trans "Events" %}</p>
+            <h3 id="statEvents" class="text-xl font-black text-teal-700">XAF 0</h3>
+        </div>
+    </div>
+
+    <!-- ── Fund Balance Banner ── -->
+    <div id="balanceBanner" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 hidden"></div>
+
+    <!-- ── Table ── -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto" id="expenditureTableContainer">
+            <table class="w-full">
+                <thead class="bg-slate-50/30 text-[10px] uppercase font-black tracking-widest text-slate-400 text-left">
+                    <tr>
+                        <th class="px-8 py-5">{% trans "Reference" %}</th>
+                        <th class="px-8 py-5">{% trans "Date" %}</th>
+                        <th class="px-8 py-5">{% trans "Fund" %}</th>
+                        <th class="px-8 py-5">{% trans "Amount" %}</th>
+                        <th class="px-8 py-5">{% trans "Created By" %}</th>
+                        <th class="px-8 py-5 text-center">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody id="expenditureListBody" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════ RECORD MODAL ════════════ -->
+<div id="recordModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div class="flex justify-between items-start p-8 pb-4 border-b border-slate-50">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800">{% trans "Record Expenditure" %}</h3>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{{ community.name }}</p>
+            </div>
+            <button onclick="closeRecordModal()" class="w-10 h-10 rounded-full hover:bg-slate-50 text-slate-400 transition-all flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-8 space-y-5 max-h-[72vh] overflow-y-auto">
+            <!-- Error -->
+            <div id="formError" class="hidden p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm rounded-2xl flex items-start gap-3">
+                <i class="fas fa-exclamation-circle mt-0.5 flex-shrink-0"></i>
+                <span id="formErrorMsg"></span>
+            </div>
+
+            <!-- Fund -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Source Fund" %} *</label>
+                <select id="modalSourceFund" class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-rose-500/20 outline-none transition-all">
+                    <option value="">— {% trans "Select a fund" %} —</option>
+                    <option value="entertainment">{% trans "Entertainment" %}</option>
+                    <option value="project">{% trans "Project" %}</option>
+                    <option value="sinking_fund">{% trans "Sinking Fund" %}</option>
+                    <option value="events">{% trans "Events" %}</option>
+                    <option value="savings">{% trans "Savings" %}</option>
+                </select>
+                <div id="balancePreview" class="hidden mt-2 px-4 py-2 bg-emerald-50 rounded-xl text-xs font-bold text-emerald-700 flex items-center gap-2">
+                    <i class="fas fa-wallet"></i> {% trans "Available:" %} <span id="balancePreviewAmount">—</span>
+                </div>
+            </div>
+
+            <!-- Amount -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Amount (XAF)" %} *</label>
+                <div class="flex items-center bg-slate-50 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-rose-500/20 transition-all">
+                    <span class="px-4 text-sm font-black text-slate-400">XAF</span>
+                    <input type="number" id="modalAmount" min="1" step="0.01" placeholder="0"
+                        class="flex-1 py-4 pr-5 bg-transparent border-none text-sm font-black text-slate-800 focus:ring-0 outline-none">
+                </div>
+            </div>
+
+            <!-- Date -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Expenditure Date" %} *</label>
+                <input type="date" id="modalDate" class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-rose-500/20 outline-none transition-all">
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Description / Justification" %} *</label>
+                <textarea id="modalDescription" rows="3" placeholder="{% trans 'Describe what the money was used for...' %}"
+                    class="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-rose-500/20 outline-none transition-all resize-none"></textarea>
+            </div>
+
+            <!-- ── Signature Pad ── -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Authorized By (Signature)" %}</label>
+                <div class="bg-slate-50 rounded-2xl p-3">
+                    <canvas id="expenditureSignaturePad" class="w-full rounded-xl bg-white border border-slate-100" style="height:130px; touch-action:none;"></canvas>
+                    <div class="flex justify-end mt-2">
+                        <button type="button" id="btnClearSig"
+                            class="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-all flex items-center gap-1">
+                            <i class="fas fa-eraser"></i> {% trans "Clear" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 p-8 pt-4 border-t border-slate-50">
+            <button type="button" onclick="closeRecordModal()"
+                class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all">
+                {% trans "Cancel" %}
+            </button>
+            <button id="btnSubmitRecord" onclick="submitExpenditure()"
+                class="flex-[2] py-4 bg-rose-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-rose-700 transition-all shadow-lg shadow-rose-600/20 active:scale-95 flex items-center justify-center gap-2">
+                <i id="submitIcon" class="fas fa-save"></i>
+                <span id="submitLabel">{% trans "Record Expenditure" %}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════ DETAIL MODAL ════════════ -->
+<div id="detailModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div class="flex justify-between items-start p-8 pb-4 border-b border-slate-50">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800">{% trans "Expenditure Detail" %}</h3>
+                <p id="detailRef" class="text-xs text-slate-400 font-bold uppercase tracking-widest font-mono mt-1">—</p>
+            </div>
+            <button onclick="closeDetailModal()" class="w-10 h-10 rounded-full hover:bg-slate-50 text-slate-400 transition-all flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-8 space-y-4">
+            <!-- Fund + Amount -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Fund" %}</p>
+                    <span id="detailFund" class="fund-chip">—</span>
+                </div>
+                <div class="bg-rose-50 rounded-2xl p-4">
+                    <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1">{% trans "Amount" %}</p>
+                    <p id="detailAmount" class="text-xl font-black text-rose-700">—</p>
+                </div>
+            </div>
+
+            <!-- Date + Created By -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Date" %}</p>
+                    <p id="detailDate" class="text-sm font-bold text-slate-700">—</p>
+                </div>
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Created By" %}</p>
+                    <p id="detailCreatedBy" class="text-sm font-bold text-slate-700">—</p>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="bg-slate-50 rounded-2xl p-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{% trans "Description / Justification" %}</p>
+                <p id="detailDescription" class="text-sm text-slate-600 leading-relaxed">—</p>
+            </div>
+
+            <!-- Signature -->
+            <div id="detailSignatureWrap" class="hidden">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Authorized By (Signature)" %}</p>
+                <div class="bg-slate-50 rounded-2xl p-3 flex items-center justify-center">
+                    <img id="detailSignatureImg" src="" alt="Signature" class="max-h-28 rounded-xl border border-slate-100">
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 pt-0 flex gap-3">
+            <button id="btnDetailDelete" onclick="deleteExpenditure()"
+                class="flex-1 py-4 bg-rose-50 text-rose-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-rose-100 transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-trash-alt"></i> {% trans "Delete" %}
+            </button>
+            <button onclick="closeDetailModal()"
+                class="flex-[2] py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all">
+                {% trans "Close" %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fund-chip { display:inline-block; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.05em; padding:3px 10px; border-radius:999px; }
+    .fund-entertainment { background:#fef3c7; color:#92400e; }
+    .fund-project       { background:#dbeafe; color:#1e40af; }
+    .fund-sinking_fund  { background:#ede9fe; color:#5b21b6; }
+    .fund-events        { background:#ccfbf1; color:#0f766e; }
+    .fund-savings       { background:#d1fae5; color:#065f46; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Signature Pad -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+(function () {
+    "use strict";
+
+    const COMMUNITY_ID = "{{ community.id }}";
+    const CSRF = "{{ csrf_token }}";
+    const ENDPOINTS = {
+        expenditures: `/finance/api/community/${COMMUNITY_ID}/expenditures/`,
+        balances:     `/finance/api/community/${COMMUNITY_ID}/expenditure-balances/`,
+    };
+
+    let state = { expenditures: [], balances: {}, search: '', fund: '', selectedId: null };
+    let sigPad = null;
+
+    // ─── Elements ─────────────────────────────────────────────
+    const el = {
+        listBody:           document.getElementById('expenditureListBody'),
+        statTotal:          document.getElementById('statTotal'),
+        statEntertainment:  document.getElementById('statEntertainment'),
+        statProject:        document.getElementById('statProject'),
+        statSinkingFund:    document.getElementById('statSinkingFund'),
+        statEvents:         document.getElementById('statEvents'),
+        searchInput:        document.getElementById('searchInput'),
+        fundFilter:         document.getElementById('fundFilter'),
+        recordModal:        document.getElementById('recordModal'),
+        detailModal:        document.getElementById('detailModal'),
+        formError:          document.getElementById('formError'),
+        formErrorMsg:       document.getElementById('formErrorMsg'),
+        balancePreview:     document.getElementById('balancePreview'),
+        balancePreviewAmt:  document.getElementById('balancePreviewAmount'),
+        balanceBanner:      document.getElementById('balanceBanner'),
+    };
+
+    // ─── Signature Pad Init ───────────────────────────────────
+    function initSigPad() {
+        const canvas = document.getElementById('expenditureSignaturePad');
+        if (!canvas || sigPad) return;
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width  = canvas.offsetWidth  * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+        sigPad = new SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)', penColor: '#0f3b3f' });
+    }
+
+    document.getElementById('btnClearSig').onclick = () => sigPad?.clear();
+
+    // ─── Fetch Data ───────────────────────────────────────────
+    async function fetchAll() {
+        const url = new URL(ENDPOINTS.expenditures, window.location.origin);
+        if (state.fund) url.searchParams.set('source_fund', state.fund);
+        try {
+            const res  = await fetch(url);
+            const data = await res.json();
+            if (data.success) {
+                state.expenditures = data.expenditures;
+                renderStats(data.stats);
+                renderTable();
+            }
+        } catch (e) { toast('error', 'Failed to load expenditures'); }
+    }
+
+    async function fetchBalances() {
+        try {
+            const res  = await fetch(ENDPOINTS.balances);
+            const data = await res.json();
+            if (data.success) { state.balances = data.balances; renderBalanceBanner(); }
+        } catch (e) { /* silent */ }
+    }
+
+    // ─── Stats ────────────────────────────────────────────────
+    function renderStats(stats) {
+        const fmt  = v => `XAF ${Number(v || 0).toLocaleString()}`;
+        const total = Object.values(stats || {}).reduce((a, b) => a + Number(b), 0);
+        el.statTotal.textContent          = `XAF ${total.toLocaleString()}`;
+        el.statEntertainment.textContent  = fmt(stats?.entertainment);
+        el.statProject.textContent        = fmt(stats?.project);
+        el.statSinkingFund.textContent    = fmt(stats?.sinking_fund);
+        el.statEvents.textContent         = fmt(stats?.events);
+    }
+
+    // ─── Balance Banner ───────────────────────────────────────
+    const FUND_META = {
+        entertainment: { label:'Entertainment', color:'text-amber-700',  bg:'bg-amber-50',  icon:'fas fa-dice' },
+        project:       { label:'Project',       color:'text-blue-700',   bg:'bg-blue-50',   icon:'fas fa-project-diagram' },
+        sinking_fund:  { label:'Sinking Fund',  color:'text-purple-700', bg:'bg-purple-50', icon:'fas fa-piggy-bank' },
+        events:        { label:'Events',         color:'text-teal-700',   bg:'bg-teal-50',   icon:'fas fa-calendar-star' },
+        savings:       { label:'Savings',        color:'text-emerald-700',bg:'bg-emerald-50',icon:'fas fa-coins' },
+    };
+
+    function renderBalanceBanner() {
+        if (!state.balances || !Object.keys(state.balances).length) return;
+        el.balanceBanner.classList.remove('hidden');
+        el.balanceBanner.innerHTML = Object.entries(state.balances).map(([fund, balance]) => {
+            const m    = FUND_META[fund] || { label: fund, color:'text-slate-700', bg:'bg-slate-50', icon:'fas fa-wallet' };
+            const avail = Number(balance);
+            const isLow = avail < 10000;
+            return `<div class="${m.bg} rounded-2xl p-4">
+                <div class="flex items-center gap-2 mb-1"><i class="${m.icon} ${m.color} text-xs"></i>
+                    <p class="text-[10px] font-black uppercase tracking-widest ${m.color.replace('700','500')}">${m.label}</p>
+                </div>
+                <p class="text-sm font-black ${isLow ? 'text-rose-600' : m.color}">XAF ${avail.toLocaleString()}</p>
+                ${isLow ? '<p class="text-[9px] text-rose-400 font-bold">Low balance</p>' : ''}
+            </div>`;
+        }).join('');
+    }
+
+    // ─── Table ────────────────────────────────────────────────
+    function renderTable() {
+        let list = state.expenditures;
+        if (state.search) {
+            const q = state.search.toLowerCase();
+            list = list.filter(e =>
+                (e.description || '').toLowerCase().includes(q) ||
+                (e.reference_number || '').toLowerCase().includes(q) ||
+                (e.created_by || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (!list.length) {
+            el.listBody.innerHTML = `<tr><td colspan="6" class="py-20 text-center text-slate-300 text-xs font-bold uppercase tracking-widest">No expenditures found</td></tr>`;
+            return;
+        }
+
+        el.listBody.innerHTML = list.map(e => `
+            <tr class="hover:bg-slate-50/50 transition-all group">
+                <td class="px-8 py-5">
+                    <p class="text-xs font-black text-slate-500 font-mono">${e.reference_number}</p>
+                </td>
+                <td class="px-8 py-5 text-xs text-slate-400 font-bold">
+                    ${new Date(e.expenditure_date).toLocaleDateString()}
+                </td>
+                <td class="px-8 py-5">
+                    <span class="fund-chip fund-${e.source_fund}">${e.source_fund_display}</span>
+                </td>
+                <td class="px-8 py-5">
+                    <p class="text-sm font-black text-rose-600">XAF ${Number(e.amount).toLocaleString()}</p>
+                </td>
+                <td class="px-8 py-5">
+                    <p class="text-xs font-bold text-slate-500">${e.created_by || '—'}</p>
+                </td>
+                <td class="px-8 py-5 text-center">
+                    <button onclick='openDetail(${JSON.stringify(e)})'
+                        class="p-2 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="View Details">
+                        <i class="fas fa-eye text-base"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // ─── Record Modal ─────────────────────────────────────────
+    window.closeRecordModal = function () {
+        el.recordModal.classList.add('hidden');
+        document.getElementById('modalSourceFund').value = '';
+        document.getElementById('modalAmount').value     = '';
+        document.getElementById('modalDate').value       = '';
+        document.getElementById('modalDescription').value = '';
+        el.formError.classList.add('hidden');
+        el.balancePreview.classList.add('hidden');
+        sigPad?.clear();
+    };
+
+    document.getElementById('btnRecord').onclick = () => {
+        el.recordModal.classList.remove('hidden');
+        document.getElementById('modalDate').value = new Date().toISOString().split('T')[0];
+        setTimeout(initSigPad, 60); // wait for canvas to be rendered
+    };
+
+    document.getElementById('modalSourceFund').onchange = function () {
+        const fund = this.value;
+        if (fund && state.balances[fund] !== undefined) {
+            const bal = Number(state.balances[fund]);
+            el.balancePreviewAmt.textContent = `XAF ${bal.toLocaleString()}`;
+            el.balancePreview.classList.remove('hidden');
+            el.balancePreview.className = `hidden mt-2 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${bal < 1 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`.replace('hidden ','');
+        } else {
+            el.balancePreview.classList.add('hidden');
+        }
+    };
+
+    window.submitExpenditure = async function () {
+        const fund        = document.getElementById('modalSourceFund').value;
+        const amount      = document.getElementById('modalAmount').value;
+        const date        = document.getElementById('modalDate').value;
+        const description = document.getElementById('modalDescription').value.trim();
+        const signature   = sigPad && !sigPad.isEmpty() ? sigPad.toDataURL() : '';
+
+        if (!fund || !amount || !date || !description) {
+            showFormError('Please fill in all required fields (Fund, Amount, Date, Description).');
+            return;
+        }
+
+        setSubmitLoading(true);
+        try {
+            const res  = await fetch(ENDPOINTS.expenditures, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                body: JSON.stringify({ source_fund: fund, amount, expenditure_date: date, description, signature })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                closeRecordModal();
+                await Promise.all([fetchAll(), fetchBalances()]);
+            } else {
+                showFormError(data.message);
+            }
+        } catch (e) {
+            showFormError('An unexpected error occurred. Please try again.');
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+
+    function showFormError(msg) {
+        el.formErrorMsg.textContent = msg;
+        el.formError.classList.remove('hidden');
+    }
+
+    function setSubmitLoading(loading) {
+        const btn   = document.getElementById('btnSubmitRecord');
+        const icon  = document.getElementById('submitIcon');
+        const label = document.getElementById('submitLabel');
+        btn.disabled    = loading;
+        icon.className  = loading ? 'fas fa-spinner fa-spin' : 'fas fa-save';
+        label.textContent = loading ? 'Saving...' : 'Record Expenditure';
+    }
+
+    // ─── Detail Modal ─────────────────────────────────────────
+    window.openDetail = function (e) {
+        state.selectedId = e.id;
+        document.getElementById('detailRef').textContent         = e.reference_number;
+        document.getElementById('detailAmount').textContent      = `XAF ${Number(e.amount).toLocaleString()}`;
+        document.getElementById('detailDate').textContent        = new Date(e.expenditure_date).toLocaleDateString();
+        document.getElementById('detailCreatedBy').textContent   = e.created_by || '—';
+        document.getElementById('detailDescription').textContent = e.description || '—';
+
+        const fundEl  = document.getElementById('detailFund');
+        fundEl.textContent = e.source_fund_display;
+        fundEl.className   = `fund-chip fund-${e.source_fund}`;
+
+        const sigWrap = document.getElementById('detailSignatureWrap');
+        const sigImg  = document.getElementById('detailSignatureImg');
+        if (e.signature && e.signature.startsWith('data:')) {
+            sigImg.src = e.signature;
+            sigWrap.classList.remove('hidden');
+        } else {
+            sigWrap.classList.add('hidden');
+        }
+
+        el.detailModal.classList.remove('hidden');
+    };
+
+    window.closeDetailModal = function () {
+        el.detailModal.classList.add('hidden');
+        state.selectedId = null;
+    };
+
+    window.deleteExpenditure = async function () {
+        if (!state.selectedId) return;
+        if (!confirm('Are you sure you want to delete this expenditure? This action cannot be undone.')) return;
+
+        try {
+            const res  = await fetch(`${ENDPOINTS.expenditures}${state.selectedId}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': CSRF }
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message || 'Expenditure deleted.');
+                closeDetailModal();
+                await Promise.all([fetchAll(), fetchBalances()]);
+            } else {
+                toast('error', data.message || 'Could not delete this expenditure.');
+            }
+        } catch (e) {
+            toast('error', 'Delete failed. Please try again.');
+        }
+    };
+
+    // ─── Events ───────────────────────────────────────────────
+    el.searchInput.oninput = (e) => {
+        state.search = e.target.value;
+        clearTimeout(window._st);
+        window._st = setTimeout(renderTable, 300);
+    };
+
+    el.fundFilter.onchange = (e) => {
+        state.fund = e.target.value;
+        fetchAll();
+    };
+
+    el.recordModal.addEventListener('click', (e) => { if (e.target === el.recordModal) closeRecordModal(); });
+    el.detailModal.addEventListener('click', (e) => { if (e.target === el.detailModal) closeDetailModal(); });
+
+    function toast(type, msg) {
+        window.toastManager?.buildToast().setMessage(msg).setType(type).show();
+    }
+
+    // ─── Init ─────────────────────────────────────────────────
+    fetchAll();
+    fetchBalances();
+})();
+</script>
+{% endblock %}

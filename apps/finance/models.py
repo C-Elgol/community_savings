@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from apps.global_data.enum import CommunityFeatureType
 
@@ -13,6 +14,7 @@ from apps.global_data.enum import (
     LoanStatus,
     CommunityFeatureType,
     RepaymentFrequency,
+    ExpenditureStatus,
 )
 from apps.communities.models import Community, Membership, MembershipApplication
 
@@ -276,7 +278,19 @@ class Loan(SavingsBaseModel):
 
     @property
     def amount_left_to_pay(self):
-        return self.total_amount_plus_interest - self.amount_paid
+        return self.total_repayable_amount - self.amount_paid
+
+    @property
+    def total_penalty_charges(self):
+        return self.penalties.aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
+
+    @property
+    def total_repayable_amount(self):
+        return self.amount_borrowed + self.interest_to_be_paid + self.total_penalty_charges
+
+    @property
+    def outstanding_balance(self):
+        return self.total_repayable_amount - self.amount_paid
 
 class LoanRepaymentSchedule(SavingsBaseModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="repayment_schedule")
@@ -309,6 +323,21 @@ class LoanPayment(SavingsBaseModel):
 
     def __str__(self):
         return f"Payment {self.amount} - {self.loan_id}"
+
+class LoanPenalty(SavingsBaseModel):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="penalties")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    penalty_rate = models.DecimalField(max_digits=5, decimal_places=2)
+    base_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    period_marker = models.CharField(max_length=7, db_index=True) # YYYY-MM
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('loan', 'period_marker')
+        verbose_name_plural = "Loan Penalties"
+
+    def __str__(self):
+        return f"Penalty {self.period_marker} - {self.loan.membership.user.fullname}"
 
 class Fine(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="fines")
@@ -379,3 +408,79 @@ class Transaction(SavingsBaseModel):
 
     def __str__(self):
         return f"{self.membership.user.get_full_name} - {self.amount}"
+
+
+class Expenditure(SavingsBaseModel):
+    """
+    Records a money outflow from a specific community fund/category.
+    Balance = SUM(Contributions by feature_type) - SUM(Expenditures by source_fund) per community.
+    """
+    SPENDABLE_FUNDS = [
+        CommunityFeatureType.ENTERTAINMENT,
+        CommunityFeatureType.PROJECT,
+        CommunityFeatureType.SINKING_FUND,
+        CommunityFeatureType.EVENTS,
+        CommunityFeatureType.SAVINGS,
+    ]
+
+    community = models.ForeignKey(
+        Community,
+        on_delete=models.CASCADE,
+        related_name="expenditures"
+    )
+    season = models.ForeignKey(
+        FinancialSeason,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenditures"
+    )
+    source_fund = models.CharField(
+        max_length=30,
+        choices=CommunityFeatureType.choices,
+        db_index=True,
+        help_text="The fund/category from which money is spent."
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    expenditure_date = models.DateField()
+    description = models.TextField(help_text="Mandatory justification for the expenditure.")
+    signature = models.TextField(blank=True)
+    reference_number = models.CharField(max_length=30, unique=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=ExpenditureStatus.choices,
+        default=ExpenditureStatus.POSTED,
+        db_index=True
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expenditures_created"
+    )
+
+    class Meta:
+        ordering = ["-expenditure_date", "-created"]
+        indexes = [
+            models.Index(fields=["community", "source_fund"]),
+            models.Index(fields=["community", "expenditure_date"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            from django.utils import timezone as tz
+            import uuid
+            ts = tz.now().strftime("%Y%m%d")
+            short = str(uuid.uuid4()).upper()[:6]
+            self.reference_number = f"EXP-{ts}-{short}"
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.amount is not None and self.amount <= 0:
+            raise ValidationError("Expenditure amount must be a positive value.")
+        if not self.description or not self.description.strip():
+            raise ValidationError("Description is required for every expenditure.")
+
+    def __str__(self):
+        return f"{self.reference_number} — {self.source_fund} — XAF {self.amount}"

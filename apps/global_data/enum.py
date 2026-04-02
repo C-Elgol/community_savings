@@ -77,6 +77,7 @@ class LoanStatus(models.TextChoices):
     PARTIAL = "partial", _("Partially Paid")
     PAID = "paid", _("Paid")
     UNPAID = "unpaid", _("Unpaid")
+    OVERDUE = "overdue", _("Overdue")
     DEFAULTED = "defaulted", _("Defaulted")
     CANCELLED = "cancelled", _("Cancelled")
 
@@ -134,4 +135,7 @@ class RepaymentFrequency(models.TextChoices):
     WEEKLY = "weekly", _("Weekly")
     BIWEEKLY = "biweekly", _("Biweekly")
     MONTHLY = "monthly", _("Monthly")
-    
+
+class ExpenditureStatus(models.TextChoices):
+    DRAFT = "draft", _("Draft")
+    POSTED = "posted", _("Posted")
