@@ -49,19 +49,23 @@ class ExpenditureBalanceAPI(View):
 class ExpenditureAPI(View):
     def get(self, request, community_id):
         source_fund = request.GET.get('source_fund', '')
+        season_id = request.GET.get('season_id')
+
         expenditures = Expenditure.objects.filter(community_id=community_id)
         if source_fund:
             expenditures = expenditures.filter(source_fund=source_fund)
+        if season_id:
+            expenditures = expenditures.filter(season_id=season_id)
 
         expenditures = expenditures.select_related('created_by', 'season').order_by('-expenditure_date')
 
         # Build summary stats by fund
         stats = {}
         for fund in SPENDABLE_FUNDS:
-            stats[fund.value] = str(
-                Expenditure.objects.filter(community_id=community_id, source_fund=fund.value, status='posted')
-                .aggregate(t=Sum('amount'))['t'] or Decimal('0')
-            )
+            qs = Expenditure.objects.filter(community_id=community_id, source_fund=fund.value, status='posted')
+            if season_id:
+                qs = qs.filter(season_id=season_id)
+            stats[fund.value] = str(qs.aggregate(t=Sum('amount'))['t'] or Decimal('0'))
 
         data = []
         for e in expenditures:
@@ -134,6 +138,12 @@ class ExpenditureAPI(View):
                 season = None
                 if season_id:
                     season = FinancialSeason.objects.filter(id=season_id, community=community).first()
+                else:
+                    # Fallback to session active season if not provided explicitly in body
+                    active_seasons = request.session.get('active_seasons', {})
+                    session_season_id = active_seasons.get(str(community_id))
+                    if session_season_id:
+                        season = FinancialSeason.objects.filter(id=session_season_id, community=community).first()
 
                 expenditure = Expenditure.objects.create(
                     community=community,
