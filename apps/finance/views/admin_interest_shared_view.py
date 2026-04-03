@@ -29,6 +29,7 @@ class AdminInterestSharingView(AdminSeasonMixin, LoginRequiredMixin, TemplateVie
         
         context.update({
             'community': community,
+            'seasons': FinancialSeason.objects.filter(community=community).order_by('-season_date'),
             'suggested_interest': loan_stats.get('interest_earned', '0.00'),
             'penalties_earned': loan_stats.get('penalties_earned', '0.00'),
         })
