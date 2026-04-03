@@ -886,13 +886,13 @@
 
         /* --- EVENT DELEGATION --- */
         document.addEventListener("click", async (e) => {
-          const editBtn = e.target.closest(".edit-community-btn");
-          const deleteBtn = e.target.closest(".delete-community-btn");
+          const editBtn = e.target.closest(".edit-btn");
+          const deleteBtn = e.target.closest(".delete-btn");
           const setupBtn = e.target.closest(".setup-policy-btn");
           const viewBtn = e.target.closest(".view-policy-btn");
 
           if (editBtn) {
-            const id = editBtn.dataset.compId;
+            const id = editBtn.dataset.editId;
             openDrawer("edit");
             drawerLoader?.showLoader();
             try {
@@ -1048,6 +1048,49 @@
         document.getElementById("policyDrawerOverlay")?.addEventListener("click", closePolicyDrawer);
         document.getElementById("closePolicyModalBtn")?.addEventListener("click", closePolicyModal);
         document.getElementById("closePolicyModalBtn2")?.addEventListener("click", closePolicyModal);
+
+        /* --- SAVE POLICY --- */
+        document.getElementById("savePolicyBtn")?.addEventListener("click", async () => {
+          if (!currentPolicyCommunityId) return;
+          const btn = document.getElementById("savePolicyBtn");
+          const icon = document.getElementById("policySaveIcon");
+          const label = document.getElementById("policySaveLabel");
+          if (btn) btn.disabled = true;
+          if (icon) { icon.classList.remove("fa-save"); icon.classList.add("fa-circle-notch", "fa-spin"); }
+          if (label) label.textContent = "Saving...";
+
+          const form = document.getElementById("policyForm");
+          const fd = new FormData(form);
+          // Checkboxes that are unchecked won't appear in FormData — add manually
+          if (!fd.has("requires_guarantor")) fd.set("requires_guarantor", "false");
+          else fd.set("requires_guarantor", "true");
+          const params = new URLSearchParams(fd);
+
+          try {
+            const res = await fetch(POLICY_UPDATE_URL(currentPolicyCommunityId), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": CSRF,
+              },
+              body: params.toString(),
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (window.toast) toast("success", "Policy saved successfully.");
+              closePolicyDrawer();
+            } else {
+              if (window.toast) toast("danger", data.message || "Failed to save policy.");
+            }
+          } catch {
+            if (window.toast) toast("danger", "Network error saving policy.");
+          } finally {
+            if (btn) btn.disabled = false;
+            if (icon) { icon.classList.add("fa-save"); icon.classList.remove("fa-circle-notch", "fa-spin"); }
+            if (label) label.textContent = "Save Policy";
+          }
+        });
 
         /* --- SEASON LOGIC --- */
         async function loadSeasons(cid) {
