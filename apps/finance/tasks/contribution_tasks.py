@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(name='apps.finance.tasks.send_contribution_recorded_email_task', bind=True, max_retries=3, default_retry_delay=60)
 def send_contribution_recorded_email_task(self, contribution_id):
     """
     Send email to member when their contribution is recorded.

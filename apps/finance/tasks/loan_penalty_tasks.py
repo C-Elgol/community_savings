@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@shared_task(name='apps.finance.tasks.send_penalty_notification_task')
 def send_penalty_notification_task(loan_id, penalty_id):
     """
     Sends an email to the borrower informing them a penalty has been applied.
@@ -58,7 +58,7 @@ def send_penalty_notification_task(loan_id, penalty_id):
         logger.error(f"Error sending penalty notification for loan {loan_id}: {e}")
 
 
-@shared_task
+@shared_task(name='apps.finance.tasks.send_loan_maturity_reminders')
 def send_loan_maturity_reminders():
     """
     Daily task to send reminder emails to borrowers whose loans mature in exactly 3 days.
@@ -112,7 +112,7 @@ def send_loan_maturity_reminders():
             logger.error(f"Error sending maturity reminder for loan {loan.id}: {e}")
 
 
-@shared_task
+@shared_task(name='apps.finance.tasks.apply_monthly_loan_penalties')
 def apply_monthly_loan_penalties():
     """
     Daily task to detect overdue loans and apply monthly penalties.
