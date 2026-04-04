@@ -35,11 +35,16 @@ class CreditProfile(SavingsBaseModel):
     )
     recommended_max_loan_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     probability_of_default = models.DecimalField(max_digits=6, decimal_places=4, default=Decimal("0.0000"))
+    explanation = models.JSONField(default=dict, blank=True)
     last_assessed_at = models.DateTimeField(null=True, blank=True)
     scoring_version = models.CharField(max_length=50, default="v1")
 
     def __str__(self):
         return f"{self.membership.user.full_name} - {self.current_score}"
+
+    @property
+    def probability_of_default_percentage(self):
+        return self.probability_of_default * 100
 
 
 class LoanRiskAssessment(SavingsBaseModel):
@@ -63,6 +68,10 @@ class LoanRiskAssessment(SavingsBaseModel):
 
     def __str__(self):
         return f"Risk Assessment - {self.membership.user.full_name}"
+
+    @property
+    def probability_of_default_percentage(self):
+        return self.probability_of_default * 100
 
 class CreditScoreHistory(SavingsBaseModel):
     membership = models.ForeignKey(Membership, on_delete=models.CASCADE)
