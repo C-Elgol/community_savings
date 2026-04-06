@@ -157,6 +157,8 @@
                         <td class="px-6 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <button 
+                                    data-modal-target="userModal" 
+                                    data-modal-show="userModal"
                                     onclick="openEditModal('{{ user.id }}', '{{ user.first_name }}', '{{ user.last_name }}', '{{ user.email }}', '{{ user.phone_number }}', '{{ user.is_staff|yesno:'on,' }}', '{{ user.is_admin|yesno:'on,' }}', '{{ user.is_superuser|yesno:'on,' }}')"
                                     class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                     title="{% trans 'Edit User' %}"
@@ -304,7 +306,12 @@
         document.getElementById('is_admin').checked = isAdmin === 'on';
         document.getElementById('is_superuser').checked = isSuper === 'on';
         
-        // Open modal manually if needed, but data-modal-target handles it
+        // Ensure modal is shown (Flowbite data attributes should handle this, but manual trigger is safer)
+        const modalElement = document.getElementById('userModal');
+        if (window.FlowbiteInstances) {
+            const modal = window.FlowbiteInstances.getInstance('Modal', 'userModal');
+            if (modal) modal.show();
+        }
     }
 
     async function handleFormSubmit(e) {
