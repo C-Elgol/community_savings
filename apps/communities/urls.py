@@ -32,6 +32,12 @@ from apps.communities.views.member_api_view import (
     AddMemberToFeatureAPI,
     RemoveMemberFromFeatureAPI,
 )
+from apps.communities.views.super_admin_community_view import (
+    SuperAdminCommunityListView,
+    AdminCommunityCreateView,
+    AdminCommunityUpdateView,
+    AdminCommunityDeleteView,
+)
 from apps.communities.views.application_api_view import (
     ApplicationListAPI,
     ApplicationDetailAPI,
@@ -81,4 +87,10 @@ urlpatterns = [
     path("communities/<uuid:community_id>/settings/", AdminSettingsView.as_view(), name="settings"),
     path("api/communities/<uuid:community_id>/features/toggle/", UpdateFeatureStatusAPI.as_view(), name="toggle_feature_api"),
     path("api/communities/<uuid:community_id>/settings/update/", UpdateCommunitySettingsAPI.as_view(), name="update_settings_api"),
+
+    # SuperAdmin Community Management
+    path("superadmin/communities/", SuperAdminCommunityListView.as_view(), name="superadmin_communities"),
+    path("superadmin/communities/create/", AdminCommunityCreateView.as_view(), name="superadmin_community_create"),
+    path("superadmin/communities/<uuid:pk>/update/", AdminCommunityUpdateView.as_view(), name="superadmin_community_update"),
+    path("superadmin/communities/<uuid:pk>/delete/", AdminCommunityDeleteView.as_view(), name="superadmin_community_delete"),
 ]
