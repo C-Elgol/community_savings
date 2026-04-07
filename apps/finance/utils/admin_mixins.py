@@ -40,6 +40,7 @@ class CommunityRoleMixin:
 
 class AdminSeasonMixin(CommunityRoleMixin):
     """Enforces that a season is selected and user has proper roles."""
+    required_feature = None
     
     def dispatch(self, request, *args, **kwargs):
         community_id = kwargs.get('community_id')
@@ -50,6 +51,13 @@ class AdminSeasonMixin(CommunityRoleMixin):
                 msg = "Auditor role: Read-only access." if is_auditor else "Permission denied."
                 return JsonResponse({'success': False, 'message': msg}, status=403)
             raise PermissionDenied("You do not have permission to access this community.")
+
+        # 🔥 Enforce Feature Flag
+        if self.required_feature:
+            if not community.features.filter(feature_type=self.required_feature, is_active=True).exists():
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'message': f"The '{self.required_feature}' feature is disabled for this community."}, status=403)
+                raise PermissionDenied(f"The '{self.required_feature}' feature is disabled for this community.")
 
         active_seasons = request.session.get('active_seasons', {})
         season_id = active_seasons.get(str(community_id))
@@ -62,11 +70,17 @@ class AdminSeasonMixin(CommunityRoleMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         community_id = self.kwargs.get('community_id')
+        community = get_object_or_404(Community, id=community_id)
         
         active_seasons = self.request.session.get('active_seasons', {})
         season_id = active_seasons.get(str(community_id))
         
         if season_id:
             context['active_season'] = get_object_or_404(FinancialSeason, id=season_id)
+        
+        # Determine which features are enabled in this community
+        context['enabled_features'] = list(
+            community.features.filter(is_active=True).values_list('feature_type', flat=True)
+        )
             
         return context
