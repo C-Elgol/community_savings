@@ -576,6 +576,47 @@
     {% include 'publics/admin/communities/includes/_policy_detail_modal.html' %}
 
     <!-- ════════════════════════════════════════════
+         DELETE CONFIRMATION MODAL
+         ════════════════════════════════════════════ -->
+    <div
+      id="deleteModal"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-10 animate-in fade-in zoom-in duration-300 text-center"
+      >
+        <div
+          class="w-20 h-20 rounded-3xl bg-rose-50 flex items-center justify-center mx-auto mb-6 text-rose-500 text-3xl"
+        >
+          <i class="fas fa-trash-alt"></i>
+        </div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2">
+          {% trans "Delete Community?" %}
+        </h3>
+        <p class="text-slate-500 font-medium mb-8">
+          {% trans "You are about to delete" %}
+          <strong id="deleteCommunityName" class="text-slate-800"></strong>.
+          {% trans "This action cannot be undone." %}
+        </p>
+        <div class="flex gap-4">
+          <button
+            id="cancelDeleteBtn"
+            class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black transition-all hover:bg-slate-200"
+          >
+            {% trans "Cancel" %}
+          </button>
+          <button
+            id="confirmDeleteBtn"
+            class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black transition-all hover:bg-rose-700 shadow-xl shadow-rose-900/20 flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-trash-alt text-xs" id="confirmDeleteIcon"></i>
+            <span id="confirmDeleteLabel">{% trans "Delete" %}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
          SEASON SELECTION MODAL
          ════════════════════════════════════════════ -->
     <div
@@ -1043,6 +1084,92 @@
         document.getElementById("cancelDrawerBtn")?.addEventListener("click", closeDrawer);
         document.getElementById("drawerOverlay")?.addEventListener("click", closeDrawer);
         document.getElementById("cancelDeleteBtn")?.addEventListener("click", () => document.getElementById("deleteModal")?.classList.replace("flex", "hidden"));
+        document.getElementById("confirmDeleteBtn")?.addEventListener("click", async () => {
+          if (!currentDeleteId) return;
+          const btn = document.getElementById("confirmDeleteBtn");
+          const label = document.getElementById("confirmDeleteLabel");
+          const icon = document.getElementById("confirmDeleteIcon");
+          
+          if (btn) btn.disabled = true;
+          if (label) label.textContent = "Deleting...";
+          if (icon) icon.classList.replace("fa-trash-alt", "fa-circle-notch"), icon.classList.add("fa-spin");
+
+          try {
+            const res = await fetch(DELETE_URL(currentDeleteId), {
+              method: "POST",
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": CSRF,
+              },
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (window.toast) toast("success", data.message);
+              document.getElementById(`card-${currentDeleteId}`)?.remove();
+              document.getElementById("deleteModal")?.classList.replace("flex", "hidden");
+              // If grid is empty, show empty state (optional but nice)
+              const container = document.getElementById("communitiesGrid");
+              if (container && container.children.length === 0) {
+                 window.location.reload(); 
+              }
+            } else {
+              if (window.toast) toast("danger", data.message || "Failed to delete.");
+            }
+          } catch {
+            if (window.toast) toast("danger", "Network error. Please try again.");
+          } finally {
+            if (btn) btn.disabled = false;
+            if (label) label.textContent = "Delete";
+            if (icon) icon.classList.replace("fa-circle-notch", "fa-trash-alt"), icon.classList.remove("fa-spin");
+            currentDeleteId = null;
+          }
+        });
+
+        /* --- SUBMIT COMMUNITY --- */
+        document.getElementById("drawerSubmitBtn")?.addEventListener("click", async () => {
+          clearErrors();
+          const btn = document.getElementById("drawerSubmitBtn");
+          const label = document.getElementById("drawerSubmitLabel");
+          const icon = document.getElementById("drawerSubmitIcon");
+          const id = document.getElementById("communityId")?.value;
+
+          const isLoading = true;
+          if (btn) btn.disabled = true;
+          if (label) label.textContent = editMode ? "Saving..." : "Launching...";
+          if (icon) icon.classList.replace("fa-check-circle", "fa-circle-notch"), icon.classList.add("fa-spin");
+
+          const form = document.getElementById("communityForm");
+          const formData = new FormData(form);
+          const url = editMode && id ? UPDATE_URL(id) : CREATE_URL;
+
+          try {
+            const res = await fetch(url, {
+              method: "POST",
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": CSRF,
+              },
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.success) {
+              if (window.toast) toast("success", data.message);
+              closeDrawer();
+              // Reload to show changes (simpler than manual DOM update for complex cards)
+              window.location.reload();
+            } else {
+              if (data.errors) displayErrors(data.errors);
+              if (window.toast) toast("danger", data.message || "Please fix errors.");
+            }
+          } catch {
+            if (window.toast) toast("danger", "Network error. Please try again.");
+          } finally {
+            if (btn) btn.disabled = false;
+            if (label) label.textContent = editMode ? "Save Changes" : "Launch Community";
+            if (icon) icon.classList.replace("fa-circle-notch", "fa-check-circle"), icon.classList.remove("fa-spin");
+          }
+        });
+
         document.getElementById("closePolicyDrawerBtn")?.addEventListener("click", closePolicyDrawer);
         document.getElementById("cancelPolicyBtn")?.addEventListener("click", closePolicyDrawer);
         document.getElementById("policyDrawerOverlay")?.addEventListener("click", closePolicyDrawer);
