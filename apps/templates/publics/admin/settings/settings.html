@@ -27,6 +27,10 @@
                 <i class="fas fa-balance-scale w-5"></i>
                 <span>{% trans "Financial Policy" %}</span>
             </button>
+            <button onclick="switchTab('roles')" id="tab_roles" class="settings-tab w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all text-slate-500 hover:bg-white/50">
+                <i class="fas fa-user-shield w-5"></i>
+                <span>{% trans "CommunitySpaceRole" %}</span>
+            </button>
         </div>
 
         <!-- Main Content Area -->
@@ -149,6 +153,69 @@
                 </div>
             </div>
 
+            <!-- CommunitySpaceRole Section -->
+            <div id="section_roles" class="settings-section hidden space-y-6">
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
+                    <h3 class="text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-users-cog text-emerald-500"></i>
+                        {% trans "Member Roles" %}
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-8 font-bold uppercase tracking-widest">{% trans "Manage roles and permissions for community space members" %}</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b border-slate-50">
+                                    <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{% trans "Member" %}</th>
+                                    <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{% trans "Current Role" %}</th>
+                                    <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for member in display_members %}
+                                <tr class="group">
+                                    <td class="py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+                                                {{ member.full_name|slice:":1" }}
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-slate-800">{{ member.full_name }}</p>
+                                                <p class="text-[10px] text-slate-400">{{ member.email }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4">
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider 
+                                            {% if member.role == 'owner' or member.role == 'president' %}bg-purple-50 text-purple-600
+                                            {% elif member.role == 'auditor' %}bg-blue-50 text-blue-600
+                                            {% else %}bg-slate-50 text-slate-500{% endif %}">
+                                            {{ member.role|capfirst }}
+                                        </span>
+                                        {% if member.is_owner %}
+                                        <span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded-md uppercase">{% trans "Primary Owner" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 text-right">
+                                        {% if not member.is_owner %}
+                                        <select onchange="updateMemberRole('{{ member.user_id }}', this.value)" class="px-4 py-2 bg-slate-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
+                                            <option value="none" {% if member.role == 'None' %}selected{% endif %}>None</option>
+                                            {% for role_value, role_label in community_space_roles %}
+                                            <option value="{{ role_value }}" {% if member.role == role_value %}selected{% endif %}>{{ role_label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% else %}
+                                        <span class="text-[10px] text-slate-400 font-bold italic">{% trans "Not Modifiable" %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -250,6 +317,32 @@
             toast('error', 'Policy update failed');
         }
     };
+
+    async function updateMemberRole(userId, newRole) {
+        try {
+            const res = await fetch(`/communities/api/communities/${COMMUNITY_ID}/settings/roles/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    role: newRole
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                // Reload or update UI
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Failed to update user role');
+        }
+    }
 
     function toast(type, msg) {
         window.toastManager?.buildToast().setMessage(msg).setType(type).show();

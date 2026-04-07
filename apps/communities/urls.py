@@ -10,6 +10,7 @@ from apps.communities.views.settings_view import (
     AdminSettingsView,
     UpdateFeatureStatusAPI,
     UpdateCommunitySettingsAPI,
+    UpdateMemberRoleAPI,
 )
 from apps.communities.views.policy_view import (
     CommunityPolicyDetailView,
@@ -87,6 +88,7 @@ urlpatterns = [
     path("communities/<uuid:community_id>/settings/", AdminSettingsView.as_view(), name="settings"),
     path("api/communities/<uuid:community_id>/features/toggle/", UpdateFeatureStatusAPI.as_view(), name="toggle_feature_api"),
     path("api/communities/<uuid:community_id>/settings/update/", UpdateCommunitySettingsAPI.as_view(), name="update_settings_api"),
+    path("api/communities/<uuid:community_id>/settings/roles/update/", UpdateMemberRoleAPI.as_view(), name="update_member_role_api"),
 
     # SuperAdmin Community Management
     path("superadmin/communities/", SuperAdminCommunityListView.as_view(), name="superadmin_communities"),

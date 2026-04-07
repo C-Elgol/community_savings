@@ -12,9 +12,14 @@ class CommunityType(models.TextChoices):
 
 class CommunitySpaceRole(models.TextChoices):
     OWNER = "owner", _("Owner")
-    ADMIN = "admin", _("Admin")
+    PRESIDENT = "president", _("President")
     MANAGER = "manager", _("Manager")
     VIEWER = "viewer", _("Viewer")
+    CHAIRPERSON = "chairperson", _("Chairperson")
+    SECRETARY = "secretary", _("Secretary")
+    TREASURER = "treasurer", _("Treasurer")
+    AUDITOR = "auditor", _("Auditor")
+    LOAN_OFFICER = "loan_officer", _("Loan Officer")
 
 
 class CommunitySpaceStatus(models.TextChoices):
@@ -24,12 +29,6 @@ class CommunitySpaceStatus(models.TextChoices):
 
 class MembershipRole(models.TextChoices):
     MEMBER = "member", _("Member")
-    ADMIN = "admin", _("Admin")
-    CHAIRPERSON = "chairperson", _("Chairperson")
-    SECRETARY = "secretary", _("Secretary")
-    TREASURER = "treasurer", _("Treasurer")
-    AUDITOR = "auditor", _("Auditor")
-    LOAN_OFFICER = "loan_officer", _("Loan Officer")
 
 
 class MembershipStatus(models.TextChoices):
