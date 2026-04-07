@@ -86,4 +86,4 @@ class CreditScoreHistory(SavingsBaseModel):
     scoring_version = models.CharField(max_length=50, default="v1")
 
     def __str__(self):
-        return f"Credit Score History - {self.membership.user.full_name}"
+        return f"Credit Score History - {self.membership.user.fullname}"
