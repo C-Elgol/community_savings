@@ -3,7 +3,7 @@ from django.views import View
 from django.shortcuts import get_object_or_404
 from apps.finance.models import FinancialSeason, ContributionCycle, Contribution
 from apps.communities.models import Community, Membership
-from apps.global_data.enum import ContributionStatus
+from apps.global_data.enum import ContributionStatus, CommunityFeatureType
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum
@@ -490,10 +490,18 @@ class MembershipCycleContributionsAPI(View):
                 if membership.has_feature(ft):
                     enrolled_features.append(ft)
                     
+            # Get comment and signature from any existing contribution for this cycle
+            first_contrib = contributions.first()
+            comment = first_contrib.comment if first_contrib else ""
+            signature = first_contrib.signature if first_contrib else ""
+
             return JsonResponse({
                 'success': True, 
                 'contributions': data,
-                'enrolled_features': enrolled_features
+                'enrolled_features': enrolled_features,
+                'comment': comment,
+                'signature': signature,
+                'is_edit': contributions.exists()
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)

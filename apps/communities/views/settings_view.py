@@ -4,12 +4,12 @@ from django.views.generic import TemplateView, View
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
-from apps.communities.models import Community, CommunityFeature, CommunityPolicy
-from apps.global_data.enum import CommunityFeatureType
+from apps.communities.models import Community, CommunityFeature, CommunityPolicy, CommunitySpaceMembership, Membership
+from apps.global_data.enum import CommunityFeatureType, CommunitySpaceRole
 
 logger = logging.getLogger(__name__)
 
-from apps.finance.utils.admin_mixins import AdminSeasonMixin
+from apps.finance.utils.admin_mixins import AdminSeasonMixin, CommunityRoleMixin
 
 class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/settings/settings.html'
@@ -45,10 +45,48 @@ class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
                 'is_active': feature_map.get(sf['type'].value, False)
             })
 
+        # Get all members of this community
+        community_memberships = Membership.objects.filter(
+            community=community
+        ).select_related('user')
+        
+        # Get space roles for these users
+        space_membership_map = {
+            m.user_id: m.role 
+            for m in CommunitySpaceMembership.objects.filter(community_space=community.community_space)
+        }
+        
+        # Include Owner if not in community memberships
+        owner = community.community_space.owner
+        display_members = []
+        seen_user_ids = set()
+        
+        for m in community_memberships:
+            user = m.user
+            display_members.append({
+                'user_id': str(user.id),
+                'full_name': user.get_full_name,
+                'email': user.email,
+                'role': space_membership_map.get(user.id, 'None'), # Default to 'None' if no space role
+                'is_owner': owner == user
+            })
+            seen_user_ids.add(user.id)
+            
+        if owner and owner.id not in seen_user_ids:
+            display_members.append({
+                'user_id': str(owner.id),
+                'full_name': owner.get_full_name,
+                'email': owner.email,
+                'role': 'owner',
+                'is_owner': True
+            })
+
         context.update({
             'community': community,
             'policy': policy,
             'feature_states': feature_states,
+            'display_members': display_members,
+            'community_space_roles': CommunitySpaceRole.choices,
         })
         return context
 
@@ -93,6 +131,52 @@ class UpdateCommunitySettingsAPI(LoginRequiredMixin, View):
             return JsonResponse({
                 'success': True,
                 'message': "Community settings updated successfully."
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+class UpdateMemberRoleAPI(CommunityRoleMixin, LoginRequiredMixin, View):
+    def post(self, request, community_id):
+        # Secure the API: only Owner or President can change roles
+        community, space, is_owner, is_president, is_auditor = self.get_community_and_roles(request, community_id)
+        
+        if not (is_owner or is_president or request.user.is_superuser):
+            return JsonResponse({'success': False, 'message': "Only owners or presidents can manage roles."}, status=403)
+
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            new_role = data.get('role')
+            
+            if not user_id or not new_role:
+                return JsonResponse({'success': False, 'message': "User ID and role are required."}, status=400)
+            
+            if new_role == 'none':
+                # Delete the space membership if it exists
+                CommunitySpaceMembership.objects.filter(
+                    community_space=space,
+                    user_id=user_id
+                ).delete()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': "Space role removed successfully."
+                })
+
+            # Use get_or_create to handle new space memberships
+            membership, created = CommunitySpaceMembership.objects.get_or_create(
+                community_space=space,
+                user_id=user_id,
+                defaults={'role': new_role}
+            )
+            
+            if not created:
+                membership.role = new_role
+                membership.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f"Role for {membership.user.get_full_name} updated to {membership.get_role_display()}."
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)

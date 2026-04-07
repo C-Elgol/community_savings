@@ -13,6 +13,7 @@ class AdminContributionAndCycleView(AdminSeasonMixin, DetailView):
     template_name = 'publics/admin/contributions/contributions.html'
     pk_url_kwarg = 'community_id'
     context_object_name = 'community'
+    required_feature = CommunityFeatureType.NJANGI
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
