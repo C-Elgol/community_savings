@@ -4,7 +4,7 @@ from .models import (
     Contribution, MemberFinanceSnapshot, NjangiBenefit,
     LoanProduct, LoanApplication, LoanGuarantor, Loan,
     LoanRepaymentSchedule, LoanPayment, Fine, FinePayment,
-    InterestDistribution, InterestPayout
+    InterestDistribution, InterestPayout, Expenditure
 )
 
 
@@ -121,3 +121,12 @@ class InterestPayoutAdmin(admin.ModelAdmin):
     list_display = ('membership', 'interest_amount', 'is_paid', 'paid_at', 'distribution')
     list_filter = ('is_paid', 'distribution__season')
     search_fields = ('membership__user__email', 'membership__user__first_name', 'membership__user__last_name')
+
+@admin.register(Expenditure)
+class ExpenditureAdmin(admin.ModelAdmin):
+    list_display = ('reference_number', 'community', 'source_fund', 'amount', 'expenditure_date', 'status')
+    list_filter = ('status', 'source_fund', 'community', 'expenditure_date', 'season')
+    search_fields = ('reference_number', 'description', 'community__name')
+    raw_id_fields = ('community', 'season', 'created_by')
+    date_hierarchy = 'expenditure_date'
+    readonly_fields = ('reference_number', 'created')

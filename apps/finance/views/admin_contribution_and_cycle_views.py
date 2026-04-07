@@ -4,9 +4,11 @@ from apps.finance.models import FinancialSeason
 from apps.communities.models import Community, Membership
 from apps.global_data.enum import CommunityFeatureType
 
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
+
 logger = logging.getLogger(__name__)
 
-class AdminContributionAndCycleView(DetailView):
+class AdminContributionAndCycleView(AdminSeasonMixin, DetailView):
     model = Community
     template_name = 'publics/admin/contributions/contributions.html'
     pk_url_kwarg = 'community_id'

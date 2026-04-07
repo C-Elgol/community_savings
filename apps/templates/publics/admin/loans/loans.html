@@ -9,7 +9,7 @@
   </div>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{% trans "Outstanding Balance" %}</p>
           <h3 id="statOutstanding" class="text-2xl font-black text-slate-800">XAF 0</h3>
@@ -21,6 +21,11 @@
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">{% trans "Total Interest" %}</p>
           <h3 id="statInterest" class="text-2xl font-black text-emerald-800">XAF 0</h3>
+      </div>
+      <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-emerald-100 bg-emerald-50/10">
+          <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-1">{% trans "Season Interest" %}</p>
+          <h3 id="statSeasonInterest" class="text-2xl font-black text-emerald-900">XAF 0</h3>
+          <p class="text-[8px] text-emerald-400 font-bold uppercase mt-1">{{ active_season.title|default:"Selected Season" }}</p>
       </div>
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">{% trans "Active Loans" %}</p>
@@ -103,8 +108,9 @@
     "use strict";
 
     const COMMUNITY_ID = "{{ community.id }}";
+    const ACTIVE_SEASON_ID = "{{ active_season.id }}";
     const API_URLS = {
-        loans: (status) => `/finance/api/community/${COMMUNITY_ID}/loans/${status ? '?status=' + status : ''}`
+        loans: (status) => `/finance/api/community/${COMMUNITY_ID}/loans/?${status ? 'status=' + status + '&' : ''}${ACTIVE_SEASON_ID ? 'season_id=' + ACTIVE_SEASON_ID : ''}`
     };
 
     const state = {
@@ -118,6 +124,7 @@
         statOutstanding: document.getElementById("statOutstanding"),
         statRepaid: document.getElementById("statRepaid"),
         statInterest: document.getElementById("statInterest"),
+        statSeasonInterest: document.getElementById("statSeasonInterest"),
         statActiveCount: document.getElementById("statActiveCount"),
         payModal: document.getElementById("payLoanModal"),
         formPayment: document.getElementById("formPayment")
@@ -135,7 +142,7 @@
             if (data.success) {
                 state.loans = data.loans;
                 renderLoans();
-                if (status === "" || status === "all") updateStats();
+                if (data.stats) updateStats(data.stats);
             }
         } catch (err) {
             toast('error', 'Failed to load loans');
@@ -238,25 +245,32 @@
 
     document.querySelectorAll(".close-modal-pay").forEach(b => b.onclick = () => el.payModal.classList.add("hidden"));
 
-    function updateStats() {
-        let outstanding = 0;
-        let repaid = 0;
-        let totalInterest = 0;
-        let activeCount = 0;
- 
-        state.loans.forEach(l => {
-            repaid += parseFloat(l.amount_paid);
-            totalInterest += parseFloat(l.interest || 0) + parseFloat(l.total_penalties || 0);
-            if (l.status !== 'paid') {
-                outstanding += parseFloat(l.amount_left);
-                activeCount++;
-            }
-        });
- 
-        el.statOutstanding.textContent = `XAF ${outstanding.toLocaleString()}`;
-        el.statRepaid.textContent = `XAF ${repaid.toLocaleString()}`;
-        el.statInterest.textContent = `XAF ${totalInterest.toLocaleString()}`;
-        el.statActiveCount.textContent = activeCount;
+    function updateStats(stats) {
+        const allTime = stats.all_time;
+        const season = stats.season;
+
+        // Display all-time stats for context or season specific if preferred
+        // Requirements say add Season Interest card specifically.
+        
+        el.statOutstanding.textContent = `XAF ${parseFloat(allTime.outstanding).toLocaleString()}`;
+        el.statRepaid.textContent = `XAF ${parseFloat(allTime.total_repaid).toLocaleString()}`;
+        
+        const totalInt = parseFloat(allTime.interest_earned) + parseFloat(allTime.penalties_earned);
+        el.statInterest.textContent = `XAF ${totalInt.toLocaleString()}`;
+
+        if (season && season.interest_earned !== undefined) {
+             const seasonInt = parseFloat(season.interest_earned) + parseFloat(season.penalties_earned);
+             el.statSeasonInterest.textContent = `XAF ${seasonInt.toLocaleString()}`;
+             
+             // Optionally update other cards to reflect season only if you want total scoping
+             // But the names "Total Repaid" suggest all-time.
+             // If we want total scoping, we'd use 'season' stats for everything.
+             // Given previous tasks, scoping the whole page to the season is usually the goal.
+             el.statActiveCount.textContent = season.active_count;
+        } else {
+             el.statSeasonInterest.textContent = '---';
+             el.statActiveCount.textContent = allTime.active_count;
+        }
     }
 
     window.switchLoanStatus = function(status) {

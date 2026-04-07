@@ -11,5 +11,10 @@ class DashboardAPI(View):
 
     def get(self, request, community_id):
         get_object_or_404(Community, id=community_id)
-        service = DashboardService(community_id)
+        
+        # Get active season from session
+        active_seasons = request.session.get('active_seasons', {})
+        season_id = active_seasons.get(str(community_id))
+        
+        service = DashboardService(community_id, season_id=season_id)
         return JsonResponse({'success': True, **service.full_summary()})

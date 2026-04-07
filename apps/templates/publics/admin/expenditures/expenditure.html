@@ -257,6 +257,7 @@
 
     const COMMUNITY_ID = "{{ community.id }}";
     const CSRF = "{{ csrf_token }}";
+    const ACTIVE_SEASON_ID = "{{ active_season.id }}";
     const ENDPOINTS = {
         expenditures: `/finance/api/community/${COMMUNITY_ID}/expenditures/`,
         balances:     `/finance/api/community/${COMMUNITY_ID}/expenditure-balances/`,
@@ -301,6 +302,7 @@
     async function fetchAll() {
         const url = new URL(ENDPOINTS.expenditures, window.location.origin);
         if (state.fund) url.searchParams.set('source_fund', state.fund);
+        if (ACTIVE_SEASON_ID) url.searchParams.set('season_id', ACTIVE_SEASON_ID);
         try {
             const res  = await fetch(url);
             const data = await res.json();
@@ -448,7 +450,7 @@
             const res  = await fetch(ENDPOINTS.expenditures, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-                body: JSON.stringify({ source_fund: fund, amount, expenditure_date: date, description, signature })
+                body: JSON.stringify({ source_fund: fund, amount, expenditure_date: date, description, signature, season_id: ACTIVE_SEASON_ID })
             });
             const data = await res.json();
             if (data.success) {

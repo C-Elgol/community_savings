@@ -129,12 +129,11 @@
     </a>
     <!-- Credit Risk Analytics -->
     <a
-      href="#"
+      href="{% url 'analytics:admin_credit_risk' community.id %}"
       data-page="risk"
-      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
+      class="nav-link flex {% if request.resolver_match.url_name == 'admin_credit_risk' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
     >
-      <i class="fas fa-chart-pie w-5 text-slate-400"></i
-      ><span>Credit Risk Analytics</span>
+      <i class="fas fa-chart-pie w-5 {% if request.resolver_match.url_name == 'admin_credit_risk' %}text-emerald-700{% else %}text-slate-400{% endif %}"></i><span>Credit Risk Analytics</span>
     </a>
     <!-- System Logs -->
     <a
@@ -155,6 +154,34 @@
   </nav>
 
   <!-- admin profile footer -->
+  {% comment %} <div class="px-6 py-6 border-b border-white/5">
+    <div class="flex items-center space-x-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+        <i class="fas fa-landmark text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-white font-black tracking-tight leading-none">{{ community.name }}</h1>
+        <p class="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">Admin Panel</p>
+      </div>
+    </div>
+
+    <!-- Active Season Display -->
+    <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Active Season</span>
+        <a href="{% url 'users:community_space_welcome' community.community_space_id %}" class="text-[10px] font-black text-emerald-400 hover:text-emerald-300 transition uppercase tracking-widest">
+            Change
+        </a>
+      </div>
+      <p class="text-sm font-black text-white truncate">
+        {% if active_season %}
+            {{ active_season.title|default:active_season.season_date }}
+        {% else %}
+            None Selected
+        {% endif %}
+      </p>
+    </div>
+  </div> {% endcomment %}
   <div class="p-5 border-t border-slate-100">
     <div class="flex items-center gap-3">
       <div

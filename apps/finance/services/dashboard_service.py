@@ -24,45 +24,53 @@ ZERO = Decimal("0.00")
 class DashboardService:
     """Centralized, reusable financial summary engine for a single community."""
 
-    def __init__(self, community_id):
+    def __init__(self, community_id, season_id=None):
         self.cid = community_id
+        self.sid = season_id
 
     # ── helpers ──────────────────────────────────────────────
     def _sum(self, qs, field='amount'):
         return qs.aggregate(t=Sum(field))['t'] or ZERO
 
+    def _filter_by_season(self, qs, season_attr='season_id'):
+        if self.sid:
+            return qs.filter(**{season_attr: self.sid})
+        return qs
+
     # ── INFLOWS ──────────────────────────────────────────────
     def total_contributions(self):
-        return self._sum(
-            Contribution.objects.filter(
-                cycle__community_id=self.cid,
-                status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL],
-            ),
-            'amount_paid',
+        qs = Contribution.objects.filter(
+            cycle__community_id=self.cid,
+            status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL],
         )
+        qs = self._filter_by_season(qs, 'cycle__season_id')
+        return self._sum(qs, 'amount_paid')
 
     def total_contributions_by_fund(self, fund):
         """Contributions for a specific feature_type."""
-        return self._sum(
-            Contribution.objects.filter(
-                cycle__community_id=self.cid,
-                feature_type=fund,
-                status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL],
-            ),
-            'amount_paid',
+        qs = Contribution.objects.filter(
+            cycle__community_id=self.cid,
+            feature_type=fund,
+            status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL],
         )
+        qs = self._filter_by_season(qs, 'cycle__season_id')
+        return self._sum(qs, 'amount_paid')
 
     def total_loan_repayments(self):
-        return self._sum(
-            LoanPayment.objects.filter(loan__membership__community_id=self.cid)
-        )
+        qs = LoanPayment.objects.filter(loan__membership__community_id=self.cid)
+        qs = self._filter_by_season(qs, 'season_id')
+        return self._sum(qs)
 
     def total_fine_payments(self):
-        return self._sum(
-            FinePayment.objects.filter(fine__membership__community_id=self.cid)
-        )
+        qs = FinePayment.objects.filter(fine__membership__community_id=self.cid)
+        qs = self._filter_by_season(qs, 'fine__season_id')
+        return self._sum(qs)
 
     def total_registration_fees(self):
+        # Registration fees are usually once per community membership, not necessarily per season.
+        # However, if we want to filter everything by season, we might want to check if they were paid in this season.
+        # But RegistrationPayment doesn't have a season_id. 
+        # For now, let's keep it as total for the community unless we want to strictly filter by time.
         return self._sum(
             RegistrationPayment.objects.filter(
                 application__community_id=self.cid,
@@ -80,20 +88,19 @@ class DashboardService:
 
     # ── OUTFLOWS ─────────────────────────────────────────────
     def total_loans_disbursed(self):
-        return self._sum(
-            Loan.objects.filter(
-                membership__community_id=self.cid,
-            ).exclude(status=LoanStatus.CANCELLED),
-            'amount_borrowed',
-        )
+        qs = Loan.objects.filter(
+            membership__community_id=self.cid,
+        ).exclude(status=LoanStatus.CANCELLED)
+        qs = self._filter_by_season(qs, 'season_id')
+        return self._sum(qs, 'amount_borrowed')
 
     def total_expenditures(self):
-        return self._sum(
-            Expenditure.objects.filter(
-                community_id=self.cid,
-                status='posted',
-            )
+        qs = Expenditure.objects.filter(
+            community_id=self.cid,
+            status='posted',
         )
+        qs = self._filter_by_season(qs, 'season_id')
+        return self._sum(qs)
 
     def total_outflows(self):
         return self.total_loans_disbursed() + self.total_expenditures()
@@ -107,25 +114,31 @@ class DashboardService:
         active_loans = Loan.objects.filter(
             membership__community_id=self.cid,
         ).exclude(status__in=[LoanStatus.CANCELLED, LoanStatus.PAID])
+        active_loans = self._filter_by_season(active_loans, 'season_id')
 
-        interest_earned = self._sum(
-            Loan.objects.filter(membership__community_id=self.cid)
-                .exclude(status=LoanStatus.CANCELLED),
-            'interest_to_be_paid',
-        )
+        all_loans = Loan.objects.filter(membership__community_id=self.cid).exclude(status=LoanStatus.CANCELLED)
+        all_loans = self._filter_by_season(all_loans, 'season_id')
 
-        penalties_earned = self._sum(
-            LoanPenalty.objects.filter(loan__membership__community_id=self.cid)
-        )
+        interest_earned = self._sum(all_loans, 'interest_to_be_paid')
+
+        penalties_qs = LoanPenalty.objects.filter(loan__membership__community_id=self.cid)
+        # LoanPenalty doesn't have a season_id, but it's linked to a loan which does.
+        if self.sid:
+            penalties_qs = penalties_qs.filter(loan__season_id=self.sid)
+        penalties_earned = self._sum(penalties_qs)
 
         outstanding = active_loans.aggregate(
             total=Sum('amount_borrowed')
         )['total'] or ZERO
 
+        repayments_qs = LoanPayment.objects.filter(loan__membership__community_id=self.cid)
+        repayments_qs = self._filter_by_season(repayments_qs, 'season_id')
+        total_repaid = self._sum(repayments_qs)
+
         return {
             'total_disbursed': str(self.total_loans_disbursed()),
             'outstanding': str(outstanding),
-            'total_repaid': str(self.total_loan_repayments()),
+            'total_repaid': str(total_repaid),
             'interest_earned': str(interest_earned),
             'penalties_earned': str(penalties_earned),
             'active_count': active_loans.count(),
@@ -136,13 +149,13 @@ class DashboardService:
         balances = {}
         for fund in SPENDABLE_FUNDS:
             inflow = self.total_contributions_by_fund(fund.value)
-            outflow = self._sum(
-                Expenditure.objects.filter(
-                    community_id=self.cid,
-                    source_fund=fund.value,
-                    status='posted',
-                )
+            outflow_qs = Expenditure.objects.filter(
+                community_id=self.cid,
+                source_fund=fund.value,
+                status='posted',
             )
+            outflow_qs = self._filter_by_season(outflow_qs, 'season_id')
+            outflow = self._sum(outflow_qs)
             balances[fund.value] = str(inflow - outflow)
         return balances
 
@@ -158,7 +171,9 @@ class DashboardService:
         qs = Contribution.objects.filter(
             cycle__community_id=self.cid,
             status__in=[ContributionStatus.PAID, ContributionStatus.PARTIAL],
-        ).select_related('membership__user', 'cycle').order_by('-paid_at')[:limit]
+        )
+        qs = self._filter_by_season(qs, 'cycle__season_id')
+        qs = qs.select_related('membership__user', 'cycle').order_by('-paid_at')[:limit]
 
         return [{
             'member': c.membership.user.fullname or c.membership.user.email,
@@ -170,7 +185,9 @@ class DashboardService:
     def recent_repayments(self, limit=5):
         qs = LoanPayment.objects.filter(
             loan__membership__community_id=self.cid,
-        ).select_related('loan__membership__user').order_by('-payment_date')[:limit]
+        )
+        qs = self._filter_by_season(qs, 'season_id')
+        qs = qs.select_related('loan__membership__user').order_by('-payment_date')[:limit]
 
         return [{
             'member': p.loan.membership.user.fullname or p.loan.membership.user.email,
@@ -182,7 +199,9 @@ class DashboardService:
         qs = Expenditure.objects.filter(
             community_id=self.cid,
             status='posted',
-        ).order_by('-expenditure_date')[:limit]
+        )
+        qs = self._filter_by_season(qs, 'season_id')
+        qs = qs.order_by('-expenditure_date')[:limit]
 
         return [{
             'reference': e.reference_number,

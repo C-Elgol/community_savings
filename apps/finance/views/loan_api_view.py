@@ -120,13 +120,19 @@ class LoanApplicationAPI(View):
 
 class LoanAPI(View):
     def get(self, request, community_id):
+        from apps.finance.services.dashboard_service import DashboardService
+        
         status = request.GET.get('status')
+        season_id = request.GET.get('season_id')
         mine = request.GET.get('mine') == 'true'
         filters = {'membership__community_id': community_id}
+        
         if mine:
             filters['membership__user'] = request.user
         
-        from django.db.models import Q
+        if season_id:
+            filters['season_id'] = season_id
+        
         if status == 'active':
             loans = Loan.objects.filter(**filters).exclude(status=LoanStatus.PAID)
         elif status:
@@ -154,8 +160,24 @@ class LoanAPI(View):
                 'status': l.status,
                 'product_name': l.application.loan_product.name if l.application else '---'
             })
+        
+        # Calculate stats using DashboardService
+        # All time stats (for the community)
+        all_time_service = DashboardService(community_id, season_id=None)
+        all_time_stats = all_time_service.loan_stats()
+        
+        # Season specific stats
+        season_stats = {}
+        if season_id:
+            season_service = DashboardService(community_id, season_id=season_id)
+            season_stats = season_service.loan_stats()
             
-        return JsonResponse({'success': True, 'loans': data})
+        stats = {
+            'all_time': all_time_stats,
+            'season': season_stats
+        }
+            
+        return JsonResponse({'success': True, 'loans': data, 'stats': stats})
 
 class LoanPaymentAPI(View):
     def post(self, request, loan_id):

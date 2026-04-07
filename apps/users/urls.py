@@ -11,6 +11,13 @@ from apps.users.views.resend_verification_view import ResendVerificationView
 from apps.users.views.admin_member_view import AdminMemberView
 from apps.users.views.welcome_view import WelcomeView
 from apps.users.views.community_space_welcome_view import CommunitySpaceWelcomeView
+from apps.users.views.super_admin_user_management_view import (
+    SuperAdminUserManagementView,
+    AdminUserCreateView,
+    AdminUserUpdateView,
+    AdminUserToggleStatusView,
+    AdminUserDeleteView
+)
 from apps.users.views.super_admin_dashboard_view import SuperAdminDashboardView
 from apps.users.views.membership_application_view import MembershipApplicationView
 
@@ -34,6 +41,13 @@ urlpatterns = [
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
     path('admin-members/<uuid:community_id>/', AdminMemberView.as_view(), name='admin_members'),
     path('superadmin-dashboard/', SuperAdminDashboardView.as_view(), name='superadmin_dashboard'),
+
+    # User Management CRUD
+    path('superadmin/user-management/', SuperAdminUserManagementView.as_view(), name='user_management'),
+    path('superadmin/user-management/create/', AdminUserCreateView.as_view(), name='user_create'),
+    path('superadmin/user-management/<uuid:pk>/update/', AdminUserUpdateView.as_view(), name='user_update'),
+    path('superadmin/user-management/<uuid:pk>/toggle-status/', AdminUserToggleStatusView.as_view(), name='user_toggle_status'),
+    path('superadmin/user-management/<uuid:pk>/delete/', AdminUserDeleteView.as_view(), name='user_delete'),
 
     path('membership-application/<uuid:community_id>/', MembershipApplicationView.as_view(), name='membership_application'),
 ]

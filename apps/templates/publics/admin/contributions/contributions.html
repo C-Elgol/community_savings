@@ -866,6 +866,8 @@
 
     // Context & URLs
     const COMMUNITY_ID = "{{ community.id }}";
+    const ACTIVE_SEASON_ID = "{{ active_season.id|default:'' }}";
+    const ACTIVE_SEASON_LABEL = "{{ active_season.title|default:active_season.season_date|default:'' }}";
     const API_URLS = {
       seasons: (featureType) =>
         `{% url 'finance:season_api' '00000000-0000-0000-0000-000000000000' %}`.replace(
@@ -953,6 +955,16 @@
     function init() {
       if (!COMMUNITY_ID || COMMUNITY_ID === "None") {
         toast("warning", "No active community found.");
+        return;
+      }
+
+      // Prefer the session-active season injected from Django
+      if (ACTIVE_SEASON_ID) {
+        state.currentSeason = { id: ACTIVE_SEASON_ID, title: ACTIVE_SEASON_LABEL };
+        // Keep localStorage in sync so other JS helpers that read it also reflect it
+        localStorage.setItem(`admin_season_${COMMUNITY_ID}`, JSON.stringify(state.currentSeason));
+        showManagement();
+        initCycles();
         return;
       }
 

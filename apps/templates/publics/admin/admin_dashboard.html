@@ -4,8 +4,18 @@
 
 {% block content %}
 {% block page_header %}
-<h2 class="text-xl font-semibold text-slate-800">Dashboard</h2>
-<p class="text-xs text-slate-500">Community overview &amp; key metrics</p>
+<div class="flex items-center justify-between">
+    <div>
+        <h2 class="text-xl font-semibold text-slate-800">Dashboard</h2>
+        <p class="text-xs text-slate-500">Community overview &amp; key metrics</p>
+    </div>
+    {% if active_season %}
+    <div class="px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
+        <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block">Season</span>
+        <span class="text-sm font-black text-emerald-900">{{ active_season.title|default:active_season.season_date }}</span>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
 
 <!-- ========== DASHBOARD PAGE ========== -->

@@ -15,7 +15,9 @@ CONTRIBUTION_FEATURE_TYPES = [
 ]
 
 
-class AdminContributionsView(DetailView):
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
+
+class AdminContributionsView(AdminSeasonMixin, DetailView):
     model = Community
     template_name = 'publics/admin/contributions/other_contributions.html'
     pk_url_kwarg = 'community_id'

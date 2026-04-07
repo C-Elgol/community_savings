@@ -661,6 +661,8 @@
 
     const COMMUNITY_ID = "{{ community.id }}";
     const ENABLED_FEATURES = {{ enabled_features|safe }};
+    const ACTIVE_SEASON_ID = "{{ active_season.id|default:'' }}";
+    const ACTIVE_SEASON_LABEL = "{{ active_season.title|default:active_season.season_date|default:'' }}";
 
     const FEATURE_LABELS = {
       savings: "Savings",
@@ -746,6 +748,16 @@
 
       updateFeatureLabel();
 
+      // Prefer the session-active season injected from Django
+      if (ACTIVE_SEASON_ID) {
+        state.currentSeason = { id: ACTIVE_SEASON_ID, title: ACTIVE_SEASON_LABEL };
+        // Keep localStorage in sync
+        localStorage.setItem(`contrib_season_global_${COMMUNITY_ID}`, JSON.stringify(state.currentSeason));
+        showManagement();
+        initCycles();
+        return;
+      }
+
       const savedSeason = localStorage.getItem(
         `contrib_season_global_${COMMUNITY_ID}`
       );
@@ -795,17 +807,23 @@
       el.managementState.classList.add("hidden");
       el.selectionState.classList.add("hidden");
 
-      // Try loading saved season for this feature type
-      const savedSeason = localStorage.getItem(
-        `contrib_season_global_${COMMUNITY_ID}`
-      );
-      if (savedSeason) {
-        state.currentSeason = JSON.parse(savedSeason);
+      // Prefer session-active season, then localStorage
+      if (ACTIVE_SEASON_ID) {
+        state.currentSeason = { id: ACTIVE_SEASON_ID, title: ACTIVE_SEASON_LABEL };
         showManagement();
         initCycles();
       } else {
-        state.currentSeason = null;
-        el.selectionState.classList.remove("hidden");
+        const savedSeason = localStorage.getItem(
+          `contrib_season_global_${COMMUNITY_ID}`
+        );
+        if (savedSeason) {
+          state.currentSeason = JSON.parse(savedSeason);
+          showManagement();
+          initCycles();
+        } else {
+          state.currentSeason = null;
+          el.selectionState.classList.remove("hidden");
+        }
       }
 
       resetMemberTable();

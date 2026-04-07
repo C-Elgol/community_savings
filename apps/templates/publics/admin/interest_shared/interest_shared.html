@@ -12,13 +12,15 @@
 <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 mb-8">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
         <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Select Season" %}</label>
-            <select id="seasonSelect" class="w-full bg-slate-50 border-none rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none">
-                <option value="">-- {% trans "Choose a Season" %} --</option>
-                {% for season in seasons %}
-                <option value="{{ season.id }}">{{ season.title }} ({{ season.season_date }})</option>
-                {% endfor %}
-            </select>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Active Season" %}</label>
+            <div class="flex items-center gap-3 bg-slate-50 rounded-2xl px-5 py-3.5">
+                <i class="fas fa-calendar-check text-emerald-600"></i>
+                <span class="text-sm font-black text-slate-700">
+                    {% if active_season %}{{ active_season.title|default:active_season.season_date }}{% else %}—{% endif %}
+                </span>
+            </div>
+            {# Hidden input so JS still reads the season id #}
+            <input type="hidden" id="seasonSelect" value="{{ active_season.id|default:'' }}">
         </div>
         <div>
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{% trans "Total Interest Pool (XAF)" %}</label>

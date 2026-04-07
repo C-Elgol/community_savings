@@ -1,85 +1,449 @@
-{% extends 'publics/superadmin/base.html' %} {% load static %} {% load i18n %}
+{% extends 'publics/superadmin/base.html' %} 
+{% load static %} 
+{% load i18n %} 
+
 {% block content %}
-
-<!-- ========== USER MANAGEMENT PAGE ========== -->
 <div id="users" class="page active-page">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-bold">User Management</h2>
-      <button
-        class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all hover-lift flex items-center gap-2"
-      >
-        <i class="fas fa-user-plus"></i>
-        <span>Add User</span>
-      </button>
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">{% trans "User Management" %}</h2>
+            <p class="text-sm text-slate-500">{% trans "Manage system users, roles, and access control." %}</p>
+        </div>
+        <button 
+            data-modal-target="userModal" 
+            data-modal-show="userModal"
+            onclick="openCreateModal()"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl hover:bg-emerald-800 transition-colors shadow-sm"
+        >
+            <i class="fas fa-plus text-xs"></i>
+            <span>{% trans "Add New User" %}</span>
+        </button>
     </div>
 
-    <!-- user stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-slate-50 p-4 rounded-xl">
-        <span class="text-sm text-slate-500">Total Users</span>
-        <p class="text-xl font-bold">2,847</p>
-      </div>
-      <div class="bg-slate-50 p-4 rounded-xl">
-        <span class="text-sm text-slate-500">Active</span>
-        <p class="text-xl font-bold text-emerald-600">2,541</p>
-      </div>
-      <div class="bg-slate-50 p-4 rounded-xl">
-        <span class="text-sm text-slate-500">Pending</span>
-        <p class="text-xl font-bold text-amber-600">189</p>
-      </div>
-      <div class="bg-slate-50 p-4 rounded-xl">
-        <span class="text-sm text-slate-500">Suspended</span>
-        <p class="text-xl font-bold text-rose-600">117</p>
-      </div>
+    <!-- Stats Row (Optional) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-medium">{% trans "Total Users" %}</p>
+                    <p class="text-xl font-bold text-slate-800">{{ users.count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-medium">{% trans "Active" %}</p>
+                    <p class="text-xl font-bold text-slate-800">{{ users|dictsort:"is_active"|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-medium">{% trans "Superadmins" %}</p>
+                    <p class="text-xl font-bold text-slate-800">{{ users|dictsort:"is_superuser"|length }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- user table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50">
-          <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Spaces</th>
-            <th>Joined</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          <tr>
-            <td class="px-4 py-3">John Doe</td>
-            <td>john@example.com</td>
-            <td>Space Admin</td>
-            <td>
-              <span class="status-active px-2 py-1 rounded-full text-xs"
-                >Active</span
-              >
-            </td>
-            <td>3</td>
-            <td>2024-01-15</td>
-          </tr>
-          <tr>
-            <td>Jane Smith</td>
-            <td>jane@example.com</td>
-            <td>Owner</td>
-            <td><span class="status-active">Active</span></td>
-            <td>2</td>
-            <td>2024-02-20</td>
-          </tr>
-          <tr>
-            <td>Bob Johnson</td>
-            <td>bob@example.com</td>
-            <td>Viewer</td>
-            <td><span class="status-pending">Pending</span></td>
-            <td>1</td>
-            <td>2024-03-10</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Search & Filter -->
+    <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center">
+        <div class="relative w-full md:w-96">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                <i class="fas fa-search"></i>
+            </span>
+            <input 
+                type="text" 
+                id="userSearch"
+                placeholder="{% trans 'Search by name or email...' %}"
+                class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                onkeyup="filterUsers()"
+            >
+        </div>
+        <div class="flex gap-2 ml-auto">
+            <select id="roleFilter" onchange="filterUsers()" class="text-sm border-slate-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">{% trans "All Roles" %}</option>
+                <option value="superuser">{% trans "Superuser" %}</option>
+                <option value="staff">{% trans "Staff" %}</option>
+                <option value="admin">{% trans "Admin" %}</option>
+            </select>
+            <select id="statusFilter" onchange="filterUsers()" class="text-sm border-slate-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">{% trans "All Status" %}</option>
+                <option value="active">{% trans "Active" %}</option>
+                <option value="inactive">{% trans "Inactive" %}</option>
+            </select>
+        </div>
     </div>
-  </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-slate-500" id="userTable">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-100">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">{% trans "User" %}</th>
+                        <th scope="col" class="px-6 py-4">{% trans "Roles" %}</th>
+                        <th scope="col" class="px-6 py-4">{% trans "Status" %}</th>
+                        <th scope="col" class="px-6 py-4">{% trans "Joined" %}</th>
+                        <th scope="col" class="px-6 py-4 text-right">{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for user in users %}
+                    <tr class="hover:bg-slate-50/50 transition-colors user-row" 
+                        data-email="{{ user.email }}" 
+                        data-name="{{ user.get_full_name }}"
+                        data-is-superuser="{{ user.is_superuser|yesno:'true,false' }}"
+                        data-is-staff="{{ user.is_staff|yesno:'true,false' }}"
+                        data-is-admin="{{ user.is_admin|yesno:'true,false' }}"
+                        data-is-active="{{ user.is_active|yesno:'true,false' }}"
+                    >
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold overflow-hidden">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" alt="{{ user.email }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        {{ user.email|slice:":1"|upper }}
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-slate-800">{{ user.get_full_name|default:user.email }}</span>
+                                    <span class="text-xs text-slate-400">{{ user.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                {% if user.is_superuser %}
+                                <span class="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-full text-[10px] font-bold uppercase">{% trans "Super" %}</span>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-bold uppercase">{% trans "Staff" %}</span>
+                                {% endif %}
+                                {% if user.is_admin %}
+                                <span class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold uppercase">{% trans "Admin" %}</span>
+                                {% endif %}
+                                {% if not user.is_superuser and not user.is_staff and not user.is_admin %}
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold uppercase">{% trans "User" %}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button 
+                                onclick="toggleStatus('{{ user.id }}', this)"
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors
+                                {% if user.is_active %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}"
+                            >
+                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 {% if user.is_active %}bg-emerald-500{% else %}bg-slate-400{% endif %}"></span>
+                                <span class="status-text">{% if user.is_active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}</span>
+                            </button>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-400">
+                            {{ user.date_joined|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button 
+                                    data-modal-target="userModal" 
+                                    data-modal-show="userModal"
+                                    onclick="openEditModal('{{ user.id }}', '{{ user.first_name }}', '{{ user.last_name }}', '{{ user.email }}', '{{ user.phone_number }}', '{{ user.is_staff|yesno:'on,' }}', '{{ user.is_admin|yesno:'on,' }}', '{{ user.is_superuser|yesno:'on,' }}')"
+                                    class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                    title="{% trans 'Edit User' %}"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button 
+                                    onclick="deleteUser('{{ user.id }}', '{{ user.email }}')"
+                                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                    title="{% trans 'Delete User' %}"
+                                >
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-slate-400">
+                            <i class="fas fa-user-slash text-4xl mb-3 block"></i>
+                            {% trans "No users found." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<!-- Main User Modal -->
+<div id="userModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-2xl shadow-xl border border-slate-100">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t text-slate-800">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <span id="modalIcon" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <i class="fas fa-user-plus text-sm"></i>
+                    </span>
+                    <span id="modalTitle">{% trans "Add New User" %}</span>
+                </h3>
+                <button type="button" class="text-slate-400 bg-transparent hover:bg-slate-100 hover:text-slate-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="userModal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <form id="userForm" class="p-4 md:p-5">
+                {% csrf_token %}
+                <input type="hidden" id="userId" name="pk">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="first_name" class="block mb-2 text-sm font-semibold text-slate-800">{% trans "First Name" %}</label>
+                            <input type="text" name="first_name" id="first_name" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5" required>
+                        </div>
+                        <div>
+                            <label for="last_name" class="block mb-2 text-sm font-semibold text-slate-800">{% trans "Last Name" %}</label>
+                            <input type="text" name="last_name" id="last_name" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="email" class="block mb-2 text-sm font-semibold text-slate-800">{% trans "Email" %}</label>
+                        <input type="email" name="email" id="email" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="phone_number" class="block mb-2 text-sm font-semibold text-slate-800">{% trans "Phone Number" %}</label>
+                        <input type="text" name="phone_number" id="phone_number" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5" placeholder="+237...">
+                    </div>
+                    <div id="passwordField">
+                        <label for="password" class="block mb-2 text-sm font-semibold text-slate-800">{% trans "Password" %}</label>
+                        <input type="password" name="password" id="password" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5">
+                        <p class="text-[10px] text-slate-400 mt-1">{% trans "Required only for new users." %}</p>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-slate-100">
+                        <p class="text-sm font-semibold text-slate-800 mb-3">{% trans "Roles & Permissions" %}</p>
+                        <div class="grid grid-cols-1 gap-2">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_staff" id="is_staff" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                <span class="ms-3 text-sm font-medium text-slate-600">{% trans "Is Staff" %}</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_admin" id="is_admin" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                <span class="ms-3 text-sm font-medium text-slate-600">{% trans "Is Admin" %}</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_superuser" id="is_superuser" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                <span class="ms-3 text-sm font-medium text-slate-600">{% trans "Is Superuser" %}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full text-white bg-emerald-700 hover:bg-emerald-800 focus:ring-4 focus:outline-none focus:ring-emerald-300 font-bold rounded-xl text-sm px-5 py-3 text-center transition-all shadow-sm">
+                        <span id="saveBtnText">{% trans "Save User" %}</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JS Support -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userForm = document.getElementById('userForm');
+        userForm.addEventListener('submit', handleFormSubmit);
+    });
+
+    let currentAction = 'create';
+
+    function openCreateModal() {
+        currentAction = 'create';
+        document.getElementById('modalTitle').innerText = "{% trans 'Add New User' %}";
+        document.getElementById('modalIcon').innerHTML = '<i class="fas fa-user-plus text-sm"></i>';
+        document.getElementById('saveBtnText').innerText = "{% trans 'Create User' %}";
+        document.getElementById('passwordField').classList.remove('hidden');
+        document.getElementById('password').required = true;
+        document.getElementById('email').readOnly = false;
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+    }
+
+    function openEditModal(id, firstName, lastName, email, phone, isStaff, isAdmin, isSuper) {
+        currentAction = 'update';
+        document.getElementById('modalTitle').innerText = "{% trans 'Edit User' %}";
+        document.getElementById('modalIcon').innerHTML = '<i class="fas fa-user-edit text-sm"></i>';
+        document.getElementById('saveBtnText').innerText = "{% trans 'Update User' %}";
+        document.getElementById('passwordField').classList.add('hidden');
+        document.getElementById('password').required = false;
+        document.getElementById('email').readOnly = true;
+        
+        document.getElementById('userId').value = id;
+        document.getElementById('first_name').value = firstName;
+        document.getElementById('last_name').value = lastName;
+        document.getElementById('email').value = email;
+        document.getElementById('phone_number').value = phone;
+        document.getElementById('is_staff').checked = isStaff === 'on';
+        document.getElementById('is_admin').checked = isAdmin === 'on';
+        document.getElementById('is_superuser').checked = isSuper === 'on';
+        
+        // Ensure modal is shown (Flowbite data attributes should handle this, but manual trigger is safer)
+        const modalElement = document.getElementById('userModal');
+        if (window.FlowbiteInstances) {
+            const modal = window.FlowbiteInstances.getInstance('Modal', 'userModal');
+            if (modal) modal.show();
+        }
+    }
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const userId = formData.get('pk');
+        let url = "{% url 'users:user_create' %}";
+        
+        if (currentAction === 'update' && userId) {
+            url = `{% url 'users:user_management' %}${userId}/update/`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                window.toastManager.buildToast().setMessage(data.message).setType('success').show();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                window.toastManager.buildToast().setMessage(data.message).setType('danger').show();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            window.toastManager.buildToast().setMessage("{% trans 'An error occurred. Please try again.' %}").setType('danger').show();
+        }
+    }
+
+    async function toggleStatus(pk, btn) {
+        const url = `{% url 'users:user_management' %}${pk}/toggle-status/`;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                window.toastManager.buildToast().setMessage(data.message).setType('success').show();
+                
+                // Update UI locally
+                const statusText = btn.querySelector('.status-text');
+                const dot = btn.querySelector('.w-1.5');
+                
+                if (data.is_active) {
+                    btn.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors bg-emerald-50 text-emerald-700 hover:bg-emerald-100';
+                    dot.className = 'w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-500';
+                    statusText.innerText = "{% trans 'Active' %}";
+                } else {
+                    btn.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200';
+                    dot.className = 'w-1.5 h-1.5 rounded-full mr-1.5 bg-slate-400';
+                    statusText.innerText = "{% trans 'Inactive' %}";
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            window.toastManager.buildToast().setMessage("{% trans 'Failed to update status.' %}").setType('danger').show();
+        }
+    }
+
+    async function deleteUser(pk, email) {
+        if (!confirm(`{% trans 'Are you sure you want to delete user' %} ${email}? {% trans 'This is a soft delete.' %}`)) {
+            return;
+        }
+
+        const url = `{% url 'users:user_management' %}${pk}/delete/`;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                window.toastManager.buildToast().setMessage(data.message).setType('success').show();
+                // Remove row from table
+                const row = document.querySelector(`tr[onclick*="${pk}"]`) || document.querySelector(`button[onclick*="${pk}"]`).closest('tr');
+                if (row) row.remove();
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            window.toastManager.buildToast().setMessage("{% trans 'Failed to delete user.' %}").setType('danger').show();
+        }
+    }
+
+    function filterUsers() {
+        const search = document.getElementById('userSearch').value.toLowerCase();
+        const role = document.getElementById('roleFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('.user-row');
+
+        rows.forEach(row => {
+            const email = row.dataset.email.toLowerCase();
+            const name = row.dataset.name.toLowerCase();
+            const isSuper = row.dataset.isSuperuser === 'true';
+            const isStaff = row.dataset.isStaff === 'true';
+            const isAdmin = row.dataset.isAdmin === 'true';
+            const isActive = row.dataset.isActive === 'true';
+
+            let matchSearch = email.includes(search) || name.includes(search);
+            let matchRole = true;
+            if (role === 'superuser') matchRole = isSuper;
+            else if (role === 'staff') matchRole = isStaff;
+            else if (role === 'admin') matchRole = isAdmin;
+
+            let matchStatus = true;
+            if (status === 'active') matchStatus = isActive;
+            else if (status === 'inactive') matchStatus = !isActive;
+
+            if (matchSearch && matchRole && matchStatus) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+    }
+</script>
 {% endblock %}

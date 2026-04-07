@@ -1,13 +1,321 @@
 {% extends 'publics/admin/base.html' %}
 {% load static %}
 {% load i18n %}
+
 {% block content %}
- <!-- ========== CREDIT RISK ANALYTICS PAGE ========== -->
-        <div id="risk" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold mb-4">Credit Risk Analytics</h2>
-                <div class="grid md:grid-cols-3 gap-4"><div class="bg-rose-50 p-4 rounded-xl"><span class="text-sm text-rose-800">High risk members</span><p class="text-2xl font-bold">8</p></div><div class="bg-amber-50 p-4 rounded-xl"><span class="text-sm text-amber-800">Moderate risk</span><p class="text-2xl font-bold">15</p></div><div class="bg-emerald-50 p-4 rounded-xl"><span class="text-sm text-emerald-800">Low risk</span><p class="text-2xl font-bold">112</p></div></div>
-                <div class="mt-6"><h3 class="font-semibold mb-2">Top default probability</h3><div class="space-y-2"><div class="flex justify-between"><span>James K.</span><span class="font-medium text-rose-600">12.3%</span></div><div class="flex justify-between"><span>Susan M.</span><span class="font-medium text-amber-600">8.7%</span></div></div></div>
+<div class="px-4 py-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">{% trans "Credit Risk Analytics" %}</h1>
+            <p class="text-slate-500">{% trans "Analyze and monitor member creditworthiness using AI and system data." %}</p>
+        </div>
+        <div>
+            <button id="recalculateAll" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm">
+                <i class="fas fa-sync-alt animate-spin-hover"></i>
+                <span>{% trans "Recalculate All Scores" %}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-sm">{% trans "Avg Credit Score" %}</span>
+                <i class="fas fa-chart-line text-emerald-500"></i>
+            </div>
+            <p class="text-3xl font-bold text-slate-800">{{ risk_stats.avg_score|floatformat:0 }}</p>
+            <p class="text-xs text-slate-400 mt-1">{% trans "Based on" %} {{ risk_stats.total_assessed }} {% trans "members" %}</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-rose-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-sm">{% trans "High Risk" %}</span>
+                <i class="fas fa-exclamation-triangle text-rose-500"></i>
+            </div>
+            <p class="text-3xl font-bold text-slate-800">{{ risk_stats.high }}</p>
+            <p class="text-xs text-slate-400 mt-1">{% trans "Critical attention required" %}</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-amber-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-sm">{% trans "Moderate Risk" %}</span>
+                <i class="fas fa-info-circle text-amber-500"></i>
+            </div>
+            <p class="text-3xl font-bold text-slate-800">{{ risk_stats.medium }}</p>
+            <p class="text-xs text-slate-400 mt-1">{% trans "Steady monitoring" %}</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-500">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-sm">{% trans "Low Risk" %}</span>
+                <i class="fas fa-check-circle text-emerald-500"></i>
+            </div>
+            <p class="text-3xl font-bold text-slate-800">{{ risk_stats.low }}</p>
+            <p class="text-xs text-slate-400 mt-1">{% trans "Healthy credit profiles" %}</p>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Members List -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800">{% trans "Member Risk Profiles" %}</h3>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="memberSearch" placeholder="{% trans 'Search members...' %}" 
+                               class="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none">
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="px-6 py-4 font-semibold">{% trans "Member" %}</th>
+                                <th class="px-6 py-4 font-semibold text-center">{% trans "Score" %}</th>
+                                <th class="px-6 py-4 font-semibold text-center">{% trans "Risk Level" %}</th>
+                                <th class="px-6 py-4 font-semibold text-right">{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for membership in memberships %}
+                            <tr class="hover:bg-slate-50/80 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                                            {{ membership.user.fullname|default:membership.user.email|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800 text-sm">{{ membership.user.fullname|default:membership.user.get_full_name|default:membership.user.email }}</p>
+                                            <p class="text-xs text-slate-400">{{ membership.member_code }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-lg font-bold 
+                                        {% if membership.credit_profile.current_score >= 750 %}text-emerald-600
+                                        {% elif membership.credit_profile.current_score >= 650 %}text-amber-600
+                                        {% else %}text-rose-600{% endif %}">
+                                        {{ membership.credit_profile.current_score|default:"---" }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex justify-center">
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                                            {% if membership.credit_profile.risk_band == 'low' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+                                            {% elif membership.credit_profile.risk_band == 'medium' %}bg-amber-50 text-amber-700 border border-amber-100
+                                            {% else %}bg-rose-50 text-rose-700 border border-rose-100{% endif %}">
+                                            {{ membership.credit_profile.risk_band|default:"N/A" }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="recalculateMember p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" 
+                                            data-id="{{ membership.id }}" title="{% trans 'Recalculate Score' %}">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+        <!-- Sidebar / Details -->
+        <div class="space-y-6">
+            <!-- Default Risk Rankings -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle text-rose-500"></i>
+                    {% trans "Highest Default Risk" %}
+                </h3>
+                <div class="space-y-4">
+                    {% for profile in top_prob_defaults %}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-700">{{ profile.membership.user.fullname|default:profile.membership.user.get_full_name|default:profile.membership.user.email }}</span>
+                        </div>
+                        <span class="text-sm font-bold text-rose-600">{{ profile.probability_of_default_percentage|floatformat:1 }}%</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-slate-400 italic">{% trans "No data available yet." %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- AI Insight Preview -->
+            <div class="bg-emerald-900 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="w-10 h-10 bg-emerald-800 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-robot text-emerald-400"></i>
+                    </div>
+                    <h3 class="font-bold mb-2">{% trans "AI Financial Insights" %}</h3>
+                    <p class="text-emerald-100 text-sm leading-relaxed mb-4">
+                        {% trans "Our AI engine analyzes behavioral patterns like contribution speed, repayment punctuality, and meeting attendance to predict reliability." %}
+                    </p>
+                    <div class="pt-4 border-t border-emerald-800">
+                        <span class="text-xs uppercase tracking-widest text-emerald-400 font-bold">{% trans "Model Version 2.0" %}</span>
+                    </div>
+                </div>
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-800/20 rounded-full blur-3xl"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Individual Member Result (Optional but good) -->
+<div id="aiModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100">
+            <div class="bg-white p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-slate-800" id="modal-title">{% trans "Credit Assessment Result" %}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <div class="flex items-center justify-center py-4">
+                        <div id="modalScoreCircle" class="w-32 h-32 rounded-full border-8 border-slate-100 flex items-center justify-center relative">
+                            <span id="modalScore" class="text-3xl font-extrabold text-slate-800">---</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fas fa-robot text-emerald-600"></i>
+                            {% trans "AI Explanation" %}
+                        </h4>
+                        <p id="modalExplanation" class="text-slate-700 text-sm italic leading-relaxed">
+                            {% trans "Processing insights..." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex justify-end">
+                <button onclick="closeModal()" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-100 transition-all">
+                    {% trans "Close" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const communityId = "{{ community.id }}";
+        
+        // Recalculate All
+        document.getElementById('recalculateAll')?.addEventListener('click', async function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch("{% url 'analytics:recalculate_scoring_api' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `community_id=${communityId}`
+                });
+                const data = await response.json();
+                if(data.status === 'success') {
+                    window.toastManager.buildToast().setMessage(data.message).setType('success').show();
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    window.toastManager.buildToast().setMessage(data.message).setType('danger').show();
+                }
+            } catch (error) {
+                console.error(error);
+                window.toastManager.buildToast().setMessage("{% trans 'An unexpected error occurred.' %}").setType('danger').show();
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        });
+
+        // Recalculate Individual
+        document.querySelectorAll('.recalculateMember').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const membershipId = this.dataset.id;
+                const icon = this.querySelector('i');
+                icon.classList.add('fa-spin');
+                this.classList.add('pointer-events-none', 'opacity-50');
+                
+                try {
+                    const response = await fetch("{% url 'analytics:recalculate_scoring_api' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `membership_id=${membershipId}`
+                    });
+                    const data = await response.json();
+                    if(data.status === 'success') {
+                        document.getElementById('modalScore').innerText = data.score;
+                        document.getElementById('modalExplanation').innerText = data.explanation;
+                        
+                        // Set circle color
+                        const circle = document.getElementById('modalScoreCircle');
+                        circle.className = "w-32 h-32 rounded-full border-8 flex items-center justify-center relative";
+                        if(data.score >= 750) circle.classList.add('border-emerald-500');
+                        else if(data.score >= 650) circle.classList.add('border-amber-500');
+                        else circle.classList.add('border-rose-500');
+                        
+                        document.getElementById('aiModal').classList.remove('hidden');
+                        window.toastManager.buildToast().setMessage("{% trans 'Score updated successfully!' %}").setType('success').show();
+                    } else {
+                        window.toastManager.buildToast().setMessage(data.message).setType('danger').show();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    window.toastManager.buildToast().setMessage("{% trans 'Failed to update score.' %}").setType('danger').show();
+                } finally {
+                    icon.classList.remove('fa-spin');
+                    this.classList.remove('pointer-events-none', 'opacity-50');
+                }
+            });
+        });
+
+        // Search functionality
+        document.getElementById('memberSearch')?.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const name = row.querySelector('.font-semibold').innerText.toLowerCase();
+                const code = row.querySelector('.text-slate-400').innerText.toLowerCase();
+                if(name.includes(query) || code.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    function closeModal() {
+        document.getElementById('aiModal').classList.add('hidden');
+    }
+</script>
+
+<style>
+    .animate-spin-hover:hover {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
 {% endblock %}

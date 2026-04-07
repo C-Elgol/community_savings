@@ -246,3 +246,6 @@ SITE_URL = config('SITE_URL')
 SESSION_COOKIE_AGE = 600  # 10 minutes in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Expire session when browser closes
 SESSION_SAVE_EVERY_REQUEST = True  
+
+# AI Analytics
+OPENAI_API_KEY = config("OPENAI_API_KEY", default="")

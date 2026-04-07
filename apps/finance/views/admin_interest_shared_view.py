@@ -10,7 +10,9 @@ from apps.finance.services.interest_sharing_service import InterestSharingServic
 from apps.finance.services.dashboard_service import DashboardService
 from decimal import Decimal
 
-class AdminInterestSharingView(LoginRequiredMixin, TemplateView):
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
+
+class AdminInterestSharingView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = "publics/admin/interest_shared/interest_shared.html"
 
     def get_context_data(self, **kwargs):
@@ -18,16 +20,16 @@ class AdminInterestSharingView(LoginRequiredMixin, TemplateView):
         community_id = self.kwargs.get('community_id')
         community = get_object_or_404(Community, id=community_id)
         
-        # Get active sessions for the community
-        seasons = FinancialSeason.objects.filter(community=community).order_by('-season_date')
+        # Get active season from session (provided by AdminSeasonMixin)
+        active_season = context.get('active_season')
         
         # Get interest earned from loans (as pool suggestion)
-        db_service = DashboardService(community_id)
+        db_service = DashboardService(community_id, season_id=active_season.id if active_season else None)
         loan_stats = db_service.loan_stats()
         
         context.update({
             'community': community,
-            'seasons': seasons,
+            'seasons': FinancialSeason.objects.filter(community=community).order_by('-season_date'),
             'suggested_interest': loan_stats.get('interest_earned', '0.00'),
             'penalties_earned': loan_stats.get('penalties_earned', '0.00'),
         })

@@ -9,7 +9,9 @@ from apps.global_data.enum import CommunityFeatureType
 
 logger = logging.getLogger(__name__)
 
-class AdminSettingsView(LoginRequiredMixin, TemplateView):
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
+
+class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/settings/settings.html'
 
     def get_context_data(self, **kwargs):
