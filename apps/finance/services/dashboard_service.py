@@ -16,6 +16,7 @@ SPENDABLE_FUNDS = [
     CommunityFeatureType.SINKING_FUND,
     CommunityFeatureType.EVENTS,
     CommunityFeatureType.SAVINGS,
+    CommunityFeatureType.NJANGI,
 ]
 
 ZERO = Decimal("0.00")

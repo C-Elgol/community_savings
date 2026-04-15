@@ -57,10 +57,14 @@
 </div>
 
 <!-- ── Fund Balance cards ── -->
-<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
     <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Savings</p>
     <p id="fundSavings" class="text-lg font-black text-emerald-700">—</p>
+  </div>
+  <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+    <p class="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Njangi</p>
+    <p id="fundNjangi" class="text-lg font-black text-orange-700">—</p>
   </div>
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
     <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">Entertainment</p>
@@ -228,6 +232,7 @@
 
             // ── Fund balances ──
             document.getElementById('fundSavings').textContent = fmt(f.savings);
+            document.getElementById('fundNjangi').textContent = fmt(f.njangi);
             document.getElementById('fundEntertainment').textContent = fmt(f.entertainment);
             document.getElementById('fundProject').textContent = fmt(f.project);
             document.getElementById('fundSinkingFund').textContent = fmt(f.sinking_fund);
