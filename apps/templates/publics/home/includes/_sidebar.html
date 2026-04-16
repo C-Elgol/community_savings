@@ -79,7 +79,7 @@
     <a
       href="{% url 'users:member_profile' %}"
       data-page="profile"
-      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_profile' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
+      class="nav-link flex items-center gap-3 px-4 py-3.5 {% if request.resolver_match.url_name == 'member_profile' or request.resolver_match.url_name == 'member_change_password' %} rounded-xl nav-item-active sidebar-transition {% else %} rounded-xl nav-item-inactive sidebar-transition {% endif %}"
     >
       <i class="fas fa-user-circle w-5 text-slate-400"></i
       ><span class="text-sm">{% trans "Profile" %}</span>

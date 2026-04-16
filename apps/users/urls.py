@@ -11,6 +11,7 @@ from apps.users.views.resend_verification_view import ResendVerificationView
 from apps.users.views.admin_member_view import AdminMemberView
 from apps.users.views.welcome_view import WelcomeView
 from apps.users.views.community_space_welcome_view import CommunitySpaceWelcomeView
+from apps.users.views.member_change_password_view import MemberChangePasswordView
 from apps.users.views.super_admin_user_management_view import (
     SuperAdminUserManagementView,
     AdminUserCreateView,
@@ -29,6 +30,7 @@ urlpatterns = [
     path('space/<uuid:pk>/welcome/', CommunitySpaceWelcomeView.as_view(), name='community_space_welcome'),
     path('dashboard/', HomeView.as_view(), name='dashboard'),
     path('profile/', MemberProfileView.as_view(), name='member_profile'),
+    path('profile/change-password/', MemberChangePasswordView.as_view(), name='member_change_password'),
     path('notification/', NotificationView.as_view(), name='notification'),
     path('admin-dashboard/<uuid:community_id>/', AdminDashboardView.as_view(), name='admin_dashboard'),
     path('register/', RegisterView.as_view(), name='register'),
