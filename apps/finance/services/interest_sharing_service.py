@@ -125,7 +125,7 @@ class InterestSharingService:
     def record_payout(self, payout_id, performed_by):
         """
         Records the actual payout for a member.
-        - Updates Expenditure (Group ledger)
+        - Updates Expenditures (Group ledger) - Split between SAVINGS and LOANS
         - Updates Wallet & Transaction (Member ledger)
         """
         payout = InterestPayout.objects.select_for_update().get(id=payout_id)
@@ -134,20 +134,38 @@ class InterestSharingService:
 
         # Total payout = Savings + Interest
         total_payout = payout.total_savings + payout.interest_amount
+        
+        exp_refs = []
+        
+        # 1. Create Group Expenditure for Savings portion (from SAVINGS fund)
+        if payout.total_savings > 0:
+            exp_sav = Expenditure.objects.create(
+                community=payout.distribution.community,
+                season=payout.distribution.season,
+                source_fund=CommunityFeatureType.SAVINGS,
+                amount=payout.total_savings,
+                expenditure_date=timezone.now().date(),
+                description=f"Savings Payout to {payout.membership.user.fullname} for season {payout.distribution.season.title}",
+                status=ExpenditureStatus.POSTED,
+                created_by=performed_by
+            )
+            exp_refs.append(exp_sav.reference_number)
 
-        # 1. Create Group Expenditure
-        expenditure = Expenditure.objects.create(
-            community=payout.distribution.community,
-            season=payout.distribution.season,
-            source_fund=CommunityFeatureType.SAVINGS,
-            amount=total_payout,
-            expenditure_date=timezone.now().date(),
-            description=f"Savings + Interest Payout to {payout.membership.user.fullname} for season {payout.distribution.season.title}",
-            status=ExpenditureStatus.POSTED,
-            created_by=performed_by
-        )
+        # 2. Create Group Expenditure for Interest portion (from LOANS fund)
+        if payout.interest_amount > 0:
+            exp_int = Expenditure.objects.create(
+                community=payout.distribution.community,
+                season=payout.distribution.season,
+                source_fund=CommunityFeatureType.LOANS,
+                amount=payout.interest_amount,
+                expenditure_date=timezone.now().date(),
+                description=f"Interest Payout to {payout.membership.user.fullname} for season {payout.distribution.season.title}",
+                status=ExpenditureStatus.POSTED,
+                created_by=performed_by
+            )
+            exp_refs.append(exp_int.reference_number)
 
-        # 2. Update Member Wallet and Record Transaction
+        # 3. Update Member Wallet and Record Transaction (Total Payout)
         wallet, _ = Wallet.objects.get_or_create(membership=payout.membership)
         wallet.balance += total_payout
         wallet.save()
@@ -160,11 +178,11 @@ class InterestSharingService:
             description=f"Received savings and interest share for {payout.distribution.season.title}"
         )
 
-        # 3. Update Payout record
+        # 4. Update Payout record
         payout.is_paid = True
         payout.paid_at = timezone.now()
         payout.recorded_by = performed_by
-        payout.expenditure_reference = expenditure.reference_number
+        payout.expenditure_reference = ", ".join(exp_refs)
         payout.transaction_reference = transaction.reference
         payout.save()
 
