@@ -73,6 +73,7 @@
                     <th class="px-8 py-5 font-black text-blue-600">{% trans "Weighted Value" %}</th>
                     <th class="px-8 py-5 font-black">{% trans "Share %" %}</th>
                     <th class="px-8 py-5 font-black text-emerald-600">{% trans "Interest Earned" %}</th>
+                    <th class="px-8 py-5 font-black text-indigo-600">{% trans "Total Payout" %}</th>
                     <th class="px-8 py-5 font-black text-center">{% trans "Action" %}</th>
                 </tr>
             </thead>
@@ -191,6 +192,8 @@
             const row = document.createElement('tr');
             row.className = "hover:bg-slate-50 transition-all group";
             
+            const totalPayout = (Number(m.total_savings) + Number(m.interest_amount)).toFixed(2);
+
             let actionBtn = '';
             if (isInit) {
                 if (m.is_paid) {
@@ -202,7 +205,7 @@
                 } else {
                     actionBtn = `
                         <button class="btn-pay bg-emerald-50 text-emerald-700 hover:bg-emerald-700 hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 cursor-pointer"
-                                data-mid="${m.membership_id}" data-payout-id="${m.payout_id}" data-amount="${m.interest_amount}">
+                                data-mid="${m.membership_id}" data-payout-id="${m.payout_id}" data-amount="${totalPayout}">
                             <i class="fas fa-paper-plane mr-1"></i> Pay Now
                         </button>
                     `;
@@ -210,7 +213,7 @@
             } else {
                 actionBtn = `
                     <button class="btn-pay bg-slate-50 text-slate-400 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-100 cursor-not-allowed"
-                            data-mid="${m.membership_id}" data-amount="${m.interest_amount}" disabled>
+                            data-mid="${m.membership_id}" data-amount="${totalPayout}" disabled>
                         {% trans "Init Required" %}
                     </button>
                 `;
@@ -226,6 +229,7 @@
                     </span>
                 </td>
                 <td class="px-8 py-5 font-black text-emerald-700 text-sm">${fmt(m.interest_amount)}</td>
+                <td class="px-8 py-5 font-black text-indigo-700 text-sm">${fmt(totalPayout)}</td>
                 <td class="px-8 py-5 text-center">
                     ${actionBtn}
                 </td>

@@ -132,29 +132,32 @@ class InterestSharingService:
         if payout.is_paid:
             raise ValueError("This payout has already been recorded.")
 
+        # Total payout = Savings + Interest
+        total_payout = payout.total_savings + payout.interest_amount
+
         # 1. Create Group Expenditure
         expenditure = Expenditure.objects.create(
             community=payout.distribution.community,
             season=payout.distribution.season,
             source_fund=CommunityFeatureType.SAVINGS,
-            amount=payout.interest_amount,
+            amount=total_payout,
             expenditure_date=timezone.now().date(),
-            description=f"Interest Payout to {payout.membership.user.fullname} for season {payout.distribution.season.title}",
+            description=f"Savings + Interest Payout to {payout.membership.user.fullname} for season {payout.distribution.season.title}",
             status=ExpenditureStatus.POSTED,
             created_by=performed_by
         )
 
         # 2. Update Member Wallet and Record Transaction
         wallet, _ = Wallet.objects.get_or_create(membership=payout.membership)
-        wallet.balance += payout.interest_amount
+        wallet.balance += total_payout
         wallet.save()
 
         transaction = Transaction.objects.create(
             membership=payout.membership,
-            amount=payout.interest_amount,
+            amount=total_payout,
             transaction_type="interest_payout",
             reference=f"INT-PAY-{payout.id.hex[:8].upper()}",
-            description=f"Received interest share for {payout.distribution.season.title}"
+            description=f"Received savings and interest share for {payout.distribution.season.title}"
         )
 
         # 3. Update Payout record
