@@ -190,7 +190,8 @@ function switchTab(tabId) {
 document.getElementById('btn-start').addEventListener('click', async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
         audioChunks = [];
 
         mediaRecorder.ondataavailable = (event) => {
@@ -198,8 +199,9 @@ document.getElementById('btn-start').addEventListener('click', async () => {
         };
 
         mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            await transcribeAudio(audioBlob);
+            const extension = mimeType.includes('webm') ? 'webm' : 'ogg';
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            await transcribeAudio(audioBlob, extension);
         };
 
         mediaRecorder.start();
@@ -290,9 +292,9 @@ document.getElementById('file-upload').addEventListener('change', (e) => {
     }
 });
 
-async function transcribeAudio(blob) {
+async function transcribeAudio(blob, extension = 'wav') {
     const formData = new FormData();
-    formData.append('audio', blob, 'recording.wav');
+    formData.append('audio', blob, `recording.${extension}`);
     formData.append('action', 'transcribe');
 
     window.toastManager.buildToast().setMessage('Transcribing audio...').setType('info').show();

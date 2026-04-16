@@ -36,19 +36,44 @@ class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
         if action == 'transcribe':
             audio_file = request.FILES.get('audio')
             if not audio_file:
-                return JsonResponse({'status': 'error', 'message': 'No audio file provided'})
+                return JsonResponse({'status': 'error', 'message': 'No file provided'})
+            
+            ext = audio_file.name.split('.')[-1].lower()
+            audio_exts = ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']
             
             try:
-                # Use OpenAI Whisper
-                # We pass a tuple (filename, file_content) to satisfy the library requirements
-                transcription = client.audio.transcriptions.create(
-                    model="whisper-1", 
-                    file=(audio_file.name, audio_file.read())
-                )
-                return JsonResponse({'status': 'success', 'transcript': transcription.text})
+                if ext in audio_exts:
+                    # Use OpenAI Whisper for audio
+                    transcription = client.audio.transcriptions.create(
+                        model="whisper-1", 
+                        file=(audio_file.name, audio_file.read())
+                    )
+                    return JsonResponse({'status': 'success', 'transcript': transcription.text})
+                
+                elif ext == 'pdf':
+                    import pypdf
+                    reader = pypdf.PdfReader(audio_file)
+                    text = ""
+                    for page in reader.pages:
+                        text += page.extract_text() + "\n"
+                    return JsonResponse({'status': 'success', 'transcript': text.strip()})
+                
+                elif ext == 'docx':
+                    import docx
+                    doc = docx.Document(audio_file)
+                    text = "\n".join([para.text for para in doc.paragraphs])
+                    return JsonResponse({'status': 'success', 'transcript': text.strip()})
+                
+                elif ext == 'txt':
+                    text = audio_file.read().decode('utf-8')
+                    return JsonResponse({'status': 'success', 'transcript': text.strip()})
+                
+                else:
+                    return JsonResponse({'status': 'error', 'message': f'Unsupported file format: {ext}'})
+                    
             except Exception as e:
-                logger.error(f"Transcription error: {e}")
-                return JsonResponse({'status': 'error', 'message': str(e)})
+                logger.error(f"Transcription/Extraction error: {e}")
+                return JsonResponse({'status': 'error', 'message': f"Failed to process {ext} file: {str(e)}"})
 
         elif action == 'generate':
             transcript = request.POST.get('transcript')
