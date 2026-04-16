@@ -371,7 +371,9 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
         const result = await response.json();
         if (result.status === 'success') {
             document.getElementById('output-summary').value = result.summary;
-            document.getElementById('output-minutes').value = result.minutes;
+            // Handle if minutes is returned as an object instead of string
+            const minutesValue = typeof result.minutes === 'object' ? JSON.stringify(result.minutes, null, 2) : result.minutes;
+            document.getElementById('output-minutes').value = minutesValue;
             window.toastManager.buildToast().setMessage('AI Minutes Generated!').setType('success').show();
         } else {
             window.toastManager.buildToast().setMessage(result.message).setType('danger').show();

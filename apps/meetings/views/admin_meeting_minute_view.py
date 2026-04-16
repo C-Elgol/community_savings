@@ -65,7 +65,8 @@ class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
                 1. A concise meeting summary.
                 2. Professional meeting minutes with sections for attendees (if mentioned), agenda, discussions, and decisions.
 
-                Format your response as a JSON object with keys 'summary' and 'minutes'.
+                Format your response as a JSON object with keys 'summary' and 'minutes'. 
+                IMPORTANT: Both values must be strings. The 'minutes' should be well-formatted with newlines and bullet points.
                 
                 Transcript:
                 {transcript}
