@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript_catalog'),
-    path('', include('apps.users.urls', namespace='users')),
+    path('', include('apps.users.urls')),
     path('finance/', include('apps.finance.urls', namespace='finance')),
     path('meetings/', include('apps.meetings.urls', namespace='meetings')),
     path('analytics/', include('apps.analytics.urls', namespace='analytics')),

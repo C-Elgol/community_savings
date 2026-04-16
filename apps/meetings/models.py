@@ -70,6 +70,12 @@ class MeetingMinute(SavingsBaseModel):
     action_items = models.TextField(blank=True)
     closing_remarks = models.TextField(blank=True)
 
+    # AI & Enhanced Data
+    language = models.CharField(max_length=50, default="English", blank=True)
+    transcript = models.TextField(blank=True)
+    summary = models.TextField(blank=True)
+    audio_file = models.FileField(upload_to="meetings/recordings/", null=True, blank=True)
+
     status = models.CharField(max_length=20, choices=MinuteStatus.choices, default=MinuteStatus.DRAFT)
 
     def __str__(self):
