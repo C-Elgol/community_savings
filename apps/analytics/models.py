@@ -67,7 +67,7 @@ class LoanRiskAssessment(SavingsBaseModel):
     reason_codes = models.JSONField(default=list, blank=True)
 
     def __str__(self):
-        return f"Risk Assessment - {self.membership.user.full_name}"
+        return f"Risk Assessment - {self.membership.user.fullname}"
 
     @property
     def probability_of_default_percentage(self):
