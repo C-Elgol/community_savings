@@ -16,6 +16,7 @@ SPENDABLE_FUNDS = [
     CommunityFeatureType.SINKING_FUND,
     CommunityFeatureType.EVENTS,
     CommunityFeatureType.SAVINGS,
+    CommunityFeatureType.NJANGI,
 ]
 
 ZERO = Decimal("0.00")
@@ -78,12 +79,35 @@ class DashboardService:
             )
         )
 
+    def brought_forward_balance(self):
+        from apps.finance.models import FinancialSeason
+        if not self.sid:
+            return ZERO
+            
+        try:
+            current_season = FinancialSeason.objects.get(id=self.sid)
+            prev_season = FinancialSeason.objects.filter(
+                community_id=self.cid,
+                season_date__lt=current_season.season_date
+            ).order_by('-season_date').first()
+            
+            if not prev_season:
+                return ZERO
+            
+            # Use a separate service instance to avoid infinite recursion
+            # This is recursive but finite as seasons are finite.
+            prev_service = DashboardService(self.cid, season_id=prev_season.id)
+            return prev_service.net_balance()
+        except FinancialSeason.DoesNotExist:
+            return ZERO
+
     def total_inflows(self):
         return (
             self.total_contributions()
             + self.total_loan_repayments()
             + self.total_fine_payments()
             + self.total_registration_fees()
+            + self.brought_forward_balance()
         )
 
     # ── OUTFLOWS ─────────────────────────────────────────────
@@ -226,6 +250,7 @@ class DashboardService:
                 'total_contributions': str(self.total_contributions()),
                 'total_expenditures': str(self.total_expenditures()),
                 'total_fines_collected': str(self.total_fine_payments()),
+                'brought_forward': str(self.brought_forward_balance()),
             },
             'fund_balances': self.fund_balances(),
             'loan_stats': self.loan_stats(),
