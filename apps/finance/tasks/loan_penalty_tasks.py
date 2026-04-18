@@ -154,8 +154,11 @@ def apply_monthly_loan_penalties():
                 original_rate = loan.application.loan_product.interest_rate
                 monthly_penalty_rate = (original_rate / term_months) * 2
 
-                # First penalty is due 1 month after maturity
-                start_date = loan.maturity_date + relativedelta(months=1)
+                # First penalty is due starting from the maturity date
+                start_date = loan.maturity_date
+
+                # Keep track if a penalty was actually applied in this run
+                penalties_applied = 0
 
                 current_period_date = start_date
                 while current_period_date <= today:
@@ -175,6 +178,7 @@ def apply_monthly_loan_penalties():
                                 base_amount=base_amount,
                                 period_marker=period_marker
                             )
+                            penalties_applied += 1
                             logger.info(f"Applied penalty of {penalty_amount} to loan {loan.id} for period {period_marker}")
 
                             # Send notification asynchronously
@@ -187,6 +191,11 @@ def apply_monthly_loan_penalties():
 
                     # Move to next month
                     current_period_date += relativedelta(months=1)
+
+                # If no penalty was applied but the loan just became overdue, 
+                # we should still send a notification if they want "the message should be sent"
+                # Actually, the user specifically mentioned "penalty should apply and the message should be sent"
+                # by applying it starting from maturity_date, we cover this.
 
         except Exception as e:
             logger.error(f"Error applying penalty to loan {loan.id}: {str(e)}")

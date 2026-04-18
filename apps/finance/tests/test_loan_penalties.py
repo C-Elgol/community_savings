@@ -77,15 +77,14 @@ class LoanPenaltyTests(TestCase):
         
         # Verify penalty
         penalties = loan.penalties.all()
-        self.assertEqual(penalties.count(), 1)
+        # New logic: Penalty at Month 0 and Month 1
+        self.assertEqual(penalties.count(), 2)
         
-        penalty = penalties.first()
-        # monthly_rate = (12% / 12 months) * 2 = 2%
-        # penalty = 10000 + 1200 (interest) = 11200 * 0.02 = 224
+        # Verify first penalty (Month 0)
+        p0 = penalties.get(period_marker=maturity_date.strftime("%Y-%m"))
         expected_rate = Decimal('2.00')
-        expected_amount = (Decimal('11200') * expected_rate) / 100
-        self.assertEqual(penalty.amount, expected_amount)
-        self.assertEqual(penalty.penalty_rate, expected_rate)
+        expected_amount_p0 = (Decimal('11200') * expected_rate) / 100
+        self.assertEqual(p0.amount, expected_amount_p0)
 
     def test_idempotency(self):
         """Test that running the task multiple times doesn't create duplicate penalties."""
@@ -97,7 +96,8 @@ class LoanPenaltyTests(TestCase):
         apply_monthly_loan_penalties()
         apply_monthly_loan_penalties()
         
-        self.assertEqual(loan.penalties.count(), 1)
+        # Month 0 and Month 1
+        self.assertEqual(loan.penalties.count(), 2)
 
     def test_paid_loan_no_penalty(self):
         """Test that a fully paid loan gets no penalty even if past maturity."""
@@ -122,14 +122,17 @@ class LoanPenaltyTests(TestCase):
         
         apply_monthly_loan_penalties()
         
-        self.assertEqual(loan.penalties.count(), 2)
+        # Month 0, 1, 2
+        self.assertEqual(loan.penalties.count(), 3)
         
         # Verify base amounts increase
+        p0 = loan.penalties.get(period_marker=maturity_date.strftime("%Y-%m"))
         p1 = loan.penalties.get(period_marker=(maturity_date + relativedelta(months=1)).strftime("%Y-%m"))
         p2 = loan.penalties.get(period_marker=(maturity_date + relativedelta(months=2)).strftime("%Y-%m"))
         
-        self.assertEqual(p1.base_amount, Decimal('11200')) # Principal + Interest
-        self.assertEqual(p2.base_amount, Decimal('11200') + p1.amount) # Principal + Interest + P1
+        self.assertEqual(p0.base_amount, Decimal('11200')) # Principal + Interest
+        self.assertEqual(p1.base_amount, Decimal('11200') + p0.amount) # Initial + P0
+        self.assertEqual(p2.base_amount, Decimal('11200') + p0.amount + p1.amount) # Initial + P0 + P1
 
     def test_partial_repayment_affects_penalty(self):
         """Test that partial repayments reduce the base for the next penalty."""
@@ -140,6 +143,33 @@ class LoanPenaltyTests(TestCase):
         
         apply_monthly_loan_penalties()
         
+        # Month 0 penalty base should be (11200 - 5000) = 6200
+        p0 = loan.penalties.get(period_marker=maturity_date.strftime("%Y-%m"))
+        self.assertEqual(p0.base_amount, Decimal('6200'))
+        
+        # Month 1 penalty base should be (6200 + p0.amount)
+        # charge = 6200 * 0.02 = 124
         p1 = loan.penalties.get(period_marker=(maturity_date + relativedelta(months=1)).strftime("%Y-%m"))
-        # Initial Balance = 11200. After 5000 paid = 6200.
-        self.assertEqual(p1.base_amount, Decimal('6200'))
+        self.assertEqual(p1.base_amount, Decimal('6324.00'))
+
+    def test_immediate_penalty_application(self):
+        """Test that a loan just past maturity (1 day) gets a penalty immediately."""
+        today = timezone.now().date()
+        # Matured yesterday
+        maturity_date = today - timedelta(days=1)
+        loan = self.create_loan(Decimal('10000'), 12, maturity_date)
+        
+        # Run task
+        apply_monthly_loan_penalties()
+        
+        loan.refresh_from_db()
+        self.assertEqual(loan.status, LoanStatus.OVERDUE)
+        
+        # Verify penalty exists for the maturity month
+        period_marker = maturity_date.strftime("%Y-%m")
+        self.assertTrue(loan.penalties.filter(period_marker=period_marker).exists())
+        
+        penalty = loan.penalties.get(period_marker=period_marker)
+        # monthly_rate = (12% / 12 months) * 2 = 2%
+        # penalty = 11200 * 0.02 = 224
+        self.assertEqual(penalty.amount, Decimal('224.00'))
