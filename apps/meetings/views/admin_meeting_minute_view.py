@@ -25,6 +25,19 @@ class AdminMeetingMinuteView(AdminSeasonMixin, LoginRequiredMixin, TemplateView)
         community_id = self.kwargs.get('community_id')
         community = Community.objects.get(id=community_id)
         context['community'] = community
+        
+        # Fetch last 3 minutes for initial display
+        recent_minutes = MeetingMinute.objects.filter(
+            meeting__community=community
+        ).select_related('meeting', 'prepared_by').order_by('-created')[:3]
+        
+        context['recent_minutes'] = recent_minutes
+        
+        # Total count for pagination display (e.g., "3 rows", or for "Load More" logic)
+        context['total_minutes_count'] = MeetingMinute.objects.filter(
+            meeting__community=community
+        ).count()
+        
         return context
 
 class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
@@ -165,4 +178,23 @@ class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
             return JsonResponse({'status': 'success', 'message': 'Meeting minutes saved successfully!'})
         except Exception as e:
             logger.error(f"Save error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+class MeetingMinuteDetailView(LoginRequiredMixin, TemplateView):
+    """Fetches details of a specific meeting minute"""
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            minute = MeetingMinute.objects.get(pk=pk)
+            return JsonResponse({
+                'status': 'success',
+                'title': minute.title,
+                'date': minute.minute_date.isoformat() if minute.minute_date else '',
+                'language': minute.language,
+                'transcript': minute.transcript,
+                'summary': minute.summary,
+                'minutes': minute.discussions
+            })
+        except MeetingMinute.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Minute not found'})
+        except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
