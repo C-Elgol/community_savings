@@ -13,10 +13,11 @@ from openai import OpenAI
 from apps.meetings.models import Meeting, MeetingMinute
 from apps.communities.models import Community
 from apps.global_data.enum import MinuteStatus
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
 
 logger = logging.getLogger(__name__)
 
-class AdminMeetingMinuteView(LoginRequiredMixin, TemplateView):
+class AdminMeetingMinuteView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/meetings_minutes/meetings_minutes.html'
 
     def get_context_data(self, **kwargs):

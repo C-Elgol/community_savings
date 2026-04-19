@@ -42,12 +42,12 @@ class AdminContributionsView(AdminSeasonMixin, DetailView):
         context['eligible_members_by_feature'] = eligible
 
         # Determine which features are enabled in this community
-        enabled_features = list(
+        active_contribution_features = list(
             community.features.filter(
                 feature_type__in=[ft.value for ft in CONTRIBUTION_FEATURE_TYPES],
                 is_active=True
             ).values_list('feature_type', flat=True)
         )
-        context['enabled_features'] = enabled_features
+        context['active_contribution_features'] = active_contribution_features
 
         return context

@@ -2,7 +2,7 @@
 <div id="contributionsPage" class="space-y-6">
   <!-- Feature Type Tabs -->
   <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-2 flex flex-wrap gap-1">
-    {% for ft in enabled_features %}
+    {% for ft in active_contribution_features %}
     <button
       onclick="switchFeatureType('{{ ft }}')"
       id="featureTab_{{ ft }}"
@@ -660,7 +660,7 @@
     "use strict";
 
     const COMMUNITY_ID = "{{ community.id }}";
-    const ENABLED_FEATURES = {{ enabled_features|safe }};
+    const ENABLED_FEATURES = {{ active_contribution_features|safe }};
     const ACTIVE_SEASON_ID = "{{ active_season.id|default:'' }}";
     const ACTIVE_SEASON_LABEL = "{{ active_season.title|default:active_season.season_date|default:'' }}";
 
