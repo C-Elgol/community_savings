@@ -14,12 +14,15 @@ from apps.users.permissions import rbac_permission_required
 class LoanApplicationAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
+        season_id = request.GET.get('season_id')
         mine = request.GET.get('mine') == 'true'
         filters = {'membership__community_id': community_id}
         if mine:
             filters['membership__user'] = request.user
         if status:
             filters['status'] = status
+        if season_id:
+            filters['season_id'] = season_id
         
         apps = LoanApplication.objects.filter(**filters).select_related('membership__user', 'loan_product', 'season').order_by('-created')
         

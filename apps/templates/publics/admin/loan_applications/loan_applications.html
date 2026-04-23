@@ -196,8 +196,9 @@
     "use strict";
 
     const COMMUNITY_ID = "{{ community.id }}";
+    const ACTIVE_SEASON_ID = "{{ active_season.id }}";
     const API_URLS = {
-        applications: (status) => `/finance/api/community/${COMMUNITY_ID}/loan-applications/${status ? '?status=' + status : ''}`,
+        applications: (status) => `/finance/api/community/${COMMUNITY_ID}/loan-applications/?${status ? 'status=' + status + '&' : ''}${ACTIVE_SEASON_ID ? 'season_id=' + ACTIVE_SEASON_ID : ''}`,
         applicationAction: (id) => `/finance/api/loan-application/${id}/`,
         products: `/finance/api/community/${COMMUNITY_ID}/loan-products/`,
         members: `/finance/api/community/${COMMUNITY_ID}/memberships/`,

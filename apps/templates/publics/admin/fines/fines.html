@@ -133,6 +133,7 @@
         "use strict";
 
         const COMMUNITY_ID = "{{ community.id }}";
+        const ACTIVE_SEASON_ID = "{{ active_season.id }}";
         const ENDPOINTS = {
             fines: `{% url 'finance:fine_list_api' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', COMMUNITY_ID),
             pay: (id) => `/finance/api/fine/${id}/pay/`
@@ -162,6 +163,9 @@
                 const url = new URL(ENDPOINTS.fines, window.location.origin);
                 url.searchParams.append('status', state.currentStatus);
                 url.searchParams.append('search', state.searchQuery);
+                if (ACTIVE_SEASON_ID && ACTIVE_SEASON_ID !== 'None') {
+                    url.searchParams.append('season_id', ACTIVE_SEASON_ID);
+                }
 
                 const res = await fetch(url);
                 const data = await res.json();
