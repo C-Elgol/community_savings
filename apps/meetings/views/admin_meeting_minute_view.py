@@ -1,6 +1,7 @@
 import json
 import logging
-from django.views.generic import TemplateView
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -129,6 +130,59 @@ class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
 
         return JsonResponse({'status': 'error', 'message': 'Invalid action'})
 
+class MeetingAttendanceAPIView(LoginRequiredMixin, View):
+    """Handles saving/updating attendance for a meeting"""
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            community_id = data.get('community_id')
+            date = data.get('date')
+            title = data.get('title')
+            attendance_list = data.get('attendance', [])
+
+            if not all([community_id, date, title]):
+                return JsonResponse({'status': 'error', 'message': 'Missing required fields (Community, Date, Title)'}, status=400)
+
+            community = get_object_or_404(Community, id=community_id)
+
+            from apps.meetings.models import MeetingAttendance
+            from apps.communities.models import Membership
+
+            with transaction.atomic():
+                # 1. Find or create meeting
+                meeting, created = Meeting.objects.get_or_create(
+                    community=community,
+                    scheduled_date=date,
+                    title=title,
+                    defaults={
+                        'start_time': timezone.now().time(),
+                        'end_time': timezone.now().time(),
+                        'chaired_by': request.user
+                    }
+                )
+
+                # 2. Save attendance records
+                for record in attendance_list:
+                    membership_id = record.get('membership_id')
+                    was_present = record.get('was_present', True)
+                    
+                    membership = get_object_or_404(Membership, id=membership_id)
+                    MeetingAttendance.objects.update_or_create(
+                        meeting=meeting,
+                        membership=membership,
+                        defaults={'was_present': was_present}
+                    )
+
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Attendance saved successfully!', 
+                'meeting_id': str(meeting.id)
+            })
+        except Exception as e:
+            logger.error(f"Attendance save error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
     """Handles saving meeting and minutes to database"""
 
@@ -142,6 +196,7 @@ class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
             summary = data.get('summary')
             minutes_content = data.get('minutes')
             community_id = data.get('community_id')
+            meeting_id = data.get('meeting_id')
 
             if not all([title, date, community_id]):
                 return JsonResponse({'status': 'error', 'message': 'Missing required fields (Title, Date, Community)'})
@@ -150,29 +205,33 @@ class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
 
             with transaction.atomic():
                 # 1. Create/Update Meeting
-                # In this flow, we create a new meeting record
-                meeting = Meeting.objects.create(
-                    community=community,
-                    title=title,
-                    scheduled_date=date,
-                    start_time=timezone.now().time(),
-                    end_time=timezone.now().time(), # Placeholder
-                    chaired_by=request.user
-                )
+                if meeting_id:
+                    meeting = get_object_or_404(Meeting, id=meeting_id)
+                else:
+                    meeting = Meeting.objects.create(
+                        community=community,
+                        title=title,
+                        scheduled_date=date,
+                        start_time=timezone.now().time(),
+                        end_time=timezone.now().time(), # Placeholder
+                        chaired_by=request.user
+                    )
 
-                # 2. Create MeetingMinute
-                MeetingMinute.objects.create(
+                # 2. Create/Update MeetingMinute
+                MeetingMinute.objects.update_or_create(
                     meeting=meeting,
-                    title=title,
-                    minute_date=date,
-                    start_time=meeting.start_time,
-                    end_time=meeting.end_time,
-                    prepared_by=request.user,
-                    transcript=transcript,
-                    summary=summary,
-                    discussions=minutes_content,
-                    language=language,
-                    status=MinuteStatus.DRAFT
+                    defaults={
+                        'title': title,
+                        'minute_date': date,
+                        'start_time': meeting.start_time,
+                        'end_time': meeting.end_time,
+                        'prepared_by': request.user,
+                        'transcript': transcript,
+                        'summary': summary,
+                        'discussions': minutes_content,
+                        'language': language,
+                        'status': MinuteStatus.DRAFT
+                    }
                 )
 
             return JsonResponse({'status': 'success', 'message': 'Meeting minutes saved successfully!'})

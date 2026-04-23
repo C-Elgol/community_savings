@@ -8,9 +8,10 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-3xl font-bold text-slate-800">Meeting Minutes</h1>
-            {% comment %} <a href="{% url 'meetings:members_meeting' %}" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center gap-2 shadow-sm">
-                <i class="fas fa-arrow-left text-xs"></i> Back
-            </a> {% endcomment %}
+            <button onclick="openAttendanceModal()" 
+                class="px-5 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+                <i class="fas fa-users-check"></i> Attendance
+            </button>
         </div>
 
         <!-- Meta Information Card -->
@@ -253,11 +254,40 @@
     </div>
 </div>
 
+<!-- Attendance Modal -->
+<div id="attendanceModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="p-8 border-b border-slate-100 flex items-center justify-between">
+            <h2 id="attendance-modal-title" class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                <i class="fas fa-clipboard-user text-emerald-600"></i> Record Attendance
+            </h2>
+            <button onclick="closeAttendanceModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-all">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        
+        <div id="attendance-list-container" class="p-8 max-h-[60vh] overflow-y-auto">
+            <div class="flex items-center justify-center py-12">
+                <i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i>
+            </div>
+        </div>
+
+        <div class="p-8 bg-slate-50 flex items-center justify-end gap-4">
+            <button onclick="closeAttendanceModal()" class="px-8 py-4 rounded-2xl font-bold text-slate-600 hover:bg-slate-200 transition-all">
+                Cancel
+            </button>
+            <button id="btn-save-attendance" class="px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all flex items-center gap-2">
+                <i class="fas fa-save"></i> Save Attendance
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 let mediaRecorder;
 let audioChunks = [];
-let startTime;
 let timerInterval;
+let recordedMeetingId = null;
 
 function switchTab(tabId) {
     const sectionVoice = document.getElementById('section-voice');
@@ -539,6 +569,14 @@ document.getElementById('btn-save').addEventListener('click', async () => {
     const minutes = document.getElementById('output-minutes').value;
 
     if (!title || !date) return window.toastManager.buildToast().setMessage('Title and Date are required').setType('warning').show();
+    
+    // Attendance Validation
+    if (!recordedMeetingId) {
+        return window.toastManager.buildToast()
+            .setMessage('Please record attendance first')
+            .setType('warning')
+            .show();
+    }
 
     const formData = new FormData();
     formData.append('title', title);
@@ -548,6 +586,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
     formData.append('summary', summary);
     formData.append('minutes', minutes);
     formData.append('community_id', "{{ community.id }}");
+    formData.append('meeting_id', recordedMeetingId);
 
     const saveBtn = document.getElementById('btn-save');
     saveBtn.disabled = true;
@@ -606,6 +645,115 @@ async function loadMinute(minuteId) {
         window.toastManager.buildToast().setMessage('Failed to load minute details').setType('danger').show();
     }
 }
+
+// Attendance Modal Logic
+async function openAttendanceModal() {
+    const title = document.getElementById('meeting-title').value;
+    const date = document.getElementById('meeting-date').value;
+    
+    if (!title || !date) {
+        return window.toastManager.buildToast()
+            .setMessage('Please enter meeting title and date first')
+            .setType('warning')
+            .show();
+    }
+
+    const modal = document.getElementById('attendanceModal');
+    const container = document.getElementById('attendance-list-container');
+    
+    modal.classList.remove('hidden');
+    container.innerHTML = '<div class="flex items-center justify-center py-12"><i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i></div>';
+
+    try {
+        const res = await fetch("{% url 'finance:membership_api' community.id %}");
+        const data = await res.json();
+        
+        if (data.success) {
+            let html = '<div class="space-y-4">';
+            data.members.forEach((m, idx) => {
+                html += `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold uppercase">
+                            ${m.name.charAt(0)}
+                        </div>
+                        <span class="font-semibold text-slate-700">${m.name}</span>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer group/label">
+                            <input type="radio" name="attendance_${m.id}" value="present" checked 
+                                class="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500 transition-all cursor-pointer">
+                            <span class="text-sm font-bold text-emerald-600">Present</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer group/label">
+                            <input type="radio" name="attendance_${m.id}" value="absent" 
+                                class="w-5 h-5 text-rose-600 border-slate-300 focus:ring-rose-500 transition-all cursor-pointer">
+                            <span class="text-sm font-bold text-rose-600">Absent</span>
+                        </label>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">${data.message || 'Error loading members'}</div>`;
+        }
+    } catch (err) {
+        container.innerHTML = '<div class="text-center py-8 text-rose-500 font-bold">Failed to load members</div>';
+    }
+}
+
+function closeAttendanceModal() {
+    document.getElementById('attendanceModal').classList.add('hidden');
+}
+
+document.getElementById('btn-save-attendance').addEventListener('click', async () => {
+    const title = document.getElementById('meeting-title').value;
+    const date = document.getElementById('meeting-date').value;
+    const btn = document.getElementById('btn-save-attendance');
+    const container = document.getElementById('attendance-list-container');
+    const memberRows = container.querySelectorAll('input[type="radio"]:checked');
+    
+    const attendance = Array.from(memberRows).map(input => ({
+        membership_id: input.name.split('_')[1],
+        was_present: input.value === 'present'
+    }));
+
+    if (attendance.length === 0) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Saving...';
+
+    try {
+        const res = await fetch("{% url 'meetings:meeting_attendance_save' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                community_id: "{{ community.id }}",
+                date: date,
+                title: title,
+                attendance: attendance
+            })
+        });
+        
+        const result = await res.json();
+        if (result.status === 'success') {
+            recordedMeetingId = result.meeting_id;
+            window.toastManager.buildToast().setMessage('Attendance saved successfully!').setType('success').show();
+            closeAttendanceModal();
+        } else {
+            window.toastManager.buildToast().setMessage(result.message).setType('danger').show();
+        }
+    } catch (err) {
+        window.toastManager.buildToast().setMessage('Failed to save attendance').setType('danger').show();
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Attendance';
+    }
+});
 </script>
 
 <style>
