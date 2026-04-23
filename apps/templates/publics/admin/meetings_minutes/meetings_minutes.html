@@ -267,8 +267,17 @@
         </div>
         
         <div id="attendance-list-container" class="p-8 max-h-[60vh] overflow-y-auto">
-            <div class="flex items-center justify-center py-12">
-                <i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i>
+            <!-- Search Bar -->
+            <div class="mb-6 relative">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="member-search" oninput="filterMembers()" placeholder="Search members..."
+                    class="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 transition-all duration-200 text-slate-800">
+            </div>
+            
+            <div id="members-list" class="space-y-4">
+                <div class="flex items-center justify-center py-12">
+                    <i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i>
+                </div>
             </div>
         </div>
 
@@ -288,6 +297,7 @@ let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
 let recordedMeetingId = null;
+let allMembers = []; // Store members for filtering
 
 function switchTab(tabId) {
     const sectionVoice = document.getElementById('section-voice');
@@ -630,6 +640,9 @@ async function loadMinute(minuteId) {
             document.getElementById('output-summary').value = result.summary || '';
             document.getElementById('output-minutes').value = result.minutes || '';
             
+            // Set meeting_id for attendance preloading
+            recordedMeetingId = result.meeting_id || null;
+            
             // Switch to voice tab if it's voice (though load logic applies to both)
             switchTab('voice');
             
@@ -659,48 +672,96 @@ async function openAttendanceModal() {
     }
 
     const modal = document.getElementById('attendanceModal');
-    const container = document.getElementById('attendance-list-container');
+    const listContainer = document.getElementById('members-list');
+    const searchInput = document.getElementById('member-search');
     
     modal.classList.remove('hidden');
-    container.innerHTML = '<div class="flex items-center justify-center py-12"><i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i></div>';
+    searchInput.value = '';
+    listContainer.innerHTML = '<div class="flex items-center justify-center py-12"><i class="fas fa-circle-notch animate-spin text-3xl text-emerald-500"></i></div>';
 
     try {
-        const res = await fetch("{% url 'finance:membership_api' community.id %}");
+        // Build URL for fetching attendance
+        let url = `{% url 'meetings:meeting_attendance_save' %}?community_id={{ community.id }}&date=${date}&title=${encodeURIComponent(title)}`;
+        if (recordedMeetingId) {
+            url = `{% url 'meetings:meeting_attendance_save' %}?meeting_id=${recordedMeetingId}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
         
-        if (data.success) {
-            let html = '<div class="space-y-4">';
-            data.members.forEach((m, idx) => {
-                html += `
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold uppercase">
-                            ${m.name.charAt(0)}
-                        </div>
-                        <span class="font-semibold text-slate-700">${m.name}</span>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <label class="flex items-center gap-2 cursor-pointer group/label">
-                            <input type="radio" name="attendance_${m.id}" value="present" checked 
-                                class="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500 transition-all cursor-pointer">
-                            <span class="text-sm font-bold text-emerald-600">Present</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer group/label">
-                            <input type="radio" name="attendance_${m.id}" value="absent" 
-                                class="w-5 h-5 text-rose-600 border-slate-300 focus:ring-rose-500 transition-all cursor-pointer">
-                            <span class="text-sm font-bold text-rose-600">Absent</span>
-                        </label>
-                    </div>
-                </div>`;
-            });
-            html += '</div>';
-            container.innerHTML = html;
+        if (data.status === 'success') {
+            if (data.exists) {
+                allMembers = data.attendance;
+                recordedMeetingId = data.meeting_id;
+            } else {
+                // If meeting doesn't exist, fetch all active members from finance API
+                const membersRes = await fetch("{% url 'finance:membership_api' community.id %}");
+                const membersData = await membersRes.json();
+                if (membersData.success) {
+                    allMembers = membersData.members.map(m => ({
+                        id: m.id,
+                        name: m.name,
+                        was_present: true // Default to true
+                    }));
+                } else {
+                    throw new Error(membersData.message || 'Failed to fetch members');
+                }
+            }
+            renderMembers(allMembers);
         } else {
-            container.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">${data.message || 'Error loading members'}</div>`;
+            listContainer.innerHTML = `<div class="text-center py-8 text-rose-500 font-bold">${data.message || 'Error loading attendance'}</div>`;
         }
     } catch (err) {
-        container.innerHTML = '<div class="text-center py-8 text-rose-500 font-bold">Failed to load members</div>';
+        listContainer.innerHTML = '<div class="text-center py-8 text-rose-500 font-bold">Failed to load members</div>';
     }
+}
+
+function renderMembers(members) {
+    const listContainer = document.getElementById('members-list');
+    if (members.length === 0) {
+        listContainer.innerHTML = '<div class="text-center py-8 text-slate-400">No members found.</div>';
+        return;
+    }
+
+    let html = '<div class="space-y-4">';
+    members.forEach((m) => {
+        html += `
+        <div class="participant-row flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold uppercase">
+                    ${m.name.charAt(0)}
+                </div>
+                <span class="member-name font-semibold text-slate-700">${m.name}</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <label class="flex items-center gap-2 cursor-pointer group/label">
+                    <input type="radio" name="attendance_${m.id}" value="present" ${m.was_present ? 'checked' : ''} 
+                        onchange="updateMemberAttendance('${m.id}', true)"
+                        class="w-5 h-5 text-emerald-600 border-slate-300 focus:ring-emerald-500 transition-all cursor-pointer">
+                    <span class="text-sm font-bold text-emerald-600">Present</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer group/label">
+                    <input type="radio" name="attendance_${m.id}" value="absent" ${!m.was_present ? 'checked' : ''} 
+                        onchange="updateMemberAttendance('${m.id}', false)"
+                        class="w-5 h-5 text-rose-600 border-slate-300 focus:ring-rose-500 transition-all cursor-pointer">
+                    <span class="text-sm font-bold text-rose-600">Absent</span>
+                </label>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    listContainer.innerHTML = html;
+}
+
+function updateMemberAttendance(id, wasPresent) {
+    const member = allMembers.find(m => m.id === id);
+    if (member) member.was_present = wasPresent;
+}
+
+function filterMembers() {
+    const query = document.getElementById('member-search').value.toLowerCase();
+    const filtered = allMembers.filter(m => m.name.toLowerCase().includes(query));
+    renderMembers(filtered);
 }
 
 function closeAttendanceModal() {
@@ -711,15 +772,8 @@ document.getElementById('btn-save-attendance').addEventListener('click', async (
     const title = document.getElementById('meeting-title').value;
     const date = document.getElementById('meeting-date').value;
     const btn = document.getElementById('btn-save-attendance');
-    const container = document.getElementById('attendance-list-container');
-    const memberRows = container.querySelectorAll('input[type="radio"]:checked');
-    
-    const attendance = Array.from(memberRows).map(input => ({
-        membership_id: input.name.split('_')[1],
-        was_present: input.value === 'present'
-    }));
 
-    if (attendance.length === 0) return;
+    if (allMembers.length === 0) return;
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Saving...';
@@ -735,7 +789,7 @@ document.getElementById('btn-save-attendance').addEventListener('click', async (
                 community_id: "{{ community.id }}",
                 date: date,
                 title: title,
-                attendance: attendance
+                attendance: allMembers.map(m => ({ membership_id: m.id, was_present: m.was_present }))
             })
         });
         

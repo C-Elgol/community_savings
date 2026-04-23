@@ -131,8 +131,56 @@ class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
         return JsonResponse({'status': 'error', 'message': 'Invalid action'})
 
 class MeetingAttendanceAPIView(LoginRequiredMixin, View):
-    """Handles saving/updating attendance for a meeting"""
+    """Handles saving/updating and fetching attendance for a meeting"""
     
+    def get(self, request, *args, **kwargs):
+        try:
+            meeting_id = request.GET.get('meeting_id')
+            community_id = request.GET.get('community_id')
+            date = request.GET.get('date')
+            title = request.GET.get('title')
+
+            meeting = None
+            if meeting_id:
+                meeting = get_object_or_404(Meeting, id=meeting_id)
+            elif all([community_id, date, title]):
+                meeting = Meeting.objects.filter(
+                    community_id=community_id,
+                    scheduled_date=date,
+                    title=title
+                ).first()
+
+            if not meeting:
+                # If meeting doesn't exist, just return exists: False
+                # The frontend will then fetch members via the normal membership API
+                return JsonResponse({'status': 'success', 'exists': False})
+
+            from apps.communities.models import Membership
+            from apps.meetings.models import MeetingAttendance
+
+            # Get all active members
+            memberships = Membership.objects.filter(community=meeting.community, status='active').select_related('user')
+            # Get existing attendance
+            attendance_map = {str(a.membership_id): a.was_present for a in MeetingAttendance.objects.filter(meeting=meeting)}
+
+            data = []
+            for m in memberships:
+                data.append({
+                    'id': str(m.id),
+                    'name': m.user.get_full_name or m.user.username,
+                    'was_present': attendance_map.get(str(m.id), True) # Default to True
+                })
+
+            return JsonResponse({
+                'status': 'success',
+                'exists': True,
+                'meeting_id': str(meeting.id),
+                'attendance': data
+            })
+        except Exception as e:
+            logger.error(f"Attendance fetch error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -251,7 +299,8 @@ class MeetingMinuteDetailView(LoginRequiredMixin, TemplateView):
                 'language': minute.language,
                 'transcript': minute.transcript,
                 'summary': minute.summary,
-                'minutes': minute.discussions
+                'minutes': minute.discussions,
+                'meeting_id': str(minute.meeting_id)
             })
         except MeetingMinute.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Minute not found'})
