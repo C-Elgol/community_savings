@@ -3,12 +3,14 @@ from django.shortcuts import get_object_or_404
 from apps.communities.models import Community
 import logging
 from django.utils.translation import gettext_lazy as _
+from apps.finance.utils.admin_mixins import AdminSeasonMixin
 
 logger = logging.getLogger(__name__)
 
-class AdminMemberView(DetailView):
+class AdminMemberView(AdminSeasonMixin, DetailView):
     model = Community
     template_name = 'publics/admin/members/members.html'
+    required_area = 'members'
     pk_url_kwarg = 'community_id'
     context_object_name = 'community'
 

@@ -6,6 +6,9 @@ from django.db.models import Sum
 from decimal import Decimal
 import json
 
+from django.utils.decorators import method_decorator
+from apps.users.permissions import rbac_permission_required
+
 from apps.finance.models import Expenditure, Contribution, FinancialSeason
 from apps.communities.models import Community
 from apps.global_data.enum import CommunityFeatureType
@@ -167,6 +170,7 @@ class ExpenditureAPI(View):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
+@method_decorator(rbac_permission_required('expenditures'), name='dispatch')
 class ExpenditureDetailAPI(View):
     """Handles operations on a single Expenditure (DELETE)."""
 

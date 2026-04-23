@@ -21,6 +21,7 @@
   <!-- navigation menu (all 13 pages) -->
   <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto text-sm">
     <!-- Dashboard -->
+    {% if 'dashboard' in user_permissions %}
     <a
       href="{% url 'users:admin_dashboard' community.id %}"
       data-page="dashboard"
@@ -28,7 +29,10 @@
     >
       <i class="fas fa-th-large w-5 text-emerald-700"></i><span>Dashboard</span>
     </a>
+    {% endif %}
+
     <!-- Members -->
+    {% if 'members' in user_permissions %}
     <a
       href="{% url 'users:admin_members' community.id %}"
       data-page="members"
@@ -36,7 +40,10 @@
     >
       <i class="fas fa-users w-5 text-slate-400"></i><span>Members</span>
     </a>
+    {% endif %}
+
     <!-- Membership Applications -->
+    {% if 'applications' in user_permissions %}
     <a
       href="{% url 'users:membership_application' community.id %}"
       data-page="applications"
@@ -45,8 +52,10 @@
       <i class="fas fa-file-signature w-5 text-slate-400"></i
       ><span>Membership Applications</span>
     </a>
+    {% endif %}
+
     <!-- Njangi -->
-    {% if 'njangi' in enabled_features %}
+    {% if 'contributions' in user_permissions and 'njangi' in enabled_features %}
     <a
       href="{% url 'finance:admin_contribution' community.id %}"
       data-page="contributions"
@@ -55,18 +64,22 @@
       <i class="fas fa-coins w-5 text-slate-400"></i><span>Njangi</span>
     </a>
     {% endif %}
+
     <!-- Contributions -->
-    {% if 'savings' in enabled_features or 'entertainment' in enabled_features or 'sinking_fund' in enabled_features or 'project' in enabled_features or 'events' in enabled_features %}
-    <a
-      href="{% url 'finance:admin_contributions' community.id %}"
-      data-page="contributions"
-      class="nav-link flex {% if request.resolver_match.url_name == 'admin_contributions' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
-    >
-      <i class="fas fa-coins w-5 text-slate-400"></i><span>Contributions</span>
-    </a>
+    {% if 'contributions' in user_permissions %}
+      {% if 'savings' in enabled_features or 'entertainment' in enabled_features or 'sinking_fund' in enabled_features or 'project' in enabled_features or 'events' in enabled_features %}
+      <a
+        href="{% url 'finance:admin_contributions' community.id %}"
+        data-page="contributions"
+        class="nav-link flex {% if request.resolver_match.url_name == 'admin_contributions' %}nav-item-active{% else %}nav-item-inactive{% endif %} items-center gap-3 px-4 py-3 rounded-xl sidebar-transition"
+      >
+        <i class="fas fa-coins w-5 text-slate-400"></i><span>Contributions</span>
+      </a>
+      {% endif %}
     {% endif %}
+
     <!-- Loans -->
-    {% if 'loans' in enabled_features %}
+    {% if 'loans' in user_permissions and 'loans' in enabled_features %}
     <a
       href="{% url 'finance:admin_loans' community.id %}"
       data-page="loans"
@@ -83,7 +96,9 @@
       <i class="fas fa-file-signature w-5 text-slate-400"></i><span>Loan Applications</span>
     </a>
     {% endif %}
+
     <!-- Fines -->
+    {% if 'fines' in user_permissions %}
     <a
       href="{% url 'finance:admin_fines' community.id %}"
       data-page="fines"
@@ -91,7 +106,10 @@
     >
       <i class="fas fa-exclamation-triangle w-5 text-slate-400"></i><span>Fines</span>
     </a>
+    {% endif %}
+
     <!-- Expenditures -->
+    {% if 'expenditures' in user_permissions %}
     <a
       href="{% url 'finance:admin_expenditures' community.id %}"
       data-page="expenditures"
@@ -99,7 +117,10 @@
     >
       <i class="fas fa-hand-holding-usd w-5 text-slate-400"></i><span>Expenditures</span>
     </a>
+    {% endif %}
+
     <!-- Interest Sharing -->
+    {% if 'interest_sharing' in user_permissions %}
     <a
       href="{% url 'finance:admin_interest_sharing' community.id %}"
       data-page="interest-sharing"
@@ -107,15 +128,10 @@
     >
       <i class="fas fa-percentage w-5 text-slate-400"></i><span>Interest Sharing</span>
     </a>
-    <!-- Meetings -->
-    <a
-      href="#"
-      data-page="meetings"
-      class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl nav-item-inactive sidebar-transition"
-    >
-      <i class="fas fa-handshake w-5 text-slate-400"></i><span>Meetings</span>
-    </a>
+    {% endif %}
+
     <!-- Meeting Minutes -->
+    {% if 'meetings' in user_permissions %}
     <a
       href="{% url 'meetings:admin_meeting_minutes' community.id %}"
       data-page="minutes"
@@ -123,7 +139,10 @@
     >
       <i class="fas fa-file-alt w-5 {% if request.resolver_match.url_name == 'admin_meeting_minutes' %}text-emerald-700{% else %}text-slate-400{% endif %}"></i><span>Meeting Minutes</span>
     </a>
+    {% endif %}
+
     <!-- Financial Reports -->
+    {% if 'reports' in user_permissions %}
     <a
       href="#"
       data-page="reports"
@@ -132,7 +151,10 @@
       <i class="fas fa-chart-bar w-5 text-slate-400"></i
       ><span>Financial Reports</span>
     </a>
+    {% endif %}
+
     <!-- Credit Risk Analytics -->
+    {% if 'analytics' in user_permissions %}
     <a
       href="{% url 'analytics:admin_credit_risk' community.id %}"
       data-page="risk"
@@ -140,7 +162,10 @@
     >
       <i class="fas fa-chart-pie w-5 {% if request.resolver_match.url_name == 'admin_credit_risk' %}text-emerald-700{% else %}text-slate-400{% endif %}"></i><span>Credit Risk Analytics</span>
     </a>
+    {% endif %}
+
     <!-- System Logs -->
+    {% if 'logs' in user_permissions %}
     <a
       href="#"
       data-page="logs"
@@ -148,7 +173,10 @@
     >
       <i class="fas fa-scroll w-5 text-slate-400"></i><span>System Logs</span>
     </a>
+    {% endif %}
+
     <!-- Settings -->
+    {% if 'settings' in user_permissions %}
     <a
       href="{% url 'communities:settings' community.id %}"
       data-page="settings"
@@ -156,6 +184,7 @@
     >
       <i class="fas fa-cog w-5 text-slate-400"></i><span>Settings</span>
     </a>
+    {% endif %}
   </nav>
 
   <!-- admin profile footer -->
