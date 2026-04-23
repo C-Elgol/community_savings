@@ -9,6 +9,7 @@ from apps.finance.utils.admin_mixins import AdminSeasonMixin
 class AdminLoanApplicationView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loan_applications/loan_applications.html'
     required_feature = CommunityFeatureType.LOANS
+    required_area = 'loans'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -18,6 +19,7 @@ class AdminLoanApplicationView(AdminSeasonMixin, LoginRequiredMixin, TemplateVie
 class AdminLoanListView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loans/loans.html'
     required_feature = CommunityFeatureType.LOANS
+    required_area = 'loans'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -27,6 +29,7 @@ class AdminLoanListView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
 class AdminLoanProductView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/loan_applications/loan_products.html'
     required_feature = CommunityFeatureType.LOANS
+    required_area = 'settings'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

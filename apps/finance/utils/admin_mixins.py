@@ -6,6 +6,8 @@ from apps.finance.models import FinancialSeason
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 
+from apps.users.permissions import has_area_permission, ROLE_PERMISSIONS
+
 class CommunityRoleMixin:
     """Mixin to handle role-based access control for community spaces."""
     
@@ -13,27 +15,36 @@ class CommunityRoleMixin:
         community = get_object_or_404(Community, id=community_id)
         space = community.community_space
         
+        # Check if user is the direct owner of the space
         is_owner = space.owner == request.user
+        
+        # Get membership in the community space
         membership = CommunitySpaceMembership.objects.filter(
             community_space=space,
             user=request.user
         ).first()
         
         role = membership.role if membership else None
-        is_president = role == CommunitySpaceRole.PRESIDENT
-        is_auditor = role == CommunitySpaceRole.AUDITOR
-        
-        return community, space, is_owner, is_president, is_auditor
+        if is_owner:
+            role = CommunitySpaceRole.OWNER
 
-    def check_permissions(self, request, is_owner, is_president, is_auditor):
+        return community, space, role
+
+    def check_permissions(self, request, role, area=None):
         # Superusers always have access
         if request.user.is_superuser:
             return True
 
-        if not (is_owner or is_president or is_auditor):
+        if not role:
             return False
             
-        if is_auditor and request.method not in ('GET', 'HEAD', 'OPTIONS'):
+        # If an area is specified, check granular permission
+        if area:
+            if not has_area_permission(role, area):
+                return False
+        
+        # Auditor role restriction (Read-only)
+        if role == CommunitySpaceRole.AUDITOR and request.method not in ('GET', 'HEAD', 'OPTIONS'):
             return False
             
         return True
@@ -41,16 +52,21 @@ class CommunityRoleMixin:
 class AdminSeasonMixin(CommunityRoleMixin):
     """Enforces that a season is selected and user has proper roles."""
     required_feature = None
+    required_area = None # The functional area being accessed
     
     def dispatch(self, request, *args, **kwargs):
         community_id = kwargs.get('community_id')
-        community, space, is_owner, is_president, is_auditor = self.get_community_and_roles(request, community_id)
+        community, space, role = self.get_community_and_roles(request, community_id)
         
-        if not self.check_permissions(request, is_owner, is_president, is_auditor):
+        # Check permissions
+        if not self.check_permissions(request, role, area=self.required_area):
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                msg = "Auditor role: Read-only access." if is_auditor else "Permission denied."
+                msg = "You don't have permission to perform this action."
                 return JsonResponse({'success': False, 'message': msg}, status=403)
-            raise PermissionDenied("You do not have permission to access this community.")
+            
+            # Set a session flag for the toast notification
+            request.session['rbac_unauthorized'] = True
+            return redirect(reverse('users:admin_dashboard', kwargs={'community_id': community_id}))
 
         # 🔥 Enforce Feature Flag
         if self.required_feature:
@@ -72,6 +88,16 @@ class AdminSeasonMixin(CommunityRoleMixin):
         community_id = self.kwargs.get('community_id')
         community = get_object_or_404(Community, id=community_id)
         
+        # Get roles for context
+        _, _, role = self.get_community_and_roles(self.request, community_id)
+        context['user_role'] = role
+        context['user_permissions'] = ROLE_PERMISSIONS.get(role, []) if role else []
+
+        # Clear unauthorized flag if present
+        if self.request.session.get('rbac_unauthorized'):
+            context['show_rbac_toast'] = True
+            del self.request.session['rbac_unauthorized']
+
         active_seasons = self.request.session.get('active_seasons', {})
         season_id = active_seasons.get(str(community_id))
         

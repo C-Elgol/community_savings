@@ -7,10 +7,12 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 from django.utils.translation import gettext_lazy as _
+from django.utils.decorators import method_decorator
 
 from apps.communities.models import Membership
 from apps.finance.models import FinancialSeason, ContributionCycle, NjangiRotation, NjangiBenefit
 from apps.global_data.enum import CommunityFeatureType
+from apps.users.permissions import rbac_permission_required
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,7 @@ class NjangiRotationAPI(View):
         rotation.delete()
         return JsonResponse({'success': True, 'message': _("Beneficiary removed from rotation.")})
 
+@method_decorator(rbac_permission_required('contributions'), name='dispatch')
 class NjangiMeetingBeneficiaryAPI(View):
     def get(self, request, cycle_id):
         cycle = get_object_or_404(ContributionCycle, id=cycle_id)

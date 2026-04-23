@@ -45,5 +45,19 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+
+    <!-- RBAC Unauthorized Toast -->
+    {% if show_rbac_toast %}
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.toastManager) {
+          window.toastManager.buildToast()
+            .setMessage("You can't access this feature")
+            .setType("danger")
+            .show();
+        }
+      });
+    </script>
+    {% endif %}
   </body>
 </html>

@@ -10,6 +10,8 @@ from apps.global_data.enum import CommunityFeatureType, CommunitySpaceRole
 logger = logging.getLogger(__name__)
 
 from apps.finance.utils.admin_mixins import AdminSeasonMixin, CommunityRoleMixin
+from apps.users.permissions import rbac_permission_required, has_area_permission
+from django.utils.decorators import method_decorator
 
 class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/settings/settings.html'
@@ -90,6 +92,7 @@ class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
         })
         return context
 
+@method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateFeatureStatusAPI(LoginRequiredMixin, View):
     def post(self, request, community_id):
         try:
@@ -116,6 +119,7 @@ class UpdateFeatureStatusAPI(LoginRequiredMixin, View):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+@method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateCommunitySettingsAPI(LoginRequiredMixin, View):
     def post(self, request, community_id):
         try:
@@ -135,12 +139,13 @@ class UpdateCommunitySettingsAPI(LoginRequiredMixin, View):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+@method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateMemberRoleAPI(CommunityRoleMixin, LoginRequiredMixin, View):
     def post(self, request, community_id):
         # Secure the API: only Owner or President can change roles
-        community, space, is_owner, is_president, is_auditor = self.get_community_and_roles(request, community_id)
+        community, space, role = self.get_community_and_roles(request, community_id)
         
-        if not (is_owner or is_president or request.user.is_superuser):
+        if not (role in (CommunitySpaceRole.OWNER, CommunitySpaceRole.PRESIDENT) or request.user.is_superuser):
             return JsonResponse({'success': False, 'message': "Only owners or presidents can manage roles."}, status=403)
 
         try:

@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class MembershipApplicationView(AdminSeasonMixin, DetailView):
     model = Community
     template_name = 'publics/admin/member_application/member_application.html'
+    required_area = 'applications'
     pk_url_kwarg = 'community_id'
     context_object_name = 'community'
 

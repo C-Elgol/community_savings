@@ -7,6 +7,7 @@ from apps.finance.utils.admin_mixins import AdminSeasonMixin
 
 class AdminExpenditureView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/expenditures/expenditure.html'
+    required_area = 'expenditures'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

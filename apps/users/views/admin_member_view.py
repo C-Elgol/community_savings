@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class AdminMemberView(AdminSeasonMixin, DetailView):
     model = Community
     template_name = 'publics/admin/members/members.html'
+    required_area = 'members'
     pk_url_kwarg = 'community_id'
     context_object_name = 'community'
 

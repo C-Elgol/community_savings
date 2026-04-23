@@ -7,7 +7,10 @@ import json
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from apps.users.permissions import rbac_permission_required
 
+@method_decorator(rbac_permission_required('loans'), name='dispatch')
 class LoanApplicationAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
@@ -83,8 +86,17 @@ class LoanApplicationAPI(View):
             data = json.loads(request.body)
             action = data.get('action') # 'approve' or 'reject'
             loan_app = get_object_or_404(LoanApplication, id=application_id)
+            community_id = loan_app.membership.community_id
+
+            # RBAC for specific actions
+            from apps.finance.utils.admin_mixins import CommunityRoleMixin
+            role_mixin = CommunityRoleMixin()
+            _, _, role = role_mixin.get_community_and_roles(request, community_id)
             
             if action == 'approve':
+                if not request.user.is_superuser and not has_area_permission(role, 'loans_approve'):
+                    return JsonResponse({'success': False, 'message': "You don't have permission to approve loans"}, status=403)
+                
                 with transaction.atomic():
                     loan_app.status = LoanApplicationStatus.APPROVED
                     loan_app.save()
@@ -217,6 +229,7 @@ class LoanPaymentAPI(View):
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
+@method_decorator(rbac_permission_required('settings'), name='dispatch')
 class LoanProductAPI(View):
     def get(self, request, community_id=None, product_id=None):
         if product_id:

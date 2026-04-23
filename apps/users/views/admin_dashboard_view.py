@@ -16,6 +16,7 @@ class AdminDashboardView(AdminSeasonMixin, DetailView):
     template_name = 'publics/admin/admin_dashboard.html'
     pk_url_kwarg = 'community_id'
     context_object_name = 'community'
+    required_area = 'dashboard'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

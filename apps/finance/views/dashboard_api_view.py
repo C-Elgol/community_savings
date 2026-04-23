@@ -6,6 +6,10 @@ from apps.communities.models import Community
 from apps.finance.services.dashboard_service import DashboardService
 
 
+from django.utils.decorators import method_decorator
+from apps.users.permissions import rbac_permission_required
+
+@method_decorator(rbac_permission_required('dashboard'), name='dispatch')
 class DashboardAPI(View):
     """Returns the full dashboard payload for a community."""
 
