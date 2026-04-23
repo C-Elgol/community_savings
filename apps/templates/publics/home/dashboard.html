@@ -48,14 +48,14 @@
             <!-- Active loan -->
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium uppercase text-slate-400">Active loan</span>
+                    <span class="text-xs font-medium uppercase text-slate-400">Total Borrowed</span>
                     <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
                         <i class="fas fa-hand-holding-usd"></i>
                     </div>
                 </div>
-                {% if active_loan %}
-                    <p class="text-2xl font-bold text-slate-800 mt-2">XAF {{ active_loan.amount_borrowed|floatformat:"0" }}</p>
-                    <p class="text-xs text-slate-500 mt-1">{{ active_loan.application.loan_product.name }}</p>
+                {% if active_loans %}
+                    <p class="text-2xl font-bold text-slate-800 mt-2">XAF {{ total_loan_amount|floatformat:"0" }}</p>
+                    <p class="text-xs text-slate-500 mt-1">{{ active_loans.count }} Active Loan{{ active_loans.count|pluralize }}</p>
                 {% else %}
                     <p class="text-2xl font-bold text-slate-300 mt-2">None</p>
                     <p class="text-xs text-slate-400 mt-1">No active loans</p>
@@ -144,51 +144,93 @@
                     </div>
                 </div>
 
+                <!-- loan repayment schedule table -->
+                {% if active_loan and loan_schedule %}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-semibold flex items-center gap-2">
+                            <i class="fas fa-list-ol text-indigo-600"></i> Loan repayment schedule
+                        </h2>
+                        <span class="text-xs text-slate-400">{{ active_loan.application.loan_product.name }}</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="text-left text-slate-400 text-xs border-b border-slate-100">
+                                <tr>
+                                    <th class="pb-3">Inst.</th>
+                                    <th class="pb-3">Due Date</th>
+                                    <th class="pb-3">Amount Due</th>
+                                    <th class="pb-3">Amount Paid</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for item in loan_schedule %}
+                                    <tr>
+                                        <td class="py-3 font-medium">#{{ item.installment_number }}</td>
+                                        <td class="py-3">{{ item.due_date|date:"d M Y" }}</td>
+                                        <td>XAF {{ item.amount_due|floatformat:"0" }}</td>
+                                        <td>XAF {{ item.amount_paid|floatformat:"0" }}</td>
+                                        <td>
+                                            {% if item.is_paid %}
+                                                <span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span>
+                                            {% else %}
+                                                <span class="bg-rose-50 text-rose-700 px-2 py-1 rounded-full text-xs">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- loan summary with progress -->
-                {% if active_loan %}
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                {% for item in loans_data %}
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mt-6">
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-base font-semibold flex items-center gap-2">
-                                <i class="fas fa-file-invoice text-indigo-600"></i> Loan summary · {{ active_loan.application.loan_product.name }}
+                                <i class="fas fa-file-invoice text-indigo-600"></i> Loan summary · {{ item.loan.application.loan_product.name }}
                             </h2>
                             <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">
-                                {{ active_loan.get_status_display }}
+                                {{ item.loan.get_status_display }}
                             </span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                             <div>
                                 <p class="text-xs text-slate-400">Principal</p>
-                                <p class="font-semibold">XAF {{ active_loan.amount_borrowed|floatformat:"0" }}</p>
+                                <p class="font-semibold">XAF {{ item.loan.amount_borrowed|floatformat:"0" }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400">Interest</p>
-                                <p class="font-semibold">XAF {{ active_loan.interest_to_be_paid|floatformat:"0" }}</p>
+                                <p class="font-semibold">XAF {{ item.loan.interest_to_be_paid|floatformat:"0" }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400">Paid so far</p>
-                                <p class="font-semibold text-emerald-600">XAF {{ active_loan.amount_paid|floatformat:"0" }}</p>
+                                <p class="font-semibold text-emerald-600">XAF {{ item.loan.amount_paid|floatformat:"0" }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-slate-400">Remaining</p>
-                                <p class="font-semibold">XAF {{ active_loan.outstanding_balance|floatformat:"0" }}</p>
+                                <p class="font-semibold">XAF {{ item.loan.outstanding_balance|floatformat:"0" }}</p>
                             </div>
                         </div>
                         <div class="space-y-1">
                             <div class="flex justify-between text-xs">
                                 <span>Repayment progress</span>
-                                <span>{{ loan_progress }}%</span>
+                                <span>{{ item.progress }}%</span>
                             </div>
                             <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="bg-emerald-600 h-2 rounded-full" style="width:{{ loan_progress }}%"></div>
+                                <div class="bg-emerald-600 h-2 rounded-full" style="width:{{ item.progress }}%"></div>
                             </div>
-                            {% if next_repayment %}
+                            {% if item.next_repayment %}
                                 <p class="text-xs text-slate-400 mt-2">
-                                    <i class="far fa-clock mr-1"></i>Next payment {{ next_repayment.due_date|date:"d M" }} · XAF {{ next_repayment.amount_due|floatformat:"0" }}
+                                    <i class="far fa-clock mr-1"></i>Next payment {{ item.next_repayment.due_date|date:"d M" }} · XAF {{ item.next_repayment.amount_due|floatformat:"0" }}
                                 </p>
                             {% endif %}
                         </div>
                     </div>
-                {% endif %}
+                {% endfor %}
             </div>
 
             <!-- right column -->

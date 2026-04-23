@@ -48,23 +48,47 @@ class HomeView(LoginRequiredMixin, TemplateView):
             ).aggregate(total=Sum('amount_paid'))['total'] or 0
         context['current_savings'] = current_savings
         
-        # 4. Active Loan
-        active_loan = Loan.objects.filter(
+        # 4. Active Loans
+        active_loans = Loan.objects.filter(
             membership=membership, 
-            status='active'
-        ).select_related('application__loan_product').first()
-        context['active_loan'] = active_loan
+            status__in=['active', 'partial', 'unpaid', 'overdue']
+        ).select_related('application__loan_product')
+        context['active_loans'] = active_loans
         
-        if active_loan:
-            # Calculate repayment percentage
-            total_to_pay = active_loan.total_repayable_amount
-            paid = active_loan.amount_paid
-            progress = (paid / total_to_pay * 100) if total_to_pay > 0 else 0
-            context['loan_progress'] = round(progress, 1)
+        total_loan_amount = 0
+        all_repayments = []
+        
+        loans_data = []
+        for loan in active_loans:
+            total_loan_amount += loan.amount_borrowed
             
-            # Next loan repayment due
-            next_repayment = active_loan.repayment_schedule.filter(is_paid=False, due_date__gte=today).order_by('due_date').first()
-            context['next_repayment'] = next_repayment
+            # Calculate repayment percentage for this loan
+            total_to_pay = loan.total_repayable_amount
+            paid = loan.amount_paid
+            progress = (paid / total_to_pay * 100) if total_to_pay > 0 else 0
+            
+            # Next loan repayment due for this loan
+            next_rep = loan.repayment_schedule.filter(is_paid=False, due_date__gte=today).order_by('due_date').first()
+            
+            loans_data.append({
+                'loan': loan,
+                'progress': round(progress, 1),
+                'next_repayment': next_rep
+            })
+            
+            # Collect all repayments for the combined table
+            all_repayments.extend(list(loan.repayment_schedule.all()))
+
+        context['loans_data'] = loans_data
+        context['total_loan_amount'] = total_loan_amount
+        
+        # Sort combined repayments by due date
+        all_repayments.sort(key=lambda x: x.due_date)
+        context['loan_schedule'] = all_repayments
+        
+        if all_repayments:
+            # Global next due for loans
+            context['next_repayment'] = next((r for r in all_repayments if not r.is_paid and r.due_date >= today), None)
 
         # 5. Credit Profile
         credit_profile = CreditProfile.objects.filter(membership=membership).first()
@@ -88,7 +112,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
                 next_due_date = next_cycle.due_date
         
         # If loan repayment is sooner, show that
-        if active_loan and context.get('next_repayment'):
+        if active_loans and context.get('next_repayment'):
             repayment = context['next_repayment']
             if not next_due_date or repayment.due_date < next_due_date:
                 next_due_amount = repayment.amount_due - repayment.amount_paid
