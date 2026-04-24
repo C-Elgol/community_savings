@@ -777,7 +777,7 @@
       if (state.currentFeatureType === featureType) return;
 
       state.currentFeatureType = featureType;
-      state.currentCycle = null;
+      // Preserve the current cycle selection — do NOT reset it
       state.members = [];
 
       // Update tab UI
@@ -852,6 +852,7 @@
 
     async function initCycles() {
       if (!state.currentSeason) return;
+      const previousCycleId = state.currentCycle; // Preserve cycle selection
       try {
         const res = await fetch(
           API_URLS.featureCycles(state.currentSeason.id, state.currentFeatureType)
@@ -871,6 +872,25 @@
           document.getElementById("displaySeasonTitle").textContent =
             state.currentSeason.title || state.currentSeason.season_date;
           
+          // Re-select previous cycle if it exists in this feature's cycles
+          if (previousCycleId) {
+            const cycleExists = data.cycles.some(c => c.id === previousCycleId);
+            if (cycleExists) {
+              el.cycleSelector.value = previousCycleId;
+              state.currentCycle = previousCycleId;
+              fetchContributions(previousCycleId);
+              const selectedOpt = el.cycleSelector.options[el.cycleSelector.selectedIndex];
+              if (selectedOpt) {
+                document.getElementById("displayCycleTitle").textContent =
+                  selectedOpt.text.split(" (")[0];
+              }
+            } else {
+              state.currentCycle = null;
+              resetMemberTable();
+              resetStats();
+            }
+          }
+
           if (state.currentView === 'net_income') {
             renderNetIncome(data.net_income);
           }
