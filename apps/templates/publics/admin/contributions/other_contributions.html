@@ -71,6 +71,22 @@
         >
           <option value="">{% trans "Select Cycle" %}</option>
         </select>
+        <div class="flex items-center gap-1">
+            <button
+              id="btnLateFine"
+              class="px-3 py-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-all text-[10px] font-black uppercase tracking-widest hidden border border-amber-100"
+              title="{% trans 'Late Contribution Fine' %}"
+            >
+              <i class="fas fa-clock mr-1"></i>{% trans 'Late Fine' %}
+            </button>
+            <button
+              id="btnAbsenceFine"
+              class="px-3 py-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-all text-[10px] font-black uppercase tracking-widest hidden border border-rose-100"
+              title="{% trans 'Absence Fine' %}"
+            >
+              <i class="fas fa-user-times mr-1"></i>{% trans 'Absence Fine' %}
+            </button>
+        </div>
         <button
           id="btnNewCycle"
           class="p-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-all active:scale-95 shadow-sm"
@@ -638,6 +654,63 @@
   </div>
 </div>
 
+<!-- Fine Issuance Modal -->
+<div
+  id="fineModal"
+  class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all"
+  >
+    <div class="p-8 pb-0 flex items-center justify-between">
+      <div>
+        <h3 id="fineModalTitle" class="text-2xl font-black text-slate-800">
+          {% trans "Issue Fines" %}
+        </h3>
+        <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+          {% trans "Select members to fine" %}
+        </p>
+      </div>
+      <button onclick="closeFineModal()" class="w-10 h-10 rounded-full hover:bg-slate-50 text-slate-400 transition-all">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="p-8">
+      <div class="relative mb-6">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+        <input 
+          type="text" 
+          id="fineMemberFilter" 
+          placeholder="{% trans 'Search members...' %}"
+          class="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 transition-all text-sm font-medium"
+        >
+      </div>
+
+      <div id="fineMemberList" class="max-h-60 overflow-y-auto space-y-2 mb-8 pr-2 custom-scrollbar">
+        <!-- Members injected here -->
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          onclick="closeFineModal()"
+          class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+        >
+          {% trans "Cancel" %}
+        </button>
+        <button
+          id="btnLaunchFines"
+          onclick="launchFines()"
+          class="flex-2 px-8 py-4 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-900 transition-all shadow-lg shadow-slate-800/20 active:scale-95 flex items-center justify-center gap-2"
+        >
+          <i id="fineBtnIcon" class="fas fa-bolt"></i>
+          <span id="fineBtnLabel">{% trans "Launch Fines" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
   .active-modal {
     transform: scale(1) !important;
@@ -698,6 +771,8 @@
         `/finance/api/cycle/${cycleId}/membership/${membershipId}/all-features/`,
       memberSeasonContributions: (seasonId, membershipId, featureType) =>
         `/finance/api/season/${seasonId}/membership/${membershipId}/contributions/?feature_type=${featureType}`,
+      fineEligible: (cycleId, type) => `/finance/api/cycle/${cycleId}/fine-eligible/${type}/`,
+      launchFines: (cycleId) => `/finance/api/cycle/${cycleId}/launch-fines/`,
     };
 
     // State
@@ -708,6 +783,9 @@
       members: [],
       cycles: [],
       currentView: 'recordings', // 'recordings' or 'net_income'
+      eligibleFineMembers: [],
+      selectedFineMembers: new Set(),
+      currentFineType: null,
     };
 
     // DOM elements
@@ -725,6 +803,15 @@
       tabRecordings: document.getElementById("tabRecordings"),
       tabNetIncome: document.getElementById("tabNetIncome"),
       memberSearchContainer: document.getElementById("memberSearchContainer"),
+      btnLateFine: document.getElementById("btnLateFine"),
+      btnAbsenceFine: document.getElementById("btnAbsenceFine"),
+      fineModal: document.getElementById("fineModal"),
+      fineMemberFilter: document.getElementById("fineMemberFilter"),
+      fineMemberList: document.getElementById("fineMemberList"),
+      fineModalTitle: document.getElementById("fineModalTitle"),
+      btnLaunchFines: document.getElementById("btnLaunchFines"),
+      fineBtnLabel: document.getElementById("fineBtnLabel"),
+      fineBtnIcon: document.getElementById("fineBtnIcon"),
     };
 
     const tableLoader = new SectionLoaderManager(
@@ -1326,6 +1413,7 @@
         resetMemberTable();
         resetStats();
       }
+      updateFineButtonsVisibility();
     };
 
     document.getElementById("memberSearch").oninput = (e) =>
@@ -1498,6 +1586,121 @@
       await saveBulkContribution(mid, amounts, comment, signature);
       closeAllModals();
     };
+
+    /* ═══════════════════════
+       FINES LOGIC
+    ═══════════════════════ */
+    function updateFineButtonsVisibility() {
+        const hasCycle = !!state.currentCycle;
+        el.btnLateFine.classList.toggle('hidden', !hasCycle);
+        el.btnAbsenceFine.classList.toggle('hidden', !hasCycle);
+    }
+
+    window.openFineModal = async (type) => {
+        if (!state.currentCycle) return;
+        state.currentFineType = type;
+        state.selectedFineMembers.clear();
+        el.fineModalTitle.textContent = type === 'late_contribution' ? "{% trans 'Late Contribution Fine' %}" : "{% trans 'Absence Fine' %}";
+        el.fineModal.classList.remove('hidden');
+        
+        el.fineMemberList.innerHTML = '<div class="py-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading members...</div>';
+        
+        try {
+            const res = await fetch(API_URLS.fineEligible(state.currentCycle, type));
+            const data = await res.json();
+            if (data.success) {
+                state.eligibleFineMembers = data.members;
+                renderFineMembers();
+            }
+        } catch (err) {
+            toast('error', 'Failed to load eligible members');
+        }
+    };
+
+    window.closeFineModal = () => {
+        el.fineModal.classList.add('hidden');
+        state.currentFineType = null;
+        state.selectedFineMembers.clear();
+        el.fineMemberFilter.value = '';
+    };
+
+    function renderFineMembers() {
+        const query = el.fineMemberFilter.value.toLowerCase();
+        const filtered = state.eligibleFineMembers.filter(m => 
+            m.full_name.toLowerCase().includes(query) || 
+            m.email.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            el.fineMemberList.innerHTML = '<div class="py-12 text-center"><p class="text-slate-400 font-bold text-sm">No eligible members found.</p></div>';
+            return;
+        }
+
+        el.fineMemberList.innerHTML = filtered.map(m => `
+            <label class="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl cursor-pointer hover:bg-slate-50 transition-all">
+                <input type="checkbox" value="${m.id}" onchange="toggleFineMemberSelection('${m.id}')" ${state.selectedFineMembers.has(m.id) ? 'checked' : ''} class="w-5 h-5 rounded-lg border-2 border-slate-200 text-emerald-500 focus:ring-emerald-500">
+                <div class="flex-1">
+                    <p class="text-sm font-black text-slate-800">${m.full_name}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${m.email}</p>
+                </div>
+            </label>
+        `).join('');
+    }
+
+    window.toggleFineMemberSelection = (id) => {
+        if (state.selectedFineMembers.has(id)) state.selectedFineMembers.delete(id);
+        else state.selectedFineMembers.add(id);
+    };
+
+    window.launchFines = async () => {
+        if (state.selectedFineMembers.size === 0) {
+            toast('warning', 'Please select at least one member');
+            return;
+        }
+
+        const ids = Array.from(state.selectedFineMembers);
+        setFineLoading(true);
+
+        try {
+            const res = await fetch(API_URLS.launchFines(state.currentCycle), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    member_ids: ids,
+                    fine_type: state.currentFineType
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast('success', data.message);
+                closeFineModal();
+            } else {
+                toast('error', data.message);
+            }
+        } catch (err) {
+            toast('error', 'Failed to launch fines');
+        } finally {
+            setFineLoading(false);
+        }
+    };
+
+    function setFineLoading(isLoading) {
+        el.btnLaunchFines.disabled = isLoading;
+        if (isLoading) {
+            el.fineBtnIcon.className = 'fas fa-spinner fa-spin';
+            el.fineBtnLabel.textContent = 'Processing...';
+        } else {
+            el.fineBtnIcon.className = 'fas fa-bolt';
+            el.fineBtnLabel.textContent = 'Launch Fines';
+        }
+    }
+
+    el.fineMemberFilter.addEventListener('input', renderFineMembers);
+    el.btnLateFine.onclick = () => openFineModal('late_contribution');
+    el.btnAbsenceFine.onclick = () => openFineModal('absence');
 
     function toast(type, msg) {
       window.toastManager?.buildToast().setMessage(msg).setType(type).show();
