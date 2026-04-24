@@ -59,6 +59,7 @@ class CreditScoringService:
             (stability_score * self.WEIGHTS['financial_stability']) +
             (engagement_score * self.WEIGHTS['engagement'])
         )
+        total_relative_score = max(Decimal('0'), min(Decimal('1'), total_relative_score))
         
         final_score = int(self.BASE_SCORE + (total_relative_score * self.MAX_ADDITIONAL_SCORE))
         final_score = max(self.BASE_SCORE, min(850, final_score))
@@ -89,7 +90,7 @@ class CreditScoringService:
                 'risk_band': risk_band,
                 'creditworthiness': creditworthiness,
                 'recommended_max_loan_amount': recommended_loan,
-                'probability_of_default': Decimal('1.0') - total_relative_score,
+                'probability_of_default': max(Decimal('0'), Decimal('1.0') - total_relative_score),
                 'explanation': explanation_json,
                 'last_assessed_at': timezone.now(),
             }
@@ -122,7 +123,8 @@ class CreditScoringService:
             status=ContributionStatus.PAID
         ).count()
         
-        return Decimal(paid_contributions) / Decimal(total_cycles)
+        consistency = Decimal(paid_contributions) / Decimal(total_cycles)
+        return max(Decimal('0'), min(Decimal('1'), consistency))
 
     def _calculate_repayment_reliability(self, membership):
         loans = Loan.objects.filter(membership=membership)
@@ -140,7 +142,7 @@ class CreditScoringService:
         if penalties > 0:
             reliability *= Decimal('0.8') # Penalty for any penalty
             
-        return max(Decimal('0'), reliability)
+        return max(Decimal('0'), min(Decimal('1'), reliability))
 
     def _calculate_financial_stability(self, membership):
         total_savings = Contribution.objects.filter(
@@ -177,7 +179,7 @@ class CreditScoringService:
         if fines > 2:
             rate *= Decimal('0.9')
             
-        return max(Decimal('0'), rate)
+        return max(Decimal('0'), min(Decimal('1'), rate))
 
     def _determine_risk_band(self, score):
         if score >= 750: return RiskBand.LOW
