@@ -1,32 +1,5 @@
 {% extends 'publics/admin/base.html' %} {% load static %} {% load i18n %} {% block content %}
 <div id="contributionsPage" class="space-y-6">
-  <!-- Feature Type Tabs -->
-  <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-2 flex flex-wrap gap-1">
-    {% for ft in active_contribution_features %}
-    <button
-      onclick="switchFeatureType('{{ ft }}')"
-      id="featureTab_{{ ft }}"
-      class="feature-tab px-5 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2
-        {% if forloop.first %}bg-emerald-700 text-white shadow-lg shadow-emerald-700/20{% else %}text-slate-400 hover:bg-slate-50{% endif %}"
-    >
-      <i class="fas 
-        {% if ft == 'savings' %}fa-piggy-bank
-        {% elif ft == 'entertainment' %}fa-glass-cheers
-        {% elif ft == 'sinking_fund' %}fa-shield-alt
-        {% elif ft == 'project' %}fa-project-diagram
-        {% elif ft == 'events' %}fa-calendar-alt
-        {% endif %}"></i>
-      <span>
-        {% if ft == 'savings' %}{% trans "Savings" %}
-        {% elif ft == 'entertainment' %}{% trans "Entertainment" %}
-        {% elif ft == 'sinking_fund' %}{% trans "Sinking Fund" %}
-        {% elif ft == 'project' %}{% trans "Project" %}
-        {% elif ft == 'events' %}{% trans "Events" %}
-        {% endif %}
-      </span>
-    </button>
-    {% endfor %}
-  </div>
 
   <!-- State 1: Selection Required -->
   <div
@@ -146,6 +119,34 @@
           0%
         </h3>
       </div>
+    </div>
+
+     <!-- Feature Type Tabs -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-2 flex flex-wrap gap-1">
+      {% for ft in active_contribution_features %}
+      <button
+        onclick="switchFeatureType('{{ ft }}')"
+        id="featureTab_{{ ft }}"
+        class="feature-tab px-5 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all flex items-center gap-2
+          {% if forloop.first %}bg-emerald-700 text-white shadow-lg shadow-emerald-700/20{% else %}text-slate-400 hover:bg-slate-50{% endif %}"
+      >
+        <i class="fas 
+          {% if ft == 'savings' %}fa-piggy-bank
+          {% elif ft == 'entertainment' %}fa-glass-cheers
+          {% elif ft == 'sinking_fund' %}fa-shield-alt
+          {% elif ft == 'project' %}fa-project-diagram
+          {% elif ft == 'events' %}fa-calendar-alt
+          {% endif %}"></i>
+        <span>
+          {% if ft == 'savings' %}{% trans "Savings" %}
+          {% elif ft == 'entertainment' %}{% trans "Entertainment" %}
+          {% elif ft == 'sinking_fund' %}{% trans "Sinking Fund" %}
+          {% elif ft == 'project' %}{% trans "Project" %}
+          {% elif ft == 'events' %}{% trans "Events" %}
+          {% endif %}
+        </span>
+      </button>
+      {% endfor %}
     </div>
 
     <!-- Main Table Section -->
