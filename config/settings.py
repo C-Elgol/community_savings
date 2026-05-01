@@ -37,11 +37,11 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'd7f3-102-244-155-10.ngrok-free.app',  
+    'ea82-129-0-78-196.ngrok-free.app',  
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://d7f3-102-244-155-10.ngrok-free.app',
+    'https://ea82-129-0-78-196.ngrok-free.app',
 ]
 
 # Application definition
