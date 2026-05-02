@@ -1510,6 +1510,14 @@
                     ? data.enrolled_features 
                     : initialFeatures;
                 populateFeatureInputs(data.contributions, features);
+
+                // Populate comment and signature if editing
+                if (data.comment) {
+                  document.getElementById("modalComment").value = data.comment;
+                }
+                if (data.signature) {
+                  signaturePad.fromDataURL(data.signature);
+                }
             }
         } catch (err) {
             console.error("Error fetching feature contributions:", err);
