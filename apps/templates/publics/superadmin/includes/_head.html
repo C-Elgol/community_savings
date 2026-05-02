@@ -67,24 +67,25 @@
             background: #f0fdf9;
         }
         
-        .sidebar-transition {
-            transition: all 0.2s ease;
-        }
+        .sidebar-transition { transition: all 0.2s ease; }
+        .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar::-webkit-scrollbar, .sidebar nav::-webkit-scrollbar { display: none; }
         
         .nav-item-active {
-            background: #ecfdf3;
-            border-left: 4px solid #0b5e4b;
-            color: #0b5e4b;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            color: #f59e0b;
             font-weight: 600;
         }
         
         .nav-item-inactive {
-            color: #64748b;
+            color: #94a3b8;
             font-weight: 500;
         }
         
         .nav-item-inactive:hover {
-            background: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
         }
         
         .page {

@@ -159,6 +159,7 @@
 
     const state = {
         loans: [],
+        applications: [],
         signaturePad: null,
         formData: {}
     };
@@ -198,14 +199,19 @@
 
     async function fetchData() {
         try {
-            const res = await fetch(API_URLS.loans);
-            const data = await res.json();
-            if (data.success) {
-                state.loans = data.loans;
-                renderLoans();
-            }
+            const [resLoans, resApps] = await Promise.all([
+                fetch(API_URLS.loans),
+                fetch(API_URLS.applications)
+            ]);
+            const dataLoans = await resLoans.json();
+            const dataApps = await resApps.json();
+
+            if (dataLoans.success) state.loans = dataLoans.loans;
+            if (dataApps.success) state.applications = dataApps.applications;
+            
+            renderLoans();
         } catch (err) {
-            toast('error', 'Failed to load loan data');
+            toast('error', 'Failed to load data');
         }
     }
 
@@ -213,6 +219,7 @@
         const activeStatuses = ['active', 'unpaid', 'partial', 'overdue'];
         const activeLoans = state.loans.filter(l => activeStatuses.includes(l.status));
         const history = state.loans.filter(l => l.status === 'paid');
+        const rejectedApps = (state.applications || []).filter(a => a.status === 'rejected');
 
         // Render Active Loans
         if (activeLoans.length > 0) {
@@ -293,7 +300,7 @@
         }
 
         // Render History
-        el.historyBody.innerHTML = history.map(l => `
+        const historyHtml = history.map(l => `
             <tr class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4">
                     <p class="font-black text-slate-700">${l.product_name}</p>
@@ -308,13 +315,67 @@
                     </div>
                 </td>
             </tr>
-        `).join('') || '<tr><td colspan="2" class="py-10 text-center text-slate-300 text-xs">{% trans "No loan history found." %}</td></tr>';
+        `).join('');
+
+        const rejectedHtml = rejectedApps.map(a => `
+            <tr class="hover:bg-slate-50 transition-colors bg-rose-50/30">
+                <td class="px-6 py-4 border-l-4 border-rose-400">
+                    <p class="font-black text-slate-700">${a.product_name}</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${new Date(a.submitted_at).toLocaleDateString()}</p>
+                    ${a.rejection_reason ? `<p class="text-[10px] text-rose-500 mt-1 max-w-xs break-words">Reason: ${a.rejection_reason}</p>` : ''}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="font-black text-slate-800">XAF ${parseFloat(a.amount_requested).toLocaleString()}</span>
+                        <span class="px-2 py-0.5 bg-rose-50 text-rose-600 text-[8px] font-black uppercase tracking-widest rounded-md">Rejected</span>
+                        <button onclick="window.resubmitApplication('${a.id}')" class="mt-1 px-3 py-1.5 bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-600 hover:text-emerald-700 hover:border-emerald-200 rounded-lg transition-colors flex items-center gap-1">
+                            <i class="fas fa-edit"></i> Modify & Resubmit
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        const bothHtml = historyHtml + rejectedHtml;
+        el.historyBody.innerHTML = bothHtml || '<tr><td colspan="2" class="py-10 text-center text-slate-300 text-xs">{% trans "No loan history found." %}</td></tr>';
     }
+
+    window.resubmitApplication = (appId) => {
+        const app = state.applications.find(a => a.id === appId);
+        if (!app) return;
+        
+        const productEl = document.getElementById("selectProduct");
+        if (app.product_id) {
+            productEl.value = app.product_id;
+        } else {
+            Array.from(productEl.options).forEach(opt => {
+                if (opt.text.includes(app.product_name)) {
+                    productEl.value = opt.value;
+                }
+            });
+        }
+        
+        document.getElementById("inputAmount").value = parseFloat(app.amount_requested);
+        
+        const freqEl = document.getElementById("selectFrequency");
+        if (app.repayment_frequency) {
+            freqEl.value = app.repayment_frequency;
+        }
+        
+        document.getElementById("textareaPurpose").value = app.purpose;
+        
+        if (state.signaturePad) state.signaturePad.clear();
+        
+        el.applyModal.classList.remove("hidden");
+        setTimeout(() => resizeCanvas(), 50);
+    };
 
     /* ═══════════════════════
        APP FLOW
     ═══════════════════════ */
     document.getElementById("btnApply").onclick = () => {
+        el.formApply.reset();
+        if (state.signaturePad) state.signaturePad.clear();
         el.applyModal.classList.remove("hidden");
         // We must wait for the modal to be visible before resizing the canvas
         // otherwise offsetWidth/Height will be 0.

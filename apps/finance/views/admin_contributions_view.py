@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 CONTRIBUTION_FEATURE_TYPES = [
     CommunityFeatureType.SAVINGS,
+    CommunityFeatureType.NJANGI,
     CommunityFeatureType.ENTERTAINMENT,
     CommunityFeatureType.SINKING_FUND,
     CommunityFeatureType.PROJECT,

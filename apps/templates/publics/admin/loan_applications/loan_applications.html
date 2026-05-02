@@ -106,7 +106,10 @@
 <!-- 2. Application Review Modal -->
 <div id="reviewAppModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
   <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden">
-    <div class="p-8">
+    <div class="p-8 relative">
+      <button class="close-modal absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+      </button>
       <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Review Application" %}</h3>
       <p id="reviewMemberName" class="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-6">MEMBER NAME</p>
       
@@ -188,6 +191,23 @@
     </div>
   </div>
 </div>
+<!-- 4. Approve Confirmation Modal -->
+<div id="approveConfirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div class="p-8 text-center">
+      <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl border-4 border-white shadow-sm">
+          <i class="fas fa-check-circle"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-800 mb-2">{% trans "Approve Loan?" %}</h3>
+      <p class="text-xs text-slate-500 mb-8 leading-relaxed">{% trans "Are you sure you want to approve this loan? This will create an active loan record for the member." %}</p>
+      
+      <div class="flex gap-3">
+          <button type="button" class="close-approve-confirm flex-1 py-4 border border-slate-100 text-slate-500 rounded-2xl font-bold text-xs hover:bg-slate-50 transition-all">{% trans "No, Cancel" %}</button>
+          <button type="button" id="btnFinalApprove" class="flex-1 py-4 bg-emerald-700 text-white rounded-2xl font-bold text-xs shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 transition-all">{% trans "Yes, Approve" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -196,8 +216,9 @@
     "use strict";
 
     const COMMUNITY_ID = "{{ community.id }}";
+    const ACTIVE_SEASON_ID = "{{ active_season.id }}";
     const API_URLS = {
-        applications: (status) => `/finance/api/community/${COMMUNITY_ID}/loan-applications/${status ? '?status=' + status : ''}`,
+        applications: (status) => `/finance/api/community/${COMMUNITY_ID}/loan-applications/?${status ? 'status=' + status + '&' : ''}${ACTIVE_SEASON_ID ? 'season_id=' + ACTIVE_SEASON_ID : ''}`,
         applicationAction: (id) => `/finance/api/loan-application/${id}/`,
         products: `/finance/api/community/${COMMUNITY_ID}/loan-products/`,
         members: `/finance/api/community/${COMMUNITY_ID}/memberships/`,
@@ -217,6 +238,7 @@
         newAppModal: document.getElementById("newAppModal"),
         reviewAppModal: document.getElementById("reviewAppModal"),
         rejectModal: document.getElementById("rejectModal"),
+        approveConfirmModal: document.getElementById("approveConfirmModal"),
         formNewApp: document.getElementById("formNewApp"),
         selectMember: document.getElementById("selectMember"),
         selectProduct: document.getElementById("selectProduct"),
@@ -409,10 +431,12 @@
         }
     }
 
-    document.getElementById("btnApproveAction").onclick = async () => {
+    document.getElementById("btnApproveAction").onclick = () => {
         if (!state.currentApp) return;
-        if (!confirm("Are you sure you want to approve this loan? This will create an active loan record.")) return;
-        
+        el.approveConfirmModal.classList.remove("hidden");
+    };
+
+    document.getElementById("btnFinalApprove").onclick = () => {
         handleAction('approve');
     };
 
@@ -487,10 +511,12 @@
         el.newAppModal.classList.add("hidden");
         el.reviewAppModal.classList.add("hidden");
         el.rejectModal.classList.add("hidden");
+        el.approveConfirmModal.classList.add("hidden");
     }
 
     document.querySelectorAll(".close-modal").forEach(b => b.onclick = closeModals);
     document.querySelectorAll(".close-modal-reject").forEach(b => b.onclick = () => el.rejectModal.classList.add("hidden"));
+    document.querySelectorAll(".close-approve-confirm").forEach(b => b.onclick = () => el.approveConfirmModal.classList.add("hidden"));
 
     function toast(type, msg) {
         window.toastManager?.buildToast().setMessage(msg).setType(type).show();

@@ -145,7 +145,7 @@ class ContributionAPI(View):
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
-VALID_FEATURE_TYPES = {'savings', 'entertainment', 'sinking_fund', 'project', 'events'}
+VALID_FEATURE_TYPES = {'savings', 'entertainment', 'sinking_fund', 'project', 'events', 'njangi'}
 
 
 class ContributionCycleAPI(View):

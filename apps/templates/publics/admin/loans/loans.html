@@ -248,24 +248,19 @@
     function updateStats(stats) {
         const allTime = stats.all_time;
         const season = stats.season;
+        const useSeason = ACTIVE_SEASON_ID && season && season.interest_earned !== undefined;
 
-        // Display all-time stats for context or season specific if preferred
-        // Requirements say add Season Interest card specifically.
+        const baseStats = useSeason ? season : allTime;
         
-        el.statOutstanding.textContent = `XAF ${parseFloat(allTime.outstanding).toLocaleString()}`;
-        el.statRepaid.textContent = `XAF ${parseFloat(allTime.total_repaid).toLocaleString()}`;
+        el.statOutstanding.textContent = `XAF ${parseFloat(baseStats.outstanding).toLocaleString()}`;
+        el.statRepaid.textContent = `XAF ${parseFloat(baseStats.total_repaid).toLocaleString()}`;
         
-        const totalInt = parseFloat(allTime.interest_earned) + parseFloat(allTime.penalties_earned);
+        const totalInt = parseFloat(baseStats.interest_earned) + parseFloat(baseStats.penalties_earned);
         el.statInterest.textContent = `XAF ${totalInt.toLocaleString()}`;
 
         if (season && season.interest_earned !== undefined) {
              const seasonInt = parseFloat(season.interest_earned) + parseFloat(season.penalties_earned);
              el.statSeasonInterest.textContent = `XAF ${seasonInt.toLocaleString()}`;
-             
-             // Optionally update other cards to reflect season only if you want total scoping
-             // But the names "Total Repaid" suggest all-time.
-             // If we want total scoping, we'd use 'season' stats for everything.
-             // Given previous tasks, scoping the whole page to the season is usually the goal.
              el.statActiveCount.textContent = season.active_count;
         } else {
              el.statSeasonInterest.textContent = '---';

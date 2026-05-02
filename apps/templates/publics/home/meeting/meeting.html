@@ -3,11 +3,130 @@
 {% load i18n %}
 
 {% block content %}
-        <!-- ========== MEETINGS PAGE ========== -->
-        <div id="meetings" class="page">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-xl font-bold text-slate-800 mb-6">Meetings & Attendance</h2>
-                <div class="space-y-4"><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-emerald-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">24</span><span class="text-xs">MAR</span></div><div class="flex-1"><p class="font-semibold">General assembly Q1</p><p class="text-sm text-slate-500">10:00 AM · Hall A · Chaired by J. Doe</p></div><span class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full">Confirmed</span></div><div class="flex items-center p-4 border rounded-lg"><div class="w-12 h-12 bg-amber-50 rounded-xl flex flex-col items-center justify-center mr-4"><span class="font-bold text-lg">02</span><span class="text-xs">APR</span></div><div class="flex-1"><p class="font-semibold">Loan committee review</p><p class="text-sm text-slate-500">2:00 PM · Boardroom</p></div><span class="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full">Pending</span></div></div>
+<div id="meetings" class="page active-page container mx-auto px-4 py-8">
+    {% if no_membership %}
+        <div class="flex flex-col items-center justify-center min-h-[50vh] text-center">
+            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-users text-3xl text-slate-300"></i>
+            </div>
+            <h2 class="text-xl font-bold text-slate-800">No active membership</h2>
+            <p class="text-slate-500 mt-2">You need to be part of a community to view meetings.</p>
+        </div>
+    {% else %}
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">Meetings & Attendance</h1>
+                <p class="text-slate-500">View upcoming schedule and your personal attendance history</p>
+            </div>
+            <span class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-100">
+                <i class="fas fa-users mr-2"></i>{{ membership.community.name }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Upcoming -->
+            <div class="lg:col-span-1 space-y-6">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-calendar-alt text-emerald-600"></i> Upcoming Schedule
+                </h2>
+                <div class="space-y-4">
+                    {% for meeting in upcoming_meetings %}
+                        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-emerald-200 transition-all group">
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex flex-col items-center justify-center text-emerald-700 border border-emerald-100 group-hover:bg-emerald-100 transition-colors">
+                                    <span class="text-lg font-black leading-none">{{ meeting.scheduled_date|date:"d" }}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">{{ meeting.scheduled_date|date:"M" }}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-slate-800">{{ meeting.title }}</h3>
+                                    <p class="text-xs text-slate-500 mt-1">
+                                        <i class="far fa-clock mr-1"></i>{{ meeting.start_time|time:"H:i" }} - {{ meeting.end_time|time:"H:i" }}
+                                    </p>
+                                    <p class="text-xs text-slate-500 mt-1">
+                                        <i class="fas fa-map-marker-alt mr-1"></i>{{ meeting.venue|default:"Online / TBA" }}
+                                    </p>
+                                </div>
+                            </div>
+                            {% if meeting.description %}
+                                <p class="text-xs text-slate-500 mt-3 line-clamp-2 italic">
+                                    "{{ meeting.description }}"
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <div class="bg-slate-50 rounded-2xl p-8 border border-dashed border-slate-200 text-center">
+                            <p class="text-sm text-slate-400">No upcoming meetings scheduled.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Column: History -->
+            <div class="lg:col-span-2 space-y-6">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-history text-indigo-600"></i> Meeting History
+                </h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100">
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Meeting</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Attendance</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for item in past_meetings_history %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <p class="font-semibold text-slate-800">{{ item.meeting.title }}</p>
+                                            <p class="text-xs text-slate-500">{{ item.meeting.venue }}</p>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">
+                                            {{ item.meeting.scheduled_date|date:"d M Y" }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {% if item.attendance %}
+                                                {% if item.attendance.was_present %}
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                        Present {% if item.attendance.arrived_late %}(Late){% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                        Absent
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-xs text-slate-400 italic">No record</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {% if item.has_minutes %}
+                                                <a href="#" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition-colors">
+                                                    <i class="far fa-file-pdf"></i> View
+                                                </a>
+                                            {% else %}
+                                                <span class="text-xs text-slate-400">Unavailable</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                            No past meetings found for this community.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+    {% endif %}
+</div>
 {% endblock %}

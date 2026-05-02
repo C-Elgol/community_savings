@@ -5,7 +5,8 @@ from apps.meetings.views.admin_meeting_minute_view import (
     AdminMeetingMinuteView, 
     MeetingMinuteAIView, 
     MeetingMinuteSaveView,
-    MeetingMinuteDetailView
+    MeetingMinuteDetailView,
+    MeetingAttendanceAPIView
 )
 
 app_name = "meetings"
@@ -15,5 +16,6 @@ urlpatterns = [
     path('meeting-minutes/<uuid:community_id>/', AdminMeetingMinuteView.as_view(), name='admin_meeting_minutes'),
     path('meeting-minutes/ai/', MeetingMinuteAIView.as_view(), name='meeting_minutes_ai'),
     path('meeting-minutes/save/', MeetingMinuteSaveView.as_view(), name='meeting_minutes_save'),
+    path('meeting-minutes/attendance/save/', MeetingAttendanceAPIView.as_view(), name='meeting_attendance_save'),
     path('meeting-minutes/detail/<uuid:pk>/', MeetingMinuteDetailView.as_view(), name='meeting_minute_detail'),
 ]

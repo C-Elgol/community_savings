@@ -10,8 +10,8 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.decorators import method_decorator
 
 from apps.communities.models import Membership
-from apps.finance.models import FinancialSeason, ContributionCycle, NjangiRotation, NjangiBenefit
-from apps.global_data.enum import CommunityFeatureType
+from apps.finance.models import FinancialSeason, ContributionCycle, NjangiRotation, NjangiBenefit, Expenditure, Transaction
+from apps.global_data.enum import CommunityFeatureType, ExpenditureStatus
 from apps.users.permissions import rbac_permission_required
 
 logger = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ class NjangiMeetingBeneficiaryAPI(View):
                 return JsonResponse({'success': False, 'message': _("This member has already benefited in this meeting.")}, status=400)
             
             import uuid
-            NjangiBenefit.objects.create(
+            benefit = NjangiBenefit.objects.create(
                 membership=membership,
                 season=cycle.season,
                 cycle=cycle,
@@ -136,6 +136,28 @@ class NjangiMeetingBeneficiaryAPI(View):
                 signature=signature,
                 benefited_date=timezone.now().date(),
                 transaction_id=f"NJ-{uuid.uuid4().hex[:8].upper()}"
+            )
+            
+            # Create an Expenditure to record the outflow for the community
+            Expenditure.objects.create(
+                community=cycle.community,
+                season=cycle.season,
+                source_fund=CommunityFeatureType.NJANGI,
+                amount=amount,
+                expenditure_date=timezone.now().date(),
+                description=f"Njangi benefit payout to {membership.user.get_full_name} for cycle {cycle.title}",
+                signature=signature,
+                status=ExpenditureStatus.POSTED,
+                created_by=request.user
+            )
+
+            # Create a Transaction for the member's personal history
+            Transaction.objects.create(
+                membership=membership,
+                amount=amount,
+                transaction_type='njangi_benefit',
+                reference=benefit.transaction_id,
+                description=f"Received Njangi benefit for cycle {cycle.title}"
             )
             
             return JsonResponse({'success': True, 'message': _("Njangi benefit recorded successfully.")})

@@ -131,9 +131,13 @@ class FineListAPI(View):
     def get(self, request, community_id):
         community = get_object_or_404(Community, id=community_id)
         status_filter = request.GET.get('status')
+        season_id = request.GET.get('season_id')
         search_query = request.GET.get('search', '').strip()
         
         fines = Fine.objects.filter(membership__community=community).select_related('membership__user')
+        
+        if season_id:
+            fines = fines.filter(season_id=season_id)
         
         if status_filter and status_filter != 'all':
             fines = fines.filter(status=status_filter)
@@ -144,9 +148,12 @@ class FineListAPI(View):
                     fines.filter(membership__user__last_name__icontains=search_query)
 
         # Stats
-        all_fines = Fine.objects.filter(membership__community=community)
-        total_amount = all_fines.aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
-        paid_amount = FinePayment.objects.filter(fine__in=all_fines).aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+        all_fines_qs = Fine.objects.filter(membership__community=community)
+        if season_id:
+            all_fines_qs = all_fines_qs.filter(season_id=season_id)
+            
+        total_amount = all_fines_qs.aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
+        paid_amount = FinePayment.objects.filter(fine__in=all_fines_qs).aggregate(Sum('amount'))['amount__sum'] or Decimal("0.00")
         pending_amount = total_amount - paid_amount
 
         fines_list = [

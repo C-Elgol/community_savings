@@ -5,38 +5,346 @@
 {% block content %}
 
 <div id="dashboard" class="page active-page">
-            <!-- overview cards (5) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Total contributions</span><div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><i class="fas fa-coins"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 540K</p><p class="text-xs text-emerald-600 mt-1">↑ 12% vs last season</p></div>
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Current savings</span><div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fas fa-piggy-bank"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 127.5K</p><p class="text-xs text-slate-500 mt-1">42% of season target</p></div>
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Active loan</span><div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center"><i class="fas fa-hand-holding-usd"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">XAF 85K</p><p class="text-xs text-slate-500 mt-1">6 months term</p></div>
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Credit score</span><div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><i class="fas fa-star"></i></div></div><p class="text-2xl font-bold text-slate-800 mt-2">724</p><p class="text-xs text-emerald-600 mt-1">Low risk</p></div>
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase text-slate-400">Next due</span><div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fas fa-hourglass-half"></i></div></div><p class="text-xl font-bold text-slate-800 mt-2">XAF 15K</p><p class="text-xs text-slate-500 mt-1">28 Mar 2026 (4d)</p></div>
+    {% if no_membership %}
+        <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+            <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                <i class="fas fa-users text-4xl text-slate-300"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">No active membership found</h2>
+            <p class="text-slate-500 max-w-md mx-auto mb-8">
+                It looks like you aren't part of any community yet. Join a community to start saving and participating in financial activities.
+            </p>
+            <a href="#" class="btn-primary px-8 py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all">
+                Find a Community
+            </a>
+        </div>
+    {% else %}
+        <!-- overview cards (5) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+            <!-- Total contributions -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase text-slate-400">Total contributions</span>
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">XAF {{ total_contributions|floatformat:"0"|default:"0" }}</p>
+                <p class="text-xs text-emerald-600 mt-1">Lifetime total</p>
             </div>
 
-            <!-- 2-col layout: left (history + loan) / right (credit widget + meetings) -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <!-- left span-2 -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- contribution history table -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-4"><h2 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-history text-emerald-600"></i> Contribution history</h2><a href="#" class="text-sm text-emerald-700 hover:underline">View all</a></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-left text-slate-400 text-xs border-b border-slate-100"><tr><th class="pb-3">Cycle</th><th class="pb-3">Due</th><th class="pb-3">Expected</th><th class="pb-3">Paid</th><th class="pb-3">Status</th></tr></thead><tbody class="divide-y divide-slate-100"><tr><td class="py-3 font-medium">March 2026</td><td class="py-3">20 Mar</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr><tr><td class="py-3 font-medium">February 2026</td><td>20 Feb</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr><tr><td class="py-3 font-medium">January 2026</td><td>20 Jan</td><td>XAF 15k</td><td>XAF 12k</td><td><span class="bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs">Partial</span></td></tr><tr><td class="py-3 font-medium">December 2025</td><td>20 Dec</td><td>XAF 15k</td><td>XAF 15k</td><td><span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span></td></tr></tbody></table></div></div>
-
-                    <!-- loan summary with progress -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-3"><h2 class="text-base font-semibold flex items-center gap-2"><i class="fas fa-file-invoice text-indigo-600"></i> Loan summary · Education loan</h2><span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">Active · 3 left</span></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"><div><p class="text-xs text-slate-400">Principal</p><p class="font-semibold">XAF 85,000</p></div><div><p class="text-xs text-slate-400">Interest (5%)</p><p class="font-semibold">XAF 4,250</p></div><div><p class="text-xs text-slate-400">Paid so far</p><p class="font-semibold text-emerald-600">XAF 42,500</p></div><div><p class="text-xs text-slate-400">Left</p><p class="font-semibold">XAF 46,750</p></div></div><div class="space-y-1"><div class="flex justify-between text-xs"><span>Repayment</span><span>48%</span></div><div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="bg-emerald-600 h-2 rounded-full" style="width:48%"></div></div><p class="text-xs text-slate-400 mt-2"><i class="far fa-clock mr-1"></i>Next payment 15 Apr · XAF 15,000</p></div></div>
+            <!-- Current savings -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase text-slate-400">Current savings</span>
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
                 </div>
-
-                <!-- right column -->
-                <div class="space-y-6">
-                    <!-- credit score widget with risk & model fields -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><h2 class="text-base font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-emerald-600"></i> Credit profile</h2><div class="flex items-end justify-between"><div><p class="text-3xl font-bold text-slate-800">724</p><p class="text-xs text-slate-500">out of 850</p></div><div><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>Low risk</span></div></div><div class="mt-5 grid grid-cols-3 gap-1 h-1.5 rounded-full overflow-hidden bg-slate-100"><div class="bg-emerald-500 h-full" style="width:100%"></div></div><div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>Low</span><span>Moderate</span><span>High</span></div><div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs"><div><span class="text-slate-400">PD</span><p class="font-medium">2.3%</p></div><div><span class="text-slate-400">Max rec.</span><p class="font-medium">XAF 250k</p></div><div><span class="text-slate-400">Worthiness</span><p class="font-medium text-emerald-600">Good</p></div><div><span class="text-slate-400">Assessed</span><p class="font-medium">2d ago</p></div></div></div>
-
-                    <!-- upcoming meetings -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center justify-between mb-3"><h2 class="text-base font-semibold"><i class="fas fa-calendar-alt text-indigo-400 mr-2"></i>Upcoming meetings</h2><i class="fas fa-ellipsis-h text-slate-300"></i></div><div class="space-y-4"><div class="flex gap-3"><div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex flex-col items-center justify-center text-sm font-semibold">24<span class="text-[9px]">MAR</span></div><div><p class="text-sm font-medium">General assembly</p><p class="text-xs text-slate-400"><i class="far fa-clock mr-1"></i>10:00 AM · Hall A</p></div></div><div class="flex gap-3"><div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex flex-col items-center justify-center text-sm font-semibold">02<span class="text-[9px]">APR</span></div><div><p class="text-sm font-medium">Loan committee</p><p class="text-xs text-slate-400"><i class="far fa-clock mr-1"></i>2:00 PM · Boardroom</p></div></div></div><button class="w-full mt-4 text-sm text-emerald-700 bg-emerald-50 py-2 rounded-xl hover:bg-emerald-100">View all</button></div>
-                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">XAF {{ current_savings|floatformat:"0"|default:"0" }}</p>
+                <p class="text-xs text-slate-500 mt-1">Season total</p>
             </div>
 
-            <!-- recent activity feed -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5"><div class="flex items-center gap-2 mb-4"><i class="fas fa-stream text-slate-300"></i><h2 class="text-base font-semibold">Recent activity</h2></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700"><i class="fas fa-check text-xs"></i></div><div><p class="text-slate-700">Contribution <span class="font-semibold">XAF 15,000</span> recorded.</p><span class="text-xs text-slate-400">2h ago</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700"><i class="fas fa-file-signature text-xs"></i></div><div><p class="text-slate-700">Loan payment <span class="font-semibold">XAF 7,500</span> received.</p><span class="text-xs text-slate-400">yesterday</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-amber-700"><i class="fas fa-exclamation text-xs"></i></div><div><p class="text-slate-700">Fine of <span class="font-semibold">XAF 2,000</span> issued (late).</p><span class="text-xs text-slate-400">3d ago</span></div></div><div class="flex items-start gap-3"><div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700"><i class="fas fa-users text-xs"></i></div><div><p class="text-slate-700">Attendance confirmed for Q1.</p><span class="text-xs text-slate-400">5d ago</span></div></div></div></div>
+            <!-- Active loan -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase text-slate-400">Total Borrowed</span>
+                    <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                </div>
+                {% if active_loans %}
+                    <p class="text-2xl font-bold text-slate-800 mt-2">XAF {{ total_loan_amount|floatformat:"0" }}</p>
+                    <p class="text-xs text-slate-500 mt-1">{{ active_loans.count }} Active Loan{{ active_loans.count|pluralize }}</p>
+                {% else %}
+                    <p class="text-2xl font-bold text-slate-300 mt-2">None</p>
+                    <p class="text-xs text-slate-400 mt-1">No active loans</p>
+                {% endif %}
+            </div>
+
+            <!-- Credit score -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase text-slate-400">Credit score</span>
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-2xl font-bold text-slate-800 mt-2">{{ credit_profile.current_score|default:"--" }}</p>
+                <p class="text-xs text-emerald-600 mt-1">{{ credit_profile.get_risk_band_display|default:"No assessment" }}</p>
+            </div>
+
+            <!-- Next due -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium uppercase text-slate-400">Next due</span>
+                    <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                {% if next_due_date %}
+                    <p class="text-xl font-bold text-slate-800 mt-2">XAF {{ next_due_amount|floatformat:"0" }}</p>
+                    <p class="text-xs text-slate-500 mt-1">{{ next_due_date|date:"d M Y" }} ({{ days_until_due }}d)</p>
+                {% else %}
+                    <p class="text-xl font-bold text-emerald-600 mt-2">All paid</p>
+                    <p class="text-xs text-slate-400 mt-1">No upcoming dues</p>
+                {% endif %}
+            </div>
         </div>
 
+        <!-- 2-col layout: left/right -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- left span-2 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- contribution history table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-semibold flex items-center gap-2">
+                            <i class="fas fa-history text-emerald-600"></i> Contribution history
+                        </h2>
+                        <a href="#" class="text-sm text-emerald-700 hover:underline">View all</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="text-left text-slate-400 text-xs border-b border-slate-100">
+                                <tr>
+                                    <th class="pb-3">Cycle</th>
+                                    <th class="pb-3">Due</th>
+                                    <th class="pb-3">Expected</th>
+                                    <th class="pb-3">Paid</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for contrib in contribution_history %}
+                                    <tr>
+                                        <td class="py-3 font-medium">{{ contrib.cycle.title }}</td>
+                                        <td class="py-3">{{ contrib.cycle.due_date|date:"d M" }}</td>
+                                        <td>XAF {{ contrib.expected_amount|floatformat:"0" }}</td>
+                                        <td>XAF {{ contrib.amount_paid|floatformat:"0" }}</td>
+                                        <td>
+                                            {% if contrib.status == 'paid' %}
+                                                <span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span>
+                                            {% elif contrib.status == 'partial' %}
+                                                <span class="bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs">Partial</span>
+                                            {% else %}
+                                                <span class="bg-rose-50 text-rose-700 px-2 py-1 rounded-full text-xs">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="py-12 text-center text-slate-400">
+                                            No contribution records found.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- loan repayment schedule table -->
+                {% if active_loan and loan_schedule %}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-semibold flex items-center gap-2">
+                            <i class="fas fa-list-ol text-indigo-600"></i> Loan repayment schedule
+                        </h2>
+                        <span class="text-xs text-slate-400">{{ active_loan.application.loan_product.name }}</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="text-left text-slate-400 text-xs border-b border-slate-100">
+                                <tr>
+                                    <th class="pb-3">Inst.</th>
+                                    <th class="pb-3">Due Date</th>
+                                    <th class="pb-3">Amount Due</th>
+                                    <th class="pb-3">Amount Paid</th>
+                                    <th class="pb-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for item in loan_schedule %}
+                                    <tr>
+                                        <td class="py-3 font-medium">#{{ item.installment_number }}</td>
+                                        <td class="py-3">{{ item.due_date|date:"d M Y" }}</td>
+                                        <td>XAF {{ item.amount_due|floatformat:"0" }}</td>
+                                        <td>XAF {{ item.amount_paid|floatformat:"0" }}</td>
+                                        <td>
+                                            {% if item.is_paid %}
+                                                <span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full text-xs">Paid</span>
+                                            {% else %}
+                                                <span class="bg-rose-50 text-rose-700 px-2 py-1 rounded-full text-xs">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- loan summary with progress -->
+                {% for item in loans_data %}
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mt-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-base font-semibold flex items-center gap-2">
+                                <i class="fas fa-file-invoice text-indigo-600"></i> Loan summary · {{ item.loan.application.loan_product.name }}
+                            </h2>
+                            <span class="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">
+                                {{ item.loan.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                            <div>
+                                <p class="text-xs text-slate-400">Principal</p>
+                                <p class="font-semibold">XAF {{ item.loan.amount_borrowed|floatformat:"0" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400">Interest</p>
+                                <p class="font-semibold">XAF {{ item.loan.interest_to_be_paid|floatformat:"0" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400">Paid so far</p>
+                                <p class="font-semibold text-emerald-600">XAF {{ item.loan.amount_paid|floatformat:"0" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400">Remaining</p>
+                                <p class="font-semibold">XAF {{ item.loan.outstanding_balance|floatformat:"0" }}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span>Repayment progress</span>
+                                <span>{{ item.progress }}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="bg-emerald-600 h-2 rounded-full" style="width:{{ item.progress }}%"></div>
+                            </div>
+                            {% if item.next_repayment %}
+                                <p class="text-xs text-slate-400 mt-2">
+                                    <i class="far fa-clock mr-1"></i>Next payment {{ item.next_repayment.due_date|date:"d M" }} · XAF {{ item.next_repayment.amount_due|floatformat:"0" }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- right column -->
+            <div class="space-y-6">
+                <!-- credit score widget -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-emerald-600"></i> Credit profile
+                    </h2>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <p class="text-3xl font-bold text-slate-800">{{ credit_profile.current_score|default:"--" }}</p>
+                            <p class="text-xs text-slate-500">out of 850</p>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                {% if credit_profile.risk_band == 'low' %}bg-emerald-100 text-emerald-800
+                                {% elif credit_profile.risk_band == 'moderate' %}bg-amber-100 text-amber-800
+                                {% else %}bg-rose-100 text-rose-800{% endif %}">
+                                <span class="w-2 h-2 rounded-full 
+                                    {% if credit_profile.risk_band == 'low' %}bg-emerald-500
+                                    {% elif credit_profile.risk_band == 'moderate' %}bg-amber-500
+                                    {% else %}bg-rose-500{% endif %} mr-1"></span>
+                                {{ credit_profile.get_risk_band_display|default:"Unassessed" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-5 grid grid-cols-3 gap-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
+                        <div class="h-full {% if credit_profile.current_score >= 700 %}bg-emerald-500{% elif credit_profile.current_score >= 500 %}bg-amber-500{% else %}bg-rose-500{% endif %}" 
+                             style="width:{{ credit_profile.current_score|default:0|divisibleby:8.5 }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>Low</span>
+                        <span>Moderate</span>
+                        <span>High</span>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-slate-400">PD</span>
+                            <p class="font-medium">{{ credit_profile.probability_of_default_percentage|floatformat:1 }}%</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Max rec.</span>
+                            <p class="font-medium">XAF {{ credit_profile.recommended_max_loan_amount|floatformat:"0" }}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Worthiness</span>
+                            <p class="font-medium text-emerald-600">{{ credit_profile.get_creditworthiness_display }}</p>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Assessed</span>
+                            <p class="font-medium">{{ credit_profile.last_assessed_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- upcoming meetings -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-base font-semibold">
+                            <i class="fas fa-calendar-alt text-indigo-400 mr-2"></i>Upcoming meetings
+                        </h2>
+                        <i class="fas fa-ellipsis-h text-slate-300"></i>
+                    </div>
+                    <div class="space-y-4">
+                        {% for meeting in upcoming_meetings %}
+                            <div class="flex gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex flex-col items-center justify-center text-sm font-semibold">
+                                    {{ meeting.scheduled_date|date:"d" }}
+                                    <span class="text-[9px] uppercase">{{ meeting.scheduled_date|date:"M" }}</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">{{ meeting.title }}</p>
+                                    <p class="text-xs text-slate-400">
+                                        <i class="far fa-clock mr-1"></i>{{ meeting.start_time|time:"H:i" }} · {{ meeting.venue|default:"Online" }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-center py-4 text-xs text-slate-400">No upcoming meetings</p>
+                        {% endfor %}
+                    </div>
+                    <button class="w-full mt-4 text-sm text-emerald-700 bg-emerald-50 py-2 rounded-xl hover:bg-emerald-100">View all</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- recent activity feed -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fas fa-stream text-slate-300"></i>
+                <h2 class="text-base font-semibold">Recent activity</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {% for activity in recent_activities %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-7 h-7 rounded-full bg-{{ activity.color }}-100 flex items-center justify-center text-{{ activity.color }}-700">
+                            <i class="{{ activity.icon }} text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-700">
+                                {{ activity.title }}
+                                {% if activity.amount %}
+                                    <span class="font-semibold">XAF {{ activity.amount|floatformat:"0" }}</span>
+                                {% endif %}.
+                            </p>
+                            <span class="text-xs text-slate-400">{{ activity.date|timesince }} ago</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="col-span-2 text-center py-4 text-slate-400">No recent activity detected.</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

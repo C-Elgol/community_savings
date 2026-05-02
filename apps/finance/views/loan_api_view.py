@@ -8,18 +8,21 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from apps.users.permissions import rbac_permission_required
+from apps.users.permissions import rbac_permission_required, has_area_permission
 
 @method_decorator(rbac_permission_required('loans'), name='dispatch')
 class LoanApplicationAPI(View):
     def get(self, request, community_id):
         status = request.GET.get('status')
+        season_id = request.GET.get('season_id')
         mine = request.GET.get('mine') == 'true'
         filters = {'membership__community_id': community_id}
         if mine:
             filters['membership__user'] = request.user
         if status:
             filters['status'] = status
+        if season_id:
+            filters['season_id'] = season_id
         
         apps = LoanApplication.objects.filter(**filters).select_related('membership__user', 'loan_product', 'season').order_by('-created')
         
@@ -29,11 +32,14 @@ class LoanApplicationAPI(View):
                 'id': str(a.id),
                 'member_name': a.membership.user.get_full_name or a.membership.user.username,
                 'amount_requested': str(a.amount_requested),
+                'product_id': str(a.loan_product_id),
                 'product_name': a.loan_product.name,
                 'term_months': a.proposed_term_months,
+                'repayment_frequency': a.repayment_frequency,
                 'status': a.status,
                 'submitted_at': a.created.isoformat(),
                 'purpose': a.purpose,
+                'rejection_reason': a.rejection_reason,
                 'season_title': a.season.title if a.season else '---'
             })
         
