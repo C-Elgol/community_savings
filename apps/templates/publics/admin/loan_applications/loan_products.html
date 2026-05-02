@@ -232,7 +232,7 @@
 
         try {
             const method = state.editId ? "PATCH" : "POST";
-            const url = state.editId ? `${API_URL}${state.editId}/` : API_URL;
+            const url = state.editId ? `/finance/api/loan-product/${state.editId}/` : API_URL;
             
             // Wait, I need a detail API for PATCH.
             // My urls.py has: path('api/community/<uuid:community_id>/loan-products/', LoanProductAPI.as_view(), name='loan_product_api'),
