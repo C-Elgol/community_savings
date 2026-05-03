@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Sum
 from apps.finance.models import (
     Contribution, FinancialSeason, InterestDistribution, InterestPayout,
-    Expenditure, Wallet, Transaction
+    Expenditure, Wallet, Transaction, ContributionCycle
 )
 from apps.communities.models import Membership
 from apps.global_data.enum import CommunityFeatureType, ContributionStatus, ExpenditureStatus
@@ -22,10 +22,16 @@ class InterestSharingService:
         Formula: weight = amount * (days_until_end_of_season)
         """
         season = FinancialSeason.objects.get(id=season_id)
-        # We define "end of season" as the season_date or today if season is open
-        end_date = season.season_date
+        # 1. Determine "end of season" for weighting.
+        # Professional approach: use the due_date of the last cycle in the season.
+        last_cycle = ContributionCycle.objects.filter(season=season).order_by('-due_date').first()
         
-        # 1. Get all PAID savings contributions for this season
+        if last_cycle:
+            end_date = last_cycle.due_date
+        else:
+            end_date = season.season_date
+        
+        # 2. Get all PAID savings contributions for this season
         contributions = Contribution.objects.filter(
             cycle__season=season,
             feature_type=CommunityFeatureType.SAVINGS,

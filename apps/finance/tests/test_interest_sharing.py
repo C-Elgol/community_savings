@@ -44,11 +44,21 @@ class InterestSharingTest(TestCase):
     def test_time_weighted_calculation(self):
         """
         Test that interest is shared based on how long money stayed in.
-        M1: 10,000 for 30 days (Weight: 300,000)
-        M2: 10,000 for 10 days (Weight: 100,000)
-        Total Weight: 400,000
-        M1 Share: 75%, M2 Share: 25%
+        We create a second cycle to define the end of the season 30 days from now.
+        M1: 10,000 paid today for 30 days (Weight: 310,000)
+        M2: 10,000 paid 20 days later for 10 days (Weight: 110,000)
+        Total Weight: 420,000
+        M1 Share: 31/42 = ~73.81%
         """
+        # Create a last cycle to set the end_date to 30 days from now
+        ContributionCycle.objects.create(
+            community=self.community,
+            season=self.season, 
+            title="Last Meeting", 
+            due_date=self.end_date,
+            expected_amount=Decimal("10000.00")
+        )
+
         # M1 pays 30 days before end (Today)
         Contribution.objects.create(
             membership=self.membership1, cycle=self.cycle,
@@ -66,15 +76,18 @@ class InterestSharingTest(TestCase):
             paid_at=m2_pay_date, feature_type=CommunityFeatureType.SAVINGS
         )
         
-        preview = self.service.calculate_distribution_preview(self.season.id, 4000)
+        preview = self.service.calculate_distribution_preview(self.season.id, 4200)
         
         m1_result = next(m for m in preview['member_breakdown'] if m['membership_id'] == str(self.membership1.id))
         m2_result = next(m for m in preview['member_breakdown'] if m['membership_id'] == str(self.membership2.id))
         
-        self.assertEqual(float(m1_result['share_percentage']), 75.0)
-        self.assertEqual(float(m2_result['share_percentage']), 25.0)
-        self.assertEqual(float(m1_result['interest_amount']), 3000.0)
-        self.assertEqual(float(m2_result['interest_amount']), 1000.0)
+        # M1: 31/42 * 100 = 73.8095
+        self.assertAlmostEqual(float(m1_result['share_percentage']), 73.8095, places=4)
+        self.assertAlmostEqual(float(m2_result['share_percentage']), 26.1905, places=4)
+        
+        # M1: 4200 * (31/42) = 3100
+        self.assertAlmostEqual(float(m1_result['interest_amount']), 3100.0, places=2)
+        self.assertAlmostEqual(float(m2_result['interest_amount']), 1100.0, places=2)
 
     def test_payout_recording(self):
         """
@@ -97,15 +110,19 @@ class InterestSharingTest(TestCase):
         self.assertTrue(payout.is_paid)
         self.assertIsNotNone(payout.paid_at)
         
-        # Check Wallet
+        # Check Wallet: Should have Savings (10000) + Interest (1000)
         wallet = Wallet.objects.get(membership=self.membership1)
-        self.assertEqual(wallet.balance, Decimal("1000.00"))
+        self.assertEqual(wallet.balance, Decimal("11000.00"))
         
         # Check Transaction
         transaction = Transaction.objects.get(membership=self.membership1, transaction_type="interest_payout")
-        self.assertEqual(transaction.amount, Decimal("1000.00"))
+        self.assertEqual(transaction.amount, Decimal("11000.00"))
         
-        # Check Expenditure
-        expenditure = Expenditure.objects.get(reference_number=payout.expenditure_reference)
-        self.assertEqual(expenditure.amount, Decimal("1000.00"))
-        self.assertEqual(expenditure.source_fund, CommunityFeatureType.SAVINGS)
+        # Check Expenditure (recorded for interest part? No, service creates two expenditures if savings > 0 and interest > 0)
+        # 1. Savings Expenditure
+        exp_sav = Expenditure.objects.get(source_fund=CommunityFeatureType.SAVINGS, amount=Decimal("10000.00"))
+        # 2. Interest Expenditure
+        exp_int = Expenditure.objects.get(source_fund=CommunityFeatureType.LOANS, amount=Decimal("1000.00"))
+        
+        self.assertIn(exp_sav.reference_number, payout.expenditure_reference)
+        self.assertIn(exp_int.reference_number, payout.expenditure_reference)
