@@ -23,7 +23,7 @@ class MemberBehaviorSnapshot(SavingsBaseModel):
         unique_together = [("membership", "season")]
 
     def __str__(self):
-        return f"Behavior Snapshot - {self.membership.user.full_name}"
+        return f"Behavior Snapshot - {self.membership.user.fullname}"
 class CreditProfile(SavingsBaseModel):
     membership = models.OneToOneField(Membership, on_delete=models.CASCADE, related_name="credit_profile")
     current_score = models.PositiveIntegerField(default=0, db_index=True)
