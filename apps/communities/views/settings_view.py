@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 from apps.finance.utils.admin_mixins import AdminSeasonMixin, CommunityRoleMixin
 from apps.users.permissions import rbac_permission_required, has_area_permission
 from django.utils.decorators import method_decorator
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/settings/settings.html'
@@ -94,6 +96,7 @@ class AdminSettingsView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
 
 @method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateFeatureStatusAPI(LoginRequiredMixin, View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             data = json.loads(request.body)
@@ -121,6 +124,7 @@ class UpdateFeatureStatusAPI(LoginRequiredMixin, View):
 
 @method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateCommunitySettingsAPI(LoginRequiredMixin, View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             data = json.loads(request.body)
@@ -141,6 +145,7 @@ class UpdateCommunitySettingsAPI(LoginRequiredMixin, View):
 
 @method_decorator(rbac_permission_required('settings'), name='dispatch')
 class UpdateMemberRoleAPI(CommunityRoleMixin, LoginRequiredMixin, View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         # Secure the API: only Owner or President can change roles
         community, space, role = self.get_community_and_roles(request, community_id)

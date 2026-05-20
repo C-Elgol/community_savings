@@ -10,6 +10,8 @@ from django.db import IntegrityError
 from django.core.files.storage import default_storage
 from apps.communities.models import Community
 from apps.global_data.enum import CommunityType
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +114,7 @@ class CommunityCreateView(LoginRequiredMixin, View):
     """AJAX: Create a new community. POST multipart/form-data."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)
@@ -213,6 +216,7 @@ class CommunityUpdateView(LoginRequiredMixin, View):
     """AJAX: Update an existing community (POST multipart/form-data)."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, pk, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)
@@ -299,6 +303,7 @@ class CommunityDeleteView(LoginRequiredMixin, View):
     """AJAX: Soft-delete (or hard-delete) a community."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, pk, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)

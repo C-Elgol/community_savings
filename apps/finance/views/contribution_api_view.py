@@ -9,6 +9,8 @@ from django.db import transaction
 from django.db.models import Sum
 import json
 from apps.finance.tasks.contribution_tasks import send_contribution_recorded_email_task
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 class SeasonAPI(View):
     def get(self, request, community_id):
@@ -16,6 +18,7 @@ class SeasonAPI(View):
         seasons = FinancialSeason.objects.filter(**filters).values('id', 'title', 'season_date', 'is_closed')
         return JsonResponse({'success': True, 'seasons': list(seasons)})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             data = json.loads(request.body)
@@ -34,6 +37,7 @@ class CycleAPI(View):
         cycles = ContributionCycle.objects.filter(season_id=season_id).values('id', 'title', 'due_date', 'expected_amount', 'is_closed')
         return JsonResponse({'success': True, 'cycles': list(cycles)})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, season_id):
         try:
             data = json.loads(request.body)
@@ -80,6 +84,7 @@ class ContributionAPI(View):
         
         return JsonResponse({'success': True, 'contributions': data})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, cycle_id):
         try:
             data = json.loads(request.body)
@@ -204,6 +209,7 @@ class ContributionCycleAPI(View):
             'net_income': str(grand_total) if feature_type else "0.00"
         })
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, season_id):
         try:
             data = json.loads(request.body)
@@ -277,6 +283,7 @@ class ContributionRecordAPI(View):
 
         return JsonResponse({'success': True, 'contributions': data})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, cycle_id):
         try:
             data = json.loads(request.body)
@@ -344,6 +351,7 @@ class ContributionRecordAPI(View):
 
 
 class BulkContributionRecordAPI(View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, cycle_id):
         try:
             data = json.loads(request.body)

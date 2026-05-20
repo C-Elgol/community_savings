@@ -5,12 +5,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import update_session_auth_hash
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
 class MemberChangePasswordView(LoginRequiredMixin, TemplateView):
     template_name = 'publics/home/profile/change_password.html'
 
+    @method_decorator(log_activity_and_errors(action="Member Change Password", module="Authentication"))
     def post(self, request, *args, **kwargs):
         current_password = request.POST.get("current_password")
         new_password = request.POST.get("new_password")

@@ -14,6 +14,8 @@ from django.core.mail import EmailMessage, get_connection
 from django.db import transaction
 from django.contrib import messages
 from decouple import config
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 from apps.users.models import User
 
@@ -34,6 +36,7 @@ class RegisterView(TemplateView):
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         return render(request, self.template_name, {'error': None})
 
+    @method_decorator(log_activity_and_errors(action="User Registration", module="Authentication"))
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         first_name = request.POST.get("first_name", "").strip()
         last_name = request.POST.get("last_name", "").strip()
@@ -192,6 +195,7 @@ class Verify2FAView(TemplateView):
     def get(self, request: HttpRequest, email: str, *args: Any, **kwargs: Any) -> HttpResponse:
         return render(request, self.template_name, {'email': email, 'error': None})
 
+    @method_decorator(log_activity_and_errors(action="Verify 2FA", module="Authentication"))
     def post(self, request: HttpRequest, email: str, *args: Any, **kwargs: Any) -> HttpResponse:
         code = request.POST.get("code", "").strip()
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

@@ -10,6 +10,8 @@ import logging
 from apps.communities.models import Community, Membership, MemberFeatureParticipation
 from apps.users.models import User
 from apps.global_data.enum import MembershipRole, MembershipStatus
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,7 @@ class MemberDetailAPI(View):
 
 class MemberCreateAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         community = get_object_or_404(Community, id=community_id)
         
@@ -118,6 +121,7 @@ class MemberCreateAPI(View):
 
 class MemberUpdateAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, member_id):
         m = get_object_or_404(Membership, id=member_id)
         u = m.user
@@ -148,6 +152,7 @@ class MemberUpdateAPI(View):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 class MemberDeleteAPI(View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, member_id):
         m = get_object_or_404(Membership, id=member_id)
         m.soft_delete()
@@ -178,6 +183,7 @@ class EligibleFeatureMemberAPI(View):
 
 class AddMemberToFeatureAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id, feature_type):
         community = get_object_or_404(Community, id=community_id)
         try:
@@ -208,6 +214,7 @@ class AddMemberToFeatureAPI(View):
 
 class RemoveMemberFromFeatureAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id, feature_type):
         community = get_object_or_404(Community, id=community_id)
         try:

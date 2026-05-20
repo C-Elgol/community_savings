@@ -15,6 +15,8 @@ from decouple import config
 
 from apps.users.models import User
 from apps.log.models import ActivityLog, FunctionalErrorLog, LogSystemStatus
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,7 @@ class ResendVerificationView(TemplateView):
     """
     Handles resending of verification code for inactive accounts via AJAX.
     """
+    @method_decorator(log_activity_and_errors())
     def post(self, request: HttpRequest, email: str, *args: Any, **kwargs: Any) -> JsonResponse:
         if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
             return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)

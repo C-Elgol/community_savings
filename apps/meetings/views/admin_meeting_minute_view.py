@@ -15,6 +15,8 @@ from apps.meetings.models import Meeting, MeetingMinute
 from apps.communities.models import Community
 from apps.global_data.enum import MinuteStatus
 from apps.finance.utils.admin_mixins import AdminSeasonMixin
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,7 @@ class AdminMeetingMinuteView(AdminSeasonMixin, LoginRequiredMixin, TemplateView)
 class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
     """Handles AI logic: Transcription and Generation"""
     
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         action = request.POST.get('action')
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -181,6 +184,7 @@ class MeetingAttendanceAPIView(LoginRequiredMixin, View):
             logger.error(f"Attendance fetch error: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -234,6 +238,7 @@ class MeetingAttendanceAPIView(LoginRequiredMixin, View):
 class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
     """Handles saving meeting and minutes to database"""
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         try:
             data = request.POST

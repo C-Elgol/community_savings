@@ -9,6 +9,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from apps.users.permissions import rbac_permission_required, has_area_permission
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 @method_decorator(rbac_permission_required('loans'), name='dispatch')
 class LoanApplicationAPI(View):
@@ -45,6 +47,7 @@ class LoanApplicationAPI(View):
         
         return JsonResponse({'success': True, 'applications': data})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             data = json.loads(request.body)
@@ -198,6 +201,7 @@ class LoanAPI(View):
         return JsonResponse({'success': True, 'loans': data, 'stats': stats})
 
 class LoanPaymentAPI(View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request, loan_id):
         try:
             data = json.loads(request.body)
@@ -251,6 +255,7 @@ class LoanProductAPI(View):
         )
         return JsonResponse({'success': True, 'products': list(products)})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             data = json.loads(request.body)

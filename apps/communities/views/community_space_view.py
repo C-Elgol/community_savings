@@ -9,6 +9,8 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 from apps.communities.models import CommunitySpace
 from apps.global_data.enum import CommunitySpaceStatus
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ class CommunitySpaceCreateView(LoginRequiredMixin, View):
     """AJAX: Create a new community space."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)
@@ -143,6 +146,7 @@ class CommunitySpaceUpdateView(LoginRequiredMixin, View):
     """AJAX: Update an existing community space."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, pk, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)
@@ -212,6 +216,7 @@ class CommunitySpaceDeleteView(LoginRequiredMixin, View):
     """AJAX: Delete a community space."""
     http_method_names = ["post"]
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, pk, *args, **kwargs):
         try:
             space = CommunitySpace.objects.get(pk=pk)

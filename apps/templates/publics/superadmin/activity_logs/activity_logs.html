@@ -4,35 +4,80 @@
 <!-- ========== ACTIVITY FEED PAGE ========== -->
 <div id="activity" class="page active-page">
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-    <h2 class="text-xl font-bold mb-6">Activity Feed</h2>
-    <div class="space-y-4">
-      <div class="flex gap-3">
-        <div
-          class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center"
-        >
-          <i class="fas fa-plus text-emerald-700"></i>
-        </div>
-        <div>
-          <p class="font-medium">New community space created</p>
-          <p class="text-sm text-slate-500">
-            Yaoundé Hub by Super Admin · 10 min ago
-          </p>
-        </div>
-      </div>
-      <div class="flex gap-3">
-        <div
-          class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"
-        >
-          <i class="fas fa-user text-blue-700"></i>
-        </div>
-        <div>
-          <p class="font-medium">15 new user registrations</p>
-          <p class="text-sm text-slate-500">
-            Across 4 community spaces · 1 hour ago
-          </p>
-        </div>
-      </div>
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-slate-800">Activity Logs</h2>
+      <button class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
+        <i class="fas fa-filter mr-2"></i>Filter
+      </button>
     </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-600">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
+          <tr>
+            <th class="px-4 py-3 rounded-l-lg">Date & Time</th>
+            <th class="px-4 py-3">User</th>
+            <th class="px-4 py-3">Module</th>
+            <th class="px-4 py-3">Action</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3 rounded-r-lg text-right">Details</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for log in logs %}
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <span class="font-medium text-slate-700">{{ log.created|date:"M d, Y" }}</span>
+              <br/>
+              <span class="text-xs text-slate-400">{{ log.created|time:"H:i A" }}</span>
+            </td>
+            <td class="px-4 py-4">
+              {% if log.user %}
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs uppercase">
+                    {{ log.user.email|make_list|first }}
+                  </div>
+                  <span class="text-slate-700">{{ log.user.email }}</span>
+                </div>
+              {% else %}
+                <span class="text-slate-400 italic">System / Anonymous</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4">
+              <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">{{ log.module }}</span>
+            </td>
+            <td class="px-4 py-4 max-w-xs truncate" title="{{ log.action }}">
+              {{ log.action }}
+            </td>
+            <td class="px-4 py-4">
+              {% if log.status == "success" %}
+                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">Success</span>
+              {% elif log.status == "failed" or log.status == "error" %}
+                <span class="px-2 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-semibold">Failed</span>
+              {% else %}
+                <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">{{ log.status|title }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4 text-right">
+              <button class="text-emerald-600 hover:text-emerald-800" title="{{ log.details }}">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-slate-400">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fas fa-inbox text-4xl mb-3 text-slate-300"></i>
+                <p>No activity logs found.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 

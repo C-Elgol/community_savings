@@ -12,6 +12,8 @@ from apps.users.permissions import rbac_permission_required
 from apps.finance.models import Expenditure, Contribution, FinancialSeason
 from apps.communities.models import Community
 from apps.global_data.enum import CommunityFeatureType
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 
 SPENDABLE_FUNDS = [
@@ -92,6 +94,7 @@ class ExpenditureAPI(View):
             'stats': stats,
         })
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         try:
             body = json.loads(request.body)

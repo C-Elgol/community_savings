@@ -12,6 +12,8 @@ from django.core.files.storage import default_storage
 
 from apps.communities.models import Community, CommunitySpace
 from apps.global_data.enum import CommunityType
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,7 @@ class AdminCommunityCreateView(LoginRequiredMixin, SuperAdminRequiredMixin, View
     """
     View to create a new community manually.
     """
+    @method_decorator(log_activity_and_errors())
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         name = request.POST.get('name', '').strip()
         code = request.POST.get('code', '').strip().upper()
@@ -109,6 +112,7 @@ class AdminCommunityUpdateView(LoginRequiredMixin, SuperAdminRequiredMixin, View
     """
     View to update an existing community.
     """
+    @method_decorator(log_activity_and_errors())
     def post(self, request: HttpRequest, pk: str, *args: Any, **kwargs: Any) -> HttpResponse:
         community = get_object_or_404(Community, id=pk)
         
@@ -151,6 +155,7 @@ class AdminCommunityDeleteView(LoginRequiredMixin, SuperAdminRequiredMixin, View
     """
     View to delete a community.
     """
+    @method_decorator(log_activity_and_errors())
     def post(self, request: HttpRequest, pk: str, *args: Any, **kwargs: Any) -> HttpResponse:
         community = get_object_or_404(Community, id=pk)
         name = community.name

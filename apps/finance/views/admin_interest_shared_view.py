@@ -11,6 +11,8 @@ from apps.finance.services.dashboard_service import DashboardService
 from decimal import Decimal
 
 from apps.finance.utils.admin_mixins import AdminSeasonMixin
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 class AdminInterestSharingView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = "publics/admin/interest_shared/interest_shared.html"
@@ -88,6 +90,7 @@ class InterestSharingAPI(APIView):
         except Exception as e:
             return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         action = request.data.get('action')
         community = get_object_or_404(Community, id=community_id)

@@ -3,8 +3,11 @@ from django.views import View
 from django.shortcuts import get_object_or_404
 from apps.finance.models import FinancialSeason
 import json
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 class SetActiveSeasonView(View):
+    @method_decorator(log_activity_and_errors())
     def post(self, request):
         try:
             data = json.loads(request.body)

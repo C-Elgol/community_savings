@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -41,6 +43,7 @@ class AdminUserCreateView(LoginRequiredMixin, SuperAdminRequiredMixin, View):
     """
     View to create a new user manually.
     """
+    @method_decorator(log_activity_and_errors(action="Create User", module="User Management"))
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         email = request.POST.get('email', '').strip()
         first_name = request.POST.get('first_name', '').strip()
@@ -83,6 +86,7 @@ class AdminUserUpdateView(LoginRequiredMixin, SuperAdminRequiredMixin, View):
     """
     View to update an existing user's basic information.
     """
+    @method_decorator(log_activity_and_errors(action="Update User", module="User Management"))
     def post(self, request: HttpRequest, pk: str, *args: Any, **kwargs: Any) -> HttpResponse:
         user = get_object_or_404(User, id=pk)
         
@@ -105,6 +109,7 @@ class AdminUserToggleStatusView(LoginRequiredMixin, SuperAdminRequiredMixin, Vie
     """
     View to toggle a user's active status.
     """
+    @method_decorator(log_activity_and_errors(action="Toggle User Status", module="User Management"))
     def post(self, request: HttpRequest, pk: str, *args: Any, **kwargs: Any) -> HttpResponse:
         user = get_object_or_404(User, id=pk)
         user.is_active = not user.is_active
@@ -120,6 +125,7 @@ class AdminUserDeleteView(LoginRequiredMixin, SuperAdminRequiredMixin, View):
     """
     View to soft delete a user.
     """
+    @method_decorator(log_activity_and_errors(action="Delete User", module="User Management"))
     def post(self, request: HttpRequest, pk: str, *args: Any, **kwargs: Any) -> HttpResponse:
         user = get_object_or_404(User, id=pk)
         user.soft_delete()
