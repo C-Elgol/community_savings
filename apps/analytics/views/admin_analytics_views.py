@@ -10,6 +10,8 @@ from apps.finance.models import LoanApplication
 from apps.analytics.models import CreditProfile, RiskBand, LoanRiskAssessment
 from apps.analytics.services.scoring_service import CreditScoringService
 from apps.finance.utils.admin_mixins import AdminSeasonMixin
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 class AdminCreditRiskDashboardView(AdminSeasonMixin, LoginRequiredMixin, TemplateView):
     template_name = 'publics/admin/credit_risk_analytics/credit_risk_analytics.html'
@@ -77,6 +79,7 @@ class RecalculateCreditScoreAPI(LoginRequiredMixin, View):
     """
     API to trigger recalculation for a single member or all members in a community.
     """
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         community_id = request.POST.get('community_id')
         membership_id = request.POST.get('membership_id')

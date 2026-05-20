@@ -4,35 +4,158 @@
 <!-- ========== ACTIVITY FEED PAGE ========== -->
 <div id="activity" class="page active-page">
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-    <h2 class="text-xl font-bold mb-6">Activity Feed</h2>
-    <div class="space-y-4">
-      <div class="flex gap-3">
-        <div
-          class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center"
-        >
-          <i class="fas fa-plus text-emerald-700"></i>
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+      <h2 class="text-xl font-bold text-slate-800">Activity Logs</h2>
+      
+      <form method="GET" class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" name="search" value="{{ filters.search }}" placeholder="Search User or Action..." 
+                 class="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm w-full lg:w-64 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
         </div>
+        
+        <select name="module" class="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 bg-white">
+          <option value="">All Modules</option>
+          {% for m in modules %}
+            <option value="{{ m }}" {% if filters.module == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        
+        <select name="status" class="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 bg-white">
+          <option value="">All Statuses</option>
+          <option value="success" {% if filters.status == 'success' %}selected{% endif %}>Success</option>
+          <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Failed</option>
+          <option value="error" {% if filters.status == 'error' %}selected{% endif %}>Error</option>
+        </select>
+        
+        <input type="date" name="start_date" value="{{ filters.start_date }}" class="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-slate-600">
+        <span class="text-slate-400">-</span>
+        <input type="date" name="end_date" value="{{ filters.end_date }}" class="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-slate-600">
+        
+        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+          <i class="fas fa-filter mr-2"></i>Apply
+        </button>
+        {% if filters.search or filters.module or filters.status or filters.start_date or filters.end_date %}
+        <a href="?" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
+          Clear
+        </a>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-600">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
+          <tr>
+            <th class="px-4 py-3 rounded-l-lg">Date & Time</th>
+            <th class="px-4 py-3">User</th>
+            <th class="px-4 py-3">Module</th>
+            <th class="px-4 py-3">Action</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3 rounded-r-lg text-right">Details</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for log in logs %}
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-4 py-4 whitespace-nowrap">
+              <span class="font-medium text-slate-700">{{ log.created|date:"M d, Y" }}</span>
+              <br/>
+              <span class="text-xs text-slate-400">{{ log.created|time:"H:i A" }}</span>
+            </td>
+            <td class="px-4 py-4">
+              {% if log.user %}
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs uppercase">
+                    {{ log.user.email|make_list|first }}
+                  </div>
+                  <span class="text-slate-700">{{ log.user.email }}</span>
+                </div>
+              {% else %}
+                <span class="text-slate-400 italic">System / Anonymous</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4">
+              <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium">{{ log.module }}</span>
+            </td>
+            <td class="px-4 py-4 max-w-xs truncate" title="{{ log.action }}">
+              {{ log.action }}
+            </td>
+            <td class="px-4 py-4">
+              {% if log.status == "success" %}
+                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">Success</span>
+              {% elif log.status == "failed" or log.status == "error" %}
+                <span class="px-2 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-semibold">Failed</span>
+              {% else %}
+                <span class="px-2 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">{{ log.status|title }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-4 text-right">
+              <button class="text-emerald-600 hover:text-emerald-800" title="{{ log.details }}">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-slate-400">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fas fa-inbox text-4xl mb-3 text-slate-300"></i>
+                <p>No activity logs found.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex items-center justify-between mt-6 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl">
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
         <div>
-          <p class="font-medium">New community space created</p>
-          <p class="text-sm text-slate-500">
-            Yaoundé Hub by Super Admin · 10 min ago
+          <p class="text-sm text-slate-700">
+            Showing <span class="font-medium">{{ page_obj.start_index }}</span> to <span class="font-medium">{{ page_obj.end_index }}</span> of <span class="font-medium">{{ paginator.count }}</span> results
           </p>
         </div>
-      </div>
-      <div class="flex gap-3">
-        <div
-          class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"
-        >
-          <i class="fas fa-user text-blue-700"></i>
-        </div>
         <div>
-          <p class="font-medium">15 new user registrations</p>
-          <p class="text-sm text-slate-500">
-            Across 4 community spaces · 1 hour ago
-          </p>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}&search={{ filters.search }}&module={{ filters.module }}&status={{ filters.status }}&start_date={{ filters.start_date }}&end_date={{ filters.end_date }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50">
+                <span class="sr-only">Previous</span>
+                <i class="fas fa-chevron-left h-5 w-5 flex items-center justify-center"></i>
+              </a>
+            {% else %}
+              <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-200 bg-slate-100 text-sm font-medium text-slate-400 cursor-not-allowed">
+                <i class="fas fa-chevron-left h-5 w-5 flex items-center justify-center"></i>
+              </span>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+              {% if page_obj.number == num %}
+                <span aria-current="page" class="z-10 bg-emerald-50 border-emerald-500 text-emerald-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">{{ num }}</span>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}&search={{ filters.search }}&module={{ filters.module }}&status={{ filters.status }}&start_date={{ filters.start_date }}&end_date={{ filters.end_date }}" class="bg-white border-slate-300 text-slate-500 hover:bg-slate-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}&search={{ filters.search }}&module={{ filters.module }}&status={{ filters.status }}&start_date={{ filters.start_date }}&end_date={{ filters.end_date }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-300 bg-white text-sm font-medium text-slate-500 hover:bg-slate-50">
+                <span class="sr-only">Next</span>
+                <i class="fas fa-chevron-right h-5 w-5 flex items-center justify-center"></i>
+              </a>
+            {% else %}
+              <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-slate-200 bg-slate-100 text-sm font-medium text-slate-400 cursor-not-allowed">
+                <i class="fas fa-chevron-right h-5 w-5 flex items-center justify-center"></i>
+              </span>
+            {% endif %}
+          </nav>
         </div>
       </div>
     </div>
+    {% endif %}
+
   </div>
 </div>
 

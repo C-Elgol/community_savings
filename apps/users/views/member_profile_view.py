@@ -5,6 +5,8 @@ from django.db import transaction
 import logging
 from django.utils.translation import gettext_lazy as _
 from apps.users.models import Profile
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ class MemberProfileView(LoginRequiredMixin, TemplateView):
         context["user_profile"] = profile
         return context
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         user = request.user
         profile = getattr(user, "profile", None)

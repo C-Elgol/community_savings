@@ -6,6 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from apps.communities.models import Community, CommunityPolicy
 from apps.global_data.enum import RegistrationFeeMode, ContributionFrequency
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 def _policy_data(policy):
     """Serialize a CommunityPolicy instance to a dict."""
@@ -48,6 +50,7 @@ class CommunityPolicyDetailView(LoginRequiredMixin, View):
 
 class CommunityPolicyUpdateView(LoginRequiredMixin, View):
     """AJAX: Create or Update community policy."""
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_pk, *args, **kwargs):
         if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return JsonResponse({"success": False, "message": "Bad request."}, status=400)

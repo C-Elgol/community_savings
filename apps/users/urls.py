@@ -20,6 +20,7 @@ from apps.users.views.super_admin_user_management_view import (
     AdminUserDeleteView
 )
 from apps.users.views.super_admin_dashboard_view import SuperAdminDashboardView
+from apps.users.views.super_admin_activity_logs_view import SuperAdminActivityLogsView
 from apps.users.views.membership_application_view import MembershipApplicationView
 
 app_name = "users"
@@ -43,6 +44,7 @@ urlpatterns = [
     path('resend-verification/<str:email>/', ResendVerificationView.as_view(), name='resend_verification'),
     path('admin-members/<uuid:community_id>/', AdminMemberView.as_view(), name='admin_members'),
     path('superadmin-dashboard/', SuperAdminDashboardView.as_view(), name='superadmin_dashboard'),
+    path('superadmin/activity-logs/', SuperAdminActivityLogsView.as_view(), name='superadmin_activity_logs'),
 
     # User Management CRUD
     path('superadmin/user-management/', SuperAdminUserManagementView.as_view(), name='user_management'),

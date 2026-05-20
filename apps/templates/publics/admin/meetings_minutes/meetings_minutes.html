@@ -211,7 +211,11 @@
                                 </span>
                             </td>
                             <td class="px-8 py-5 text-sm text-slate-600">
-                                {{ minute.prepared_by.get_full_name|default:minute.prepared_by.username }}
+                                {% if minute.prepared_by %}
+                                    {{ minute.prepared_by.get_full_name|default:minute.prepared_by.username }}
+                                {% else %}
+                                    ---
+                                {% endif %}
                             </td>
                             <td class="px-8 py-5 text-xs text-slate-400 font-medium">
                                 {{ minute.created_at|date:"Y-m-d H:i:s" }}
@@ -808,6 +812,70 @@ document.getElementById('btn-save-attendance').addEventListener('click', async (
         btn.innerHTML = '<i class="fas fa-save"></i> Save Attendance';
     }
 });
+// View All Minutes
+document.getElementById('btn-load-all')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-load-all');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Loading...';
+
+    try {
+        const response = await fetch(`/meetings/meeting-minutes/all/{{ community.id }}/`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            renderMinutesTable(result.minutes);
+            btn.parentElement.classList.add('hidden'); // Hide the button after loading all
+            window.toastManager.buildToast().setMessage('All minutes loaded').setType('success').show();
+        } else {
+            window.toastManager.buildToast().setMessage(result.message).setType('danger').show();
+        }
+    } catch (err) {
+        console.error('Error loading all minutes:', err);
+        window.toastManager.buildToast().setMessage('Failed to load all minutes').setType('danger').show();
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+});
+
+function renderMinutesTable(minutes) {
+    const tbody = document.querySelector('tbody');
+    let html = '';
+    
+    minutes.forEach(minute => {
+        const idShort = (minute.id || '').substring(0, 8);
+        const methodClass = minute.audio_file ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600';
+        const methodName = minute.audio_file ? 'voice' : 'text';
+        
+        html += `
+        <tr class="group hover:bg-slate-50/50 transition-all duration-200">
+            <td class="px-8 py-5 text-sm font-medium text-slate-500">#${idShort}</td>
+            <td class="px-8 py-5 text-sm text-slate-600">${minute.minute_date}</td>
+            <td class="px-8 py-5 text-sm font-bold text-slate-800">${minute.title}</td>
+            <td class="px-8 py-5">
+                <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${methodClass}">
+                    ${methodName}
+                </span>
+            </td>
+            <td class="px-8 py-5 text-sm text-slate-600">${minute.prepared_by}</td>
+            <td class="px-8 py-5 text-xs text-slate-400 font-medium">${minute.created_at}</td>
+            <td class="px-8 py-5">
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="loadMinute('${minute.id}')"
+                        class="px-4 py-1.5 rounded-lg border border-indigo-200 text-indigo-600 text-xs font-bold hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
+                        Load
+                    </button>
+                    <a href="#" class="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-800 hover:text-white hover:border-slate-800 transition-all shadow-sm">
+                        PDF
+                    </a>
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    tbody.innerHTML = html;
+}
 </script>
 
 <style>

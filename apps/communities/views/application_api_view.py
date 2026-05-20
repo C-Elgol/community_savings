@@ -13,6 +13,8 @@ from apps.communities.tasks.membership_tasks import (
     send_application_submitted_emails_task,
     send_application_review_result_email_task
 )
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,7 @@ class ApplicationDetailAPI(View):
 
 class ApplicationProcessAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, application_id):
         app = get_object_or_404(MembershipApplication, id=application_id)
         
@@ -153,6 +156,7 @@ class ApplicationCreateAPI(View):
         return JsonResponse({'success': True, 'data': data})
 
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, community_id):
         if not request.user.is_authenticated:
             return JsonResponse({'success': False, 'message': _("Authentication required.")}, status=401)

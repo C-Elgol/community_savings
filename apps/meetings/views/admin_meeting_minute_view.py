@@ -15,6 +15,8 @@ from apps.meetings.models import Meeting, MeetingMinute
 from apps.communities.models import Community
 from apps.global_data.enum import MinuteStatus
 from apps.finance.utils.admin_mixins import AdminSeasonMixin
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,7 @@ class AdminMeetingMinuteView(AdminSeasonMixin, LoginRequiredMixin, TemplateView)
 class MeetingMinuteAIView(LoginRequiredMixin, TemplateView):
     """Handles AI logic: Transcription and Generation"""
     
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         action = request.POST.get('action')
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -181,6 +184,7 @@ class MeetingAttendanceAPIView(LoginRequiredMixin, View):
             logger.error(f"Attendance fetch error: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
@@ -234,6 +238,7 @@ class MeetingAttendanceAPIView(LoginRequiredMixin, View):
 class MeetingMinuteSaveView(LoginRequiredMixin, TemplateView):
     """Handles saving meeting and minutes to database"""
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, *args, **kwargs):
         try:
             data = request.POST
@@ -306,3 +311,27 @@ class MeetingMinuteDetailView(LoginRequiredMixin, TemplateView):
             return JsonResponse({'status': 'error', 'message': 'Minute not found'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
+
+class AllMeetingMinutesAPIView(LoginRequiredMixin, View):
+    """API to fetch all meeting minutes for a community"""
+    def get(self, request, community_id, *args, **kwargs):
+        try:
+            community = get_object_or_404(Community, id=community_id)
+            minutes = MeetingMinute.objects.filter(
+                meeting__community=community
+            ).select_related('meeting', 'prepared_by').order_by('-created')
+            
+            data = []
+            for m in minutes:
+                data.append({
+                    'id': str(m.id),
+                    'minute_date': m.minute_date.isoformat() if m.minute_date else '---',
+                    'title': m.title or 'Meeting Minutes',
+                    'audio_file': bool(m.audio_file),
+                    'prepared_by': m.prepared_by.get_full_name or m.prepared_by.email if m.prepared_by else '---',
+                    'created_at': m.created.strftime('%Y-%m-%d %H:%M:%S')
+                })
+                
+            return JsonResponse({'status': 'success', 'minutes': data})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

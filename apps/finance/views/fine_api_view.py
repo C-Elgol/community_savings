@@ -12,6 +12,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.communities.models import Community, Membership
 from apps.finance.models import ContributionCycle, Contribution, Fine, FinancialSeason, FinePayment
 from apps.global_data.enum import CommunityFeatureType, FineType, FineStatus, ContributionStatus
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +71,7 @@ class FineEligibleMembersAPI(View):
 
 class LaunchFinesAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, cycle_id):
         cycle = get_object_or_404(ContributionCycle, id=cycle_id)
         community = cycle.community
@@ -183,6 +186,7 @@ class FineListAPI(View):
 
 class PayFineAPI(View):
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, fine_id):
         fine = get_object_or_404(Fine, id=fine_id)
         try:

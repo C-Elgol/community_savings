@@ -13,6 +13,8 @@ from apps.communities.models import Membership
 from apps.finance.models import FinancialSeason, ContributionCycle, NjangiRotation, NjangiBenefit, Expenditure, Transaction
 from apps.global_data.enum import CommunityFeatureType, ExpenditureStatus
 from apps.users.permissions import rbac_permission_required
+from django.utils.decorators import method_decorator
+from apps.log.decorators import log_activity_and_errors
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ class NjangiRotationAPI(View):
         ]
         return JsonResponse({'success': True, 'rotations': data})
 
+    @method_decorator(log_activity_and_errors())
     def post(self, request, season_id):
         season = get_object_or_404(FinancialSeason, id=season_id)
         try:
@@ -110,6 +113,7 @@ class NjangiMeetingBeneficiaryAPI(View):
         return JsonResponse({'success': True, 'data': data})
 
     @transaction.atomic
+    @method_decorator(log_activity_and_errors())
     def post(self, request, cycle_id):
         cycle = get_object_or_404(ContributionCycle, id=cycle_id)
         try:
