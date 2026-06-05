@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from apps.communities.models import Membership
 from apps.analytics.models import MemberBehaviorSnapshot, CreditProfile
 from apps.analytics.services.scoring_service import CreditScoringService
-from apps.finance.models import Loan, LoanRepaymentSchedule, Contribution
+from apps.finance.models import Loan, LoanRepaymentSchedule, Contribution 
 from apps.global_data.enum import ContributionStatus, LoanStatus
 
 User = get_user_model()
