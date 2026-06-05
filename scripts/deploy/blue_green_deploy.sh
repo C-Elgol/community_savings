@@ -109,31 +109,21 @@ WEB_PORT="$NEW_PORT" ENV_FILE="$NEW_ENV_FILE" docker compose \
 log "⏳ Running health checks on new color..."
 
 for i in {1..30}; do
-  if curl -fsS "http://127.0.0.1:$NEW_PORT/health/" > /dev/null; then
+
+  echo "Attempt $i"
+
+  if curl -v "http://127.0.0.1:$NEW_PORT/health/"; then
     log "✅ New color passed health check"
-
-    log "🔍 Debugging container state..."
-
-    docker ps
-
-    echo ""
-    echo "Testing local port:"
-    curl -v "http://127.0.0.1:$NEW_PORT/health/" || true
-
-    echo ""
-    echo "Listening ports:"
-    sudo ss -tulpn | grep "$NEW_PORT" || true
-
-    sleep 10
     break
   fi
+
+  echo "Health check failed, sleeping..."
+  sleep 3
 
   if [ "$i" -eq 30 ]; then
     log "❌ New color failed health checks"
     rollback_failed_new_color
   fi
-
-  sleep 15
 done
 
 log "🔁 Switching Nginx traffic to $NEW_COLOR..."
