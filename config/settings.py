@@ -37,11 +37,15 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'ea82-129-0-78-196.ngrok-free.app',  
+    'ea82-129-0-78-196.ngrok-free.app', 
+    "njangihub.medremindr.com",
+    "www.njangihub.medremindr.com", 
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://ea82-129-0-78-196.ngrok-free.app',
+    "https://njangihub.medremindr.com",
+    "https://www.njangihub.medremindr.com", 
 ]
 
 # Application definition
