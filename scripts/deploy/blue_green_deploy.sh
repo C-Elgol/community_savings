@@ -111,6 +111,20 @@ log "⏳ Running health checks on new color..."
 for i in {1..30}; do
   if curl -fsS "http://127.0.0.1:$NEW_PORT/health/" > /dev/null; then
     log "✅ New color passed health check"
+
+    log "🔍 Debugging container state..."
+
+    docker ps
+
+    echo ""
+    echo "Testing local port:"
+    curl -v "http://127.0.0.1:$NEW_PORT/health/" || true
+
+    echo ""
+    echo "Listening ports:"
+    sudo ss -tulpn | grep "$NEW_PORT" || true
+
+    sleep 10
     break
   fi
 
@@ -119,7 +133,7 @@ for i in {1..30}; do
     rollback_failed_new_color
   fi
 
-  sleep 3
+  sleep 15
 done
 
 log "🔁 Switching Nginx traffic to $NEW_COLOR..."
@@ -168,6 +182,14 @@ EOF
 
 sudo nginx -t
 sudo systemctl reload nginx
+
+log "🔍 Testing through Nginx..."
+
+curl -vk "https://$DOMAIN/health/" || true
+
+echo ""
+echo "Nginx site content:"
+sudo cat "$NGINX_SITE"
 
 log "🔎 Verifying public domain after traffic switch..."
 
