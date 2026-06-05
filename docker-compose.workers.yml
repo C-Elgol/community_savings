@@ -1,0 +1,34 @@
+services:
+  celery:
+    build: .
+    restart: always
+    command: sh /app/scripts/entrypoint.sh celery -A config worker -l info
+    volumes:
+      - /opt/community_savings/staticfiles:/app/staticfiles
+      - /opt/community_savings/media:/app/media
+      - /var/www/community_savings/secrets:/app/secrets:ro
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      RUN_MIGRATIONS: "0"
+    networks:
+      - community_savings_network
+
+  celerybeat:
+    build: .
+    restart: always
+    command: sh /app/scripts/entrypoint.sh celery -A config beat -l info
+    volumes:
+      - /opt/community_savings/staticfiles:/app/staticfiles
+      - /opt/community_savings/media:/app/media
+      - /var/www/community_savings/secrets:/app/secrets:ro
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      RUN_MIGRATIONS: "0"
+    networks:
+      - community_savings_network
+
+networks:
+  community_savings_network:
+    external: true

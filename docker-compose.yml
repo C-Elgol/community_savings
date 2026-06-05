@@ -1,0 +1,77 @@
+services:
+  web:
+    build: .
+    container_name: community_savings-web
+    command: sh /app/scripts/entrypoint.sh gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 120
+    volumes:
+      - /opt/community_savings/staticfiles:/app/staticfiles
+      - /opt/community_savings/media:/app/media
+    ports:
+      - "8005:8000"
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "1"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - mynetwork
+
+  db:
+    image: postgres:15
+    container_name: community_savings-db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  redis:
+    image: redis:7
+    container_name: community_savings-redis
+    ports:
+      - "6379"
+    networks:
+      - mynetwork
+
+  celery:
+    build: .
+    container_name: community_savings-celery
+    command: sh /app/scripts/entrypoint.sh celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "0"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - mynetwork
+  
+  celerybeat:
+    build: .
+    container_name: community_savings-celerybeat
+    command: sh /app/scripts/entrypoint.sh celery -A config beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "0"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - mynetwork
+
+volumes:
+  postgres_data:
+
+networks:
+  mynetwork:
+    driver: bridge

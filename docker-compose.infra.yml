@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:15
+    container_name: community_savings-db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - community_savings_network
+
+  redis:
+    image: redis:7
+    container_name: community_savings-redis
+    restart: always
+    networks:
+      - community_savings_network
+
+volumes:
+  postgres_data:
+
+networks:
+  community_savings_network:
+    name: community_savings_network
+    driver: bridge
