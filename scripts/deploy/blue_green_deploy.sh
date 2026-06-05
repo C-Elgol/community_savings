@@ -92,11 +92,11 @@ WEB_PORT="$NEW_PORT" ENV_FILE="$NEW_ENV_FILE" docker compose \
   -p "community_savings_$NEW_COLOR" \
   -f docker-compose.app.yml run --rm web python manage.py collectstatic --noinput --clear
 
-log "🌍 Compiling translation messages once..."
-WEB_PORT="$NEW_PORT" ENV_FILE="$NEW_ENV_FILE" docker compose \
-  --env-file "$NEW_ENV_FILE" \
-  -p "community_savings_$NEW_COLOR" \
-  -f docker-compose.app.yml run --rm web python manage.py compilemessages
+# log "🌍 Compiling translation messages once..."
+# WEB_PORT="$NEW_PORT" ENV_FILE="$NEW_ENV_FILE" docker compose \
+#   --env-file "$NEW_ENV_FILE" \
+#   -p "community_savings_$NEW_COLOR" \
+#   -f docker-compose.app.yml run --rm web python manage.py compilemessages
 
 log "🧹 Cleaning stale containers for $NEW_COLOR..."
 
