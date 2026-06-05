@@ -3,7 +3,7 @@ import os
 from celery import Celery
 from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
