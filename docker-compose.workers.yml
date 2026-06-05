@@ -5,7 +5,7 @@ services:
     command: sh /app/scripts/entrypoint.sh celery -A config worker -l info
     volumes:
       - /opt/community_savings/staticfiles:/app/staticfiles
-      - /opt/community_savings/media:/app/apps/media
+      - /opt/community_savings/media:/app/media
       - /var/www/community_savings/secrets:/app/secrets:ro
     env_file:
       - ${ENV_FILE:-.env}
@@ -20,7 +20,7 @@ services:
     command: sh /app/scripts/entrypoint.sh celery -A config beat -l info
     volumes:
       - /opt/community_savings/staticfiles:/app/staticfiles
-      - /opt/community_savings/media:/app/apps/media
+      - /opt/community_savings/media:/app/media
       - /var/www/community_savings/secrets:/app/secrets:ro
     env_file:
       - ${ENV_FILE:-.env}

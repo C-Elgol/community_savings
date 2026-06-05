@@ -102,8 +102,8 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-MEDIA_ROOT = str(APPS_DIR / "media")
-MEDIA_URL = "/media/"
+MEDIA_ROOT = config("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+MEDIA_URL = config("MEDIA_URL", default="/media/")
 
 # Base URL of this deployment — used by get_absolute_image_url when no
 # HttpRequest is available (background tasks, management commands, etc.).
