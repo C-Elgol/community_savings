@@ -7,7 +7,7 @@ DOMAIN="njangihub.medremindr.com"
 BLUE_PORT=8010
 GREEN_PORT=8011
 ACTIVE_FILE=".active_color"
-NGINX_SITE="/etc/nginx/sites-available/njangihub" 
+NGINX_SITE="/etc/nginx/sites-available/community_savings"
 
 cd "$PROJECT_PATH"
 
