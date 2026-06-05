@@ -13,7 +13,7 @@ services:
       --max-requests-jitter 100
     volumes:
       - /opt/community_savings/staticfiles:/app/staticfiles
-      - /opt/community_savings/media:/app/media
+      - /opt/community_savings/media:/app/apps/media
       - /var/www/community_savings/secrets:/app/secrets:ro
     ports:
       - "${WEB_PORT}:8000"
