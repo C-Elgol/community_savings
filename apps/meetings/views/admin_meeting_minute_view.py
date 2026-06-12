@@ -444,7 +444,7 @@ class MeetingMinutePDFView(LoginRequiredMixin, View):
 
         # Custom styles
         st_community = _style('CommunityName', fontSize=18, fontName='Helvetica-Bold',
-                              textColor=C_DARK, alignment=TA_CENTER, spaceAfter=2)
+                              textColor=C_DARK, alignment=TA_CENTER, leading=22, spaceAfter=6)
         st_tagline = _style('Tagline', fontSize=9, fontName='Helvetica',
                             textColor=C_PRIMARY, alignment=TA_CENTER, spaceAfter=4)
         st_title = _style('DocTitle', fontSize=13, fontName='Helvetica-Bold',
