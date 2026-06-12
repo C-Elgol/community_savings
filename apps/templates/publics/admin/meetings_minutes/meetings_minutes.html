@@ -615,7 +615,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
         const result = await response.json();
         if (result.status === 'success') {
             window.toastManager.buildToast().setMessage(result.message).setType('success').show();
-            setTimeout(() => window.location.href = "{% url 'meetings:members_meeting' %}", 2000);
+            setTimeout(() => window.location.reload(), 2000);
         } else {
             window.toastManager.buildToast().setMessage(result.message).setType('danger').show();
         }
