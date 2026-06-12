@@ -571,15 +571,7 @@ class MeetingMinutePDFView(LoginRequiredMixin, View):
                     story.append(Paragraph(line, st_body))
             story.append(Spacer(1, 6))
 
-        # ── PAGE BREAK → SIGNATURE PAGE ─────────────────────────────────────
-        story.append(PageBreak())
-
-        # Second page header
-        story.append(Paragraph(community.name.upper(), st_community))
-        story.append(Paragraph('Connect &nbsp;·&nbsp; Inspire &nbsp;·&nbsp; Thrive', st_tagline))
-        story.append(HRFlowable(width='100%', thickness=1.5, color=C_PRIMARY, spaceAfter=12))
-
-        # ── ELECTRONIC SIGNATURE ────────────────────────────────────────────
+        story.append(Spacer(1, 15))
         story.append(Paragraph('Electronic Signature', st_section))
         story.append(HRFlowable(width='100%', thickness=0.5, color=C_BORDER, spaceAfter=8))
 
