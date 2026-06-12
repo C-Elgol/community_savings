@@ -470,10 +470,13 @@ class MeetingMinutePDFView(LoginRequiredMixin, View):
         logo_cell_left  = ''
         logo_cell_right = ''
         try:
-            if community.logo:
+            # Fallback: Check community logo, then community space logo
+            logo_to_use = community.logo if community.logo else community.community_space.logo
+            
+            if logo_to_use:
                 # Eagerly load image via PIL into BytesIO so any IO error is
                 # caught here (inside try/except), not lazily inside doc.build().
-                pil_logo = PILImage.open(community.logo.path).convert('RGBA')
+                pil_logo = PILImage.open(logo_to_use.path).convert('RGBA')
                 buf_left = io.BytesIO()
                 pil_logo.save(buf_left, format='PNG')
                 buf_left.seek(0)
@@ -483,7 +486,8 @@ class MeetingMinutePDFView(LoginRequiredMixin, View):
                 # Two separate RLImage instances – sharing one between cells breaks layout
                 logo_cell_left  = RLImage(buf_left,  width=18 * mm, height=18 * mm)
                 logo_cell_right = RLImage(buf_right, width=18 * mm, height=18 * mm)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Error loading PDF logos: {str(e)}")
             pass  # Logo missing/corrupt – render header without it
 
         center_header = [
