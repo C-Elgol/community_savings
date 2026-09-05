@@ -130,7 +130,7 @@ log "🔁 Switching Nginx traffic to $NEW_COLOR..."
 
 sudo tee "$NGINX_SITE" > /dev/null <<EOF
 server {
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $DOMAIN www.$DOMAIN; 
 
     client_max_body_size 50M;
 
